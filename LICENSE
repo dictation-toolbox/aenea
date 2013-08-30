@@ -1,2 +1,2 @@
-* software.iso contains software licensed under various licenses owned by other people.
+* software.iso contains software licensed under various licenses that permit redistribution in unmodified form owned by other people. I have included them because one of the more time consuming parts of getting this working was finding all the right versions that played nice with each other.
 * all other code in this repository was created by me is released to the public domain. There are no restrictions placed on its use, modification, distribution, or distribution of modified versions.
