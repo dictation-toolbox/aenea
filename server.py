@@ -3,24 +3,27 @@
 import comsat, sys, os, time
 
 class Handler(object):
+  def __init__(self):
+    self.state = {}
+
   @staticmethod
-  def runCommand(command):
-    command_string = "xdotool %s" % command
+  def runCommand(command, executable="xdotool"):
+    command_string = "%s %s" % (executable, command)
     sys.stderr.write(command_string + "\n")
     os.system(command_string)
   
   @staticmethod
-  def readCommand(command):
-    with os.popen("xdotool %s" % command, "r") as fd:
+  def readCommand(command, executable="xdotool"):
+    with os.popen("%s %s" % (executable, command), "r") as fd:
       rval = fd.read()
-    sys.stderr.write("xdotool %s > %s\n" % (command, rval))
+    sys.stderr.write("%s %s > %s\n" % (executable, command, rval))
     return rval
   
   @staticmethod
-  def writeCommand(message):
-    with os.popen("xdotool type --file -", "w") as fd:
+  def writeCommand(message, executable="xdotool"):
+    with os.popen("%s type --file -" % executable, "w") as fd:
       fd.write(message)
-    sys.stderr.write("echo \"%s\" | xdotool type --file -\n" % message.replace("\n", "\\n"))
+    sys.stderr.write("echo \"%s\" | %s type --file -\n" % (message.replace("\n", "\\n"), executable))
 
   def callLog(self, message):
     sys.stderr.write(message + "\n")
@@ -80,7 +83,7 @@ class Handler(object):
     self.runCommand(' '.join(command))
 
   def callRaw(self, arguments):
-    self.runCommand(' '.join(arguments))
+    return self.readCommand(' '.join(arguments))
 
   def callReloadConfiguration(self):
     pass
@@ -90,8 +93,14 @@ class Handler(object):
 
   def callGetState(self):
     state = self.state.copy()
-    active_id = self.callGetActiveWindow()
-    state["active"] = active_id
+    active_id, active_title = self.callGetActiveWindow()
+    #todo, try to do this more generally
+    active_pid = int(self.callRaw(["getwindowpid %i" % active_id]))
+
+    state["active_id"] = active_id
+    state["active_title"] = active_title
+    state["in_terminal"] = ("urxvt" in self.readCommand("aux | grep %i" % active_pid))
+
     return state
 
 cs = comsat.ComSat()

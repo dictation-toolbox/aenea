@@ -1,12 +1,21 @@
-from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal)
+from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, Context)
 import natlink, os
 
 from comsat import ComSat
 
 from raul import SelfChoice, processDictation, NUMBERS as numbers
 
+class VimContext(Context):
+  def __init__(self):
+    self._str = "VimContext"
 
-grammar_context = AppContext(executable="notepad")
+  def matches(self, executable, title, handle):
+    with ComSat() as cs:
+      active_title = cs.getRPCProxy().callGetState()["active_title"].strip().lower()
+      return (active_title.startswith("vim ") or active_title.endswith(" vim") or
+              " vim " in active_title)
+
+grammar_context = AppContext(executable="notepad") & VimContext()
 grammar = Grammar("vim", context=grammar_context)
 
 class VimCommand(CompoundRule):

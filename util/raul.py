@@ -7,6 +7,8 @@ def SelfChoice(name, ch):
   return Choice(name, dict(zip(ch, ch)))
 
 def processDictation(message):
+  """For some reason the format() method on DictationContainers doesn't seem to
+     do this right. More duct tape! More I say!"""
   subs = {".\\period":".",
           ",\\comma":",",
           "?\\question-mark":"?",
