@@ -71,38 +71,6 @@ class ComSat(object):
           sys.stderr.write("Could not connect.\n")
           time.sleep(1)
 
-  def clientMainLoop(self):
-    def connect():
-      while not self.pocket:
-        conn = socket.socket()
-        conn.connect((config.HOST, config.PORT))
-        if conn is not None:
-          sys.stderr.write("client: Client connected.\n")
-          self.pocket = Pocket(conn)
-        else:
-          sys.stderr.write("Could not connect.\n")
-          time.sleep(1)
-
-    try:
-      connect()
-      while True:
-        try:
-          self.process()
-          blocking = yield
-        except socket.error:
-          try:
-            self.pocket.sock.close()
-          except Exception:
-            pass
-          self.pocket = None
-          sys.stderr.write("Lost connection.\n")
-          connect()
-    finally:
-      try:
-        self.pocket.sock.close()
-      except:
-        pass
-
   def process(self):
     tup = self.pocket.recv()
     args = []

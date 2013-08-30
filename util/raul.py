@@ -10,15 +10,24 @@ def processDictation(message):
   subs = {".\\period":".",
           ",\\comma":",",
           "?\\question-mark":"?",
+          "std::\\":"std::",
           ".\\dot":".",
           "!\\exclamation-mark":"!",
           "&\\ampersand":"&",
           "write\\":"write",
           "*\\asterisk":"*",
           "*\\asterisk":"*"}
-  message = str(message)
+  message = str(message).lower()
   for sub in subs.iteritems():
     message = message.replace(*sub)
+
+  while "\\uppercase-letter" in message:
+    i = message.find("\\uppercase-letter")
+    if i > 0:
+      message = message[:i - 1] + message[i - 1].upper() + message[i + 17:]
+    else:
+      message = message[17:]
+
   return message
 
 # hackity hack hack

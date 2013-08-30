@@ -172,11 +172,11 @@ class ScratchMove(CompoundRule):
 class Capitalization(CompoundRule):
   spec = "<cmd> <name>"
   cmd = {"camel":"c", "resolution":"R", "steadily":"s", ".word":".", "score":"_", "capscore":"C_",
-         "up score":"U_", "jumble":"jumble"}
+         "up score":"U_", "jumble":"jumble", "twitter":"twitter", "twit shout":"twitshout"}
   extras = [Choice("cmd", cmd), Dictation("name")]
       
   def _process_recognition(self, node, extras):
-    name = processDictation(extras["name"]).replace("std::\\", "std").split()
+    name = processDictation(extras["name"]).split()
     cmd = extras["cmd"]
     if cmd == "c":
       var = ''.join([name[0]] + [x.capitalize() for x in name[1:]])
@@ -193,7 +193,11 @@ class Capitalization(CompoundRule):
     elif cmd == "R":
       var = '::'.join(name)
     elif cmd == "jumble":
+      var = "".join(name)
+    elif cmd == "twitter":
       var = "".join(name).lower()
+    elif cmd == "twitshout":
+      var = "".join(name).upper()
     with ComSat() as cs:
       cs.getRPCProxy().callText(var)
 
