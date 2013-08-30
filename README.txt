@@ -20,9 +20,7 @@ With many thanks to Tavis Rudd for showing us it was practical for coding...
 Summary
 -------
 
-The code currently is extermly poorly written. I would normally not consider releasing code
-in this shape, but I needed to bootstrap a voice system before rewriting the whole thing
-in Twisted and redoing the NatSpeak modules with what I now know, and wanted it to be available to others in the meantime.
+The code currently is extermly poorly written. I would normally not consider releasing code in this shape, but I needed to bootstrap a voice system before rewriting the whole thing in Twisted and redoing the NatSpeak modules with what I now know, and wanted it to be available to others in the meantime.
 
 1) Get a Virtual Machine and install Windows and Dragon.
 2) Install a bunch of free software on the VM. (Included snapshot, or go online for latest versions)
@@ -67,7 +65,7 @@ Detail
 
 16) I have my modules configured so that they are only active when a notepad window is open on Windows. That way when writing prose I can use Dragon on Windows normally with none of my custom grammar active. Note that Dragon seems to interpret notepad++ as notepad for these purposes.
 
-17) every time you update your modules you will need to turn the microphone off and then back on again for the changes to be visible. Import errors will disable on a module by module basis and will appear in the messages window. In some cases, particularly when modifying one of the modules in util, you will need to exit Dragon and reenter it in order for the changes to appear.
+17) every time you update your modules you will need to say "reload aenea configuration" or run the script of the same name ON WINDOWS. Then turn the microphone off and then back on again for the changes to be visible to Dragon. Import errors will disable on a module by module basis and will appear in the messages window. In some cases, particularly when modifying one of the modules in util, you will need to exit Dragon and reenter it in order for the changes to appear.
 
 18) from time to time, Dragon will pop up stupid Windows that you will need to close in the Windows virtual machine. I have not yet found a way to disable these but I have not looked very hard. They seem to be getting less common as it gets better at listening to me and I get better at speaking to it.
 
