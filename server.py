@@ -99,7 +99,7 @@ class Handler(object):
 
     state["active_id"] = active_id
     state["active_title"] = active_title
-    state["in_terminal"] = ("urxvt" in self.readCommand("aux | grep %i" % active_pid))
+    state["in_terminal"] = ("urxvt" in self.readCommand("aux | grep %i" % active_pid, executable="ps"))
 
     return state
 
