@@ -11,23 +11,45 @@ class VimContext(Context):
 
   def matches(self, executable, title, handle):
     with ComSat() as cs:
-      active_title = cs.getRPCProxy().callGetState()["active_title"].strip().lower()
+      active_title = cs.getRPCProxy().callGetState()["active_title"]
+      if active_title;
+        active_title = active_title.strip().lower()
+      else;
+        return False
+
       return (active_title.startswith("vim ") or active_title.endswith(" vim") or
               " vim " in active_title)
 
 grammar_context = AppContext(executable="notepad") & VimContext()
 grammar = Grammar("vim", context=grammar_context)
 
+class VimSearch(CompoundRule):
+  spec = "vim <cmd> [<number>]"
+  cmd = {"query":"/", "query back":"?",
+         "search":"/", "search back":"?"}
+  extras = [SelfChoice("cmd", cmd), SelfChoice("number", numbers)]
+
+  def _process_recognition(self, node, extras):
+    number = int(numbers.get(str(extras.get("number", "one")), "1"))
+    with ComSat() as cs:
+      rpc = cs.getRPCProxy()
+      rpc.callKeys("Escape")
+      cmd = self.cmd[str(extras["cmd"])]
+      rpc.callText("%i%s" % (number, cmd))
+      if "search" in str(extras["cmd"]):
+        rpc.callKeys(["Return"])
+
 class VimCommand(CompoundRule):
   spec = "vim <cmd>"
-  cmd = ["save", "save and quick", "quit bang", "quit"]
+  cmd = {"write":"w", "write and quit":"wq", "quit bang":"q!", "quit":"q",
+         "undo":"u", "redo":":redo"}
   extras = [SelfChoice("cmd", cmd)]
 
   def _process_recognition(self, node, extras):
     with ComSat() as cs:
       rpc = cs.getRPCProxy()
       rpc.callKeys("Escape")
-      cmd = {"save":"w", "save and quit":"wq", "quit":"q", "quit bang":"q!"}[str(extras["cmd"])]
+      cmd = self.cmd[str(extras["cmd"])]
       rpc.callText(":%s\n" % cmd)
 
 class VIMRule4(CompoundRule):
@@ -42,12 +64,12 @@ class VIMRule4(CompoundRule):
 
 class VIMRule3point5(CompoundRule):
   spec = "<cmd> word"
-  cmd = {"Grab":"y", "Inc.":"y", "Dell":"d"}
-  extras = [Choice("cmd", cmd)]
+  cmd = {"Grab":"y", "Inc.":"y", "Dell":"d", "back dell":"d a"}
+  extras = [SelfChoice("cmd", cmd)]
 
   def _process_recognition(self, node, extras):
     with ComSat() as cs:
-      cs.getRPCProxy().callText("%sw" % extras["cmd"])
+      cs.getRPCProxy().callModifiedKeys("%s w" % self.cmd[str(extras["cmd"])])
         
 class VIMRule3(CompoundRule):
   spec = "<cmd> rest"
@@ -71,8 +93,8 @@ class VIMRule2(CompoundRule):
 class VIMRule(CompoundRule):
   spec = "<number> <cmd>"
   extras = [Choice("cmd", {"J":"j", "K":"k", "H":"h", "L":"l", "P":"p",
-                           "word":"w", "Oscar":"o",
-                           "up Oscar":"O"}), Dictation("number", numbers)]
+                   "word":"w", "Oscar":"o", "go":"G",
+                   "up Oscar":"O"}), Dictation("number", numbers)]
 
   def _process_recognition(self, node, extras):
     number = int(processDictation(numbers[str(extras["number"])]))
@@ -85,6 +107,7 @@ grammar.add_rule(VIMRule2())
 grammar.add_rule(VIMRule3())
 grammar.add_rule(VIMRule3point5())
 grammar.add_rule(VIMRule4())
+grammar.add_rule(VimSearch())
 
 grammar.load()
 

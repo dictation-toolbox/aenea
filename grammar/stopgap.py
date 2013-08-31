@@ -44,7 +44,8 @@ class QuadCommand(CompoundRule):
 class TranslateSpecial(CompoundRule):
   spec = "<cmd>"
   # say: law raw slaw sraw claw craw
-  cmd = {"act":"Escape", "append":"a", "inns":"i", "vim replace":"R", "Kerry":"Home", "dolly":"End"}
+  cmd = {"act":"Escape", "syn":"a", "inns":"i", "vim replace":"R", "Kerry":"Home", "dolly":"End",
+         "care":"Home", "doll":"End", "unslap":"Up End", "termie":"F2"}
   extras = [Choice("cmd", cmd)]
 
   def _process_recognition(self, node, extras):
@@ -53,19 +54,42 @@ class TranslateSpecial(CompoundRule):
 
 class Translate(CompoundRule):
   spec = "<cmd>"
-
-  cmd = {"push":"(", "pop":")", "push push":"((", "pop pop":"))", "slot":"[", "straw":"]", "claw":"{", "draw":"}",
-         "law raw":"()", "slot straw":"[]", "claw draw":"{}", "light":"< ", "right":"> ",
-         "light right":"<>", "typename int":"int ", "assign":"= ",
+ 
+  cmd = {"push":"(", "pop":")", "push push":"((", "pop pop":"))", "slot":"[",
+         "straw":"]", "claw":"{", "draw":"}",
+         "law raw":"()", "slot straw":"[]", "claw draw":"{}", "typename int":"int ", "assign":" = ",
          "equal":"== ", "resolve":"::", "light light":"<< ", "right right":">> ",
          "alpha":"a", "bravo":"b", "charlie":"c", "ace ace":"  ", "slap slap":"\n\n",
          "pie deaf":"def ", "yeah":":", "yeah yeah":"::", "dub quote dub quote":'""',
-         "dub quote dub quote dub quote":'"""', "yep":", ", "yep quote":'", "'}
-  extras = [Choice("cmd", cmd)]
+         "dub quote dub quote dub quote":'"""', "yep":", ", "yep quote":'", "',
+         "dick tia":'":"', "singh dick tia":"':'", "yep singh quote":"', '",
+         "comma slap":",\n", "yeah slap":":\n", "yep slap":",\n", "yep slap quote":"\",\n\"",
+         "yep slap singh quote":"',\n'", "puppy yeah":"):", "puppy yeah slap":"):\n",
+         "yes":";", "yes slap":";\n", "and":" & ", "and and":" && ", "or":" | ",
+         "or or":" || ", "xor":" ^ ", "xor xor":" ^^ ", "bang":"!", "hash bang shell":"#!/bin/sh",
+         "hash bang bash":"#!/bin/sh", "hash bang python":"#!/usr/bin/python",
+         "hash":"#", "ash":"/", "back ash":"\\", "mod":" % ", "plus":" + ",
+         "minus":" - ", "plus assign":" += ", "minus assign":" -= ",
+         "times assign":" *= ", "divide assign":" /= ", "mod assign":" %= ",
+         "times":" * ", "divide":" / ", "pie and":" and ", "pie or":" or ",
+         "if test":"if ", "for loop":"for ", "for loop push":"for (",
+         "ternary if":" if ", "elif":"elif ", "ternary else":" else ",
+         "ternary for":" for ", "do":"do", "do claw":"do {", "while":"while ", "class":"class ",
+         "struct":"struct ", "deaf":"def ", "circle yeah slap":"()\n",
+         "with":"with ", "as":" as ", "import":"import ", "from":"from ",
+         "raise":"raise ", "return":"return ", "None":"None", "try yeah":"try:",
+         "try claw":"try {", "try yeah slap":"try:\n", "try claw slap":"try {\n",
+         "pass":"pass", "pass slap":"pass\n", "else yeah slap":"else:\n",
+         "else yeah":"else:", "except":"except ", "except yeah":"except:",
+         "except yeah slap":"except:\n", "lambda":"lambda ", "assert":"assert ",
+         "assert push":"assert(", "self dot":"self.", "in":" in ", "not":"not ",
+         "home elixir":"/home/alexr", "elixir":"alexr"}
+
+  extras = [SelfChoice("cmd", cmd)]
  
   def _process_recognition(self, node, extras):
     with ComSat() as cs:
-      cs.getRPCProxy().callText(str(extras["cmd"]))
+      cs.getRPCProxy().callText(self.cmd[str(extras["cmd"])])
 
 class DocString(CompoundRule):
   spec = "doc string [<ind>]"
@@ -122,6 +146,10 @@ class ParIndices(CompoundRule):
   def _process_recognition(self, node, extras):
     if "ind" in extras:
       index = processDictation(extras["ind"])
+      if index in ("right", "write"):
+        with ComSat() as cs:
+          cs.getRPCProxy().callText("()")
+          return
     else:
       index = ""
     with ComSat() as cs:
@@ -144,6 +172,37 @@ class ArrayIndices(CompoundRule):
       cs.getRPCProxy().callText("[%s]" % index)
       if not index:
         cs.getRPCProxy().callKeys("Left")
+
+class SquareSingQuote(CompoundRule):
+  spec = "square quote [<ind>]"
+ 
+  extras = [Dictation("ind")]
+
+  def _process_recognition(self, node, extras):
+    if "ind" in extras:
+      index = processDictation(extras["ind"])
+      index = numbers.get(index, index)
+    else:
+      index = ""
+    with ComSat() as cs:
+      cs.getRPCProxy().callText("['%s']" % index)
+      if not index:
+        cs.getRPCProxy().callKeys("Left Left")
+class SquareQuote(CompoundRule):
+  spec = "square quote [<ind>]"
+ 
+  extras = [Dictation("ind")]
+
+  def _process_recognition(self, node, extras):
+    if "ind" in extras:
+      index = processDictation(extras["ind"])
+      index = numbers.get(index, index)
+    else:
+      index = ""
+    with ComSat() as cs:
+      cs.getRPCProxy().callText("[\"%s\"]" % index)
+      if not index:
+        cs.getRPCProxy().callKeys("Left Left")
 
 class ScratchMove(CompoundRule):
   spec = "<cmd> [<ind>]"
@@ -168,11 +227,12 @@ class ScratchMove(CompoundRule):
       cmd = "^apostrophe"
     with ComSat() as cs:
       cs.getRPCProxy().callModifiedKeys((cmd + " ") * index)
-      
+
 class Capitalization(CompoundRule):
   spec = "<cmd> <name>"
   cmd = {"camel":"c", "resolution":"R", "steadily":"s", ".word":".", "score":"_", "capscore":"C_",
-         "up score":"U_", "jumble":"jumble", "twitter":"twitter", "twit shout":"twitshout"}
+         "up score":"U_", "jumble":"jumble", "twitter":"twitter", "twit shout":"twitshout",
+         "path":"path", "abs path":"abs path", "foma":"foma"}
   extras = [Choice("cmd", cmd), Dictation("name")]
       
   def _process_recognition(self, node, extras):
@@ -186,6 +246,10 @@ class Capitalization(CompoundRule):
       var = '.'.join(name).lower()
     elif cmd == "_":
       var = '_'.join(name).lower()
+    elif cmd == "path":
+      var = '/'.join(name)
+    elif cmd == "abs path":
+      var = '/' + '/'.join(name)
     elif cmd == "C_":
       var = '_'.join([x.capitalize() for x in name])
     elif cmd == "U_":
@@ -194,6 +258,8 @@ class Capitalization(CompoundRule):
       var = '::'.join(name)
     elif cmd == "jumble":
       var = "".join(name)
+    elif cmd == "foma":
+      var = "".join(word.split("\\")[0] for word in name)
     elif cmd == "twitter":
       var = "".join(name).lower()
     elif cmd == "twitshout":
@@ -299,6 +365,8 @@ grammar.add_rule(DubDocString())
 grammar.add_rule(DocString())
 grammar.add_rule(ScratchMove())
 grammar.add_rule(TemplateIndices())
+grammar.add_rule(SquareQuote())
+grammar.add_rule(SquareSingQuote())
 grammar.add_rule(TBJunk())
 grammar.add_rule(QuadCommand())
 grammar.add_rule(MouseClick())

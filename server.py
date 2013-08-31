@@ -16,7 +16,7 @@ class Handler(object):
   def readCommand(command, executable="xdotool"):
     with os.popen("%s %s" % (executable, command), "r") as fd:
       rval = fd.read()
-    sys.stderr.write("%s %s > %s\n" % (executable, command, rval))
+#    sys.stderr.write("%s %s > %s\n" % (executable, command, rval))
     return rval
   
   @staticmethod
@@ -47,9 +47,13 @@ class Handler(object):
 
   def callGetActiveWindow(self):
     """Returns the window id and title of the active window."""
-    window_id = int(self.readCommand("getactivewindow"))
-    window_title = self.readCommand("getwindowname %ii" % window_id)
-    return window_id, window_title
+    window_id = self.readCommand("getactivewindow")
+    if window_id:
+      window_id = int(window_id)
+      window_title = self.readCommand("getwindowname %i" % window_id)
+      return window_id, window_title
+    else:
+      return None, None
 
   def callSetIonWorkspace(self, workspace):
     """Set the current ion workspace to a number from 1 to 6"""
@@ -77,6 +81,8 @@ class Handler(object):
         command.extend(("keydown Shift", "key " + key[1:], "keyup Shift"))
       elif key.startswith("&"):
         command.extend(("keydown Alt_L", "key " + key[1:], "keyup Alt_L"))
+      elif key.startswith("*"):
+        command.extend(("keydown Control_L", "key " + key[1:], "keyup Control_L"))
       else:
         command.append("key " + key)
 
@@ -94,12 +100,15 @@ class Handler(object):
   def callGetState(self):
     state = self.state.copy()
     active_id, active_title = self.callGetActiveWindow()
-    #todo, try to do this more generally
-    active_pid = int(self.callRaw(["getwindowpid %i" % active_id]))
 
     state["active_id"] = active_id
     state["active_title"] = active_title
-    state["in_terminal"] = ("urxvt" in self.readCommand("aux | grep %i" % active_pid, executable="ps"))
+
+    if active_id:
+      active_pid = int(self.callRaw(["getwindowpid %i" % active_id]))
+      state["in_terminal"] = ("urxvt" in self.readCommand("aux | grep %i" % active_pid, executable="ps"))
+    else:
+      state["in_terminal"] = False
 
     return state
 
