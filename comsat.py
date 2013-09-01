@@ -41,17 +41,20 @@ class ComSat(object):
       self.sock.setblocking(True)
   
       while True:
-        self.pocket = Pocket(self.sock.accept()[0])
-        sys.stderr.write("server: Client connected.\n")
         try:
-          while True:
-            self.process()
-            yield
-        except socket.error:
-          sys.stderr.write("Lost connection.\n")
+          self.pocket = Pocket(self.sock.accept()[0])
+          sys.stderr.write("server: Client connected.\n")
+          try:
+            while True:
+              self.process()
+              yield
+          except socket.error:
+            sys.stderr.write("Lost connection.\n")
+        finally:
+          self.pocket.sock.close()
     finally:
       try:
-        self.pocket.sock.close()
+        self.sock.close()
       except:
         pass
 

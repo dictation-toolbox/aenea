@@ -12,9 +12,9 @@ class VimContext(Context):
   def matches(self, executable, title, handle):
     with ComSat() as cs:
       active_title = cs.getRPCProxy().callGetState()["active_title"]
-      if active_title;
+      if active_title:
         active_title = active_title.strip().lower()
-      else;
+      else:
         return False
 
       return (active_title.startswith("vim ") or active_title.endswith(" vim") or

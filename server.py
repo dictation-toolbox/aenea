@@ -105,7 +105,10 @@ class Handler(object):
     state["active_title"] = active_title
 
     if active_id:
-      active_pid = int(self.callRaw(["getwindowpid %i" % active_id]))
+      try:
+        active_pid = int(self.callRaw(["getwindowpid %i" % active_id]))
+      except:
+        active_pid = -1
       state["in_terminal"] = ("urxvt" in self.readCommand("aux | grep %i" % active_pid, executable="ps"))
     else:
       state["in_terminal"] = False

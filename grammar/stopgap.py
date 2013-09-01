@@ -59,13 +59,13 @@ class Translate(CompoundRule):
          "straw":"]", "claw":"{", "draw":"}",
          "law raw":"()", "slot straw":"[]", "claw draw":"{}", "typename int":"int ", "assign":" = ",
          "equal":"== ", "resolve":"::", "light light":"<< ", "right right":">> ",
-         "alpha":"a", "bravo":"b", "charlie":"c", "ace ace":"  ", "slap slap":"\n\n",
+         "ace ace":"  ", "slap slap":"\n\n",
          "pie deaf":"def ", "yeah":":", "yeah yeah":"::", "dub quote dub quote":'""',
          "dub quote dub quote dub quote":'"""', "yep":", ", "yep quote":'", "',
          "dick tia":'":"', "singh dick tia":"':'", "yep singh quote":"', '",
          "comma slap":",\n", "yeah slap":":\n", "yep slap":",\n", "yep slap quote":"\",\n\"",
          "yep slap singh quote":"',\n'", "puppy yeah":"):", "puppy yeah slap":"):\n",
-         "yes":";", "yes slap":";\n", "and":" & ", "and and":" && ", "or":" | ",
+         "and":" & ", "and and":" && ", "or":" | ",
          "or or":" || ", "xor":" ^ ", "xor xor":" ^^ ", "bang":"!", "hash bang shell":"#!/bin/sh",
          "hash bang bash":"#!/bin/sh", "hash bang python":"#!/usr/bin/python",
          "hash":"#", "ash":"/", "back ash":"\\", "mod":" % ", "plus":" + ",
@@ -83,13 +83,21 @@ class Translate(CompoundRule):
          "else yeah":"else:", "except":"except ", "except yeah":"except:",
          "except yeah slap":"except:\n", "lambda":"lambda ", "assert":"assert ",
          "assert push":"assert(", "self dot":"self.", "in":" in ", "not":"not ",
-         "home elixir":"/home/alexr", "elixir":"alexr"}
+         "home elixir":"/home/alexr", "elixir":"alexr", "oop":"."}
 
   extras = [SelfChoice("cmd", cmd)]
  
   def _process_recognition(self, node, extras):
     with ComSat() as cs:
       cs.getRPCProxy().callText(self.cmd[str(extras["cmd"])])
+
+class PythonPrivate(CompoundRule):
+  spec = "pie priv"
+
+  def _process_recognition(self, node, extras):
+    with ComSat() as cs:
+      cs.getRPCProxy().callText("____")
+      cs.getRPCProxy().callKeys(["Left ", "Left"])
 
 class DocString(CompoundRule):
   spec = "doc string [<ind>]"
@@ -377,6 +385,7 @@ grammar.add_rule(TBBodyPane())
 grammar.add_rule(IonTwinkle())
 grammar.add_rule(IonFlipFlop())
 grammar.add_rule(IonTab())
+grammar.add_rule(PythonPrivate())
 
 #---------------------------------------------------------------------------
 # Load the grammar instance and define how to unload it.
