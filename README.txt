@@ -13,7 +13,7 @@ With many thanks to Tavis Rudd for showing us it was practical for coding...
 ...and to Joel Gould and NatLink for making it possible...
 ...and to Christo Butcher and Dragonfly for making it easy...
 ...and to Nuance for being so awesomly hack friendly...
-   (even if it means we have to write the context free grammars ourselves :-) )
+   (even if it means we have to write the grammars ourselves :-) )
 
 -------------------------------------------------------------------------------------------
 
@@ -72,3 +72,12 @@ Detail
 19) It would be wise to change the VirtualBox network adapter to host only to isolate your VM from the internet, given it's basically a keylogger...and let's be honest here; you're not going to keep that box up to date.
 
 20) Choose Again.
+
+-------------------------------------------------------------------------------------------
+
+Musings on the "quality"of the current code
+------------------------------------------
+
+"Technological advance is an inherently iterative process. One does not simply take sand from the beach and produce a Dataprobe. We use crude tools to fashion better tools, and then our better tools to fashion more precise tools, and so on. Each minor refinement is a step in the process, and all of the steps must be taken. "
+— Chairman Sheng-ji Yang "Looking God in the Eye"
+  Sid Meier's Alpha Centauri

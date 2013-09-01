@@ -25,6 +25,17 @@ class MetaKey(CompoundRule):
                  [("keyup %s" % mod) for mod in modifiers])
       connection.getRPCProxy().callRaw(actions)
 
+class UpperKeypress(CompoundRule):
+  spec = "upper <key>"
+
+  letter = SelfChoice("key", ALPHANUMERIC)
+  extras = [letter]
+
+  def _process_recognition(self, node, extras):
+    key = ALPHANUMERIC[str(extras["key"])]
+    with ComSat() as connection:
+      connection.getRPCProxy().callText(key.upper())
+
 class Keypress(CompoundRule):
   spec = "<key>"
 
@@ -50,6 +61,7 @@ class SpellingBee(CompoundRule):
 grammar.add_rule(SpellingBee())
 grammar.add_rule(MetaKey())
 grammar.add_rule(Keypress())
+grammar.add_rule(UpperKeypress())
 
 grammar.load()
 

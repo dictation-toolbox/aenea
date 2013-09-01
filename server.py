@@ -57,7 +57,7 @@ class Handler(object):
 
   def callSetIonWorkspace(self, workspace):
     """Set the current ion workspace to a number from 1 to 6"""
-    mapping = [1, 2, 3, "apostrophe", "comma", "period"]
+    mapping = [1, 2, 3, "apostrophe", "comma", "period", "space"]
     self.callModifiedKeys(["&" + str(mapping[workspace - 1])])
 
   def callSetIonTab(self, tab):

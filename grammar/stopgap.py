@@ -76,7 +76,7 @@ class Translate(CompoundRule):
          "ternary if":" if ", "elif":"elif ", "ternary else":" else ",
          "ternary for":" for ", "do":"do", "do claw":"do {", "while":"while ", "class":"class ",
          "struct":"struct ", "deaf":"def ", "circle yeah slap":"()\n",
-         "with":"with ", "as":" as ", "import":"import ", "from":"from ",
+         "with context":"with ", "as":" as ", "import":"import ", "from":"from ",
          "raise":"raise ", "return":"return ", "None":"None", "try yeah":"try:",
          "try claw":"try {", "try yeah slap":"try:\n", "try claw slap":"try {\n",
          "pass":"pass", "pass slap":"pass\n", "else yeah slap":"else:\n",
@@ -338,7 +338,7 @@ class IonFlipFlop(CompoundRule):
       cs.getRPCProxy().callModifiedKeys(["&" + flip])
       
 class IonTab(CompoundRule):
-  spec = "flip <tab>"
+  spec = "[frame | flip] <tab>"
   tab = ["zero", "one", "two", "too", "to", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
   extras = [SelfChoice("tab", tab)]
 
@@ -350,10 +350,10 @@ class IonTab(CompoundRule):
       cs.getRPCProxy().callSetIonTab(tab)
       
 class IonTwinkle(CompoundRule):
-  spec = "work <workspace>"
+  spec = "[twinkle | work] <workspace>"
   workspace = ["one", "to", "too", "two", "three", "four", "five", "six"]
   whimsical = {"quebec":"4", "whiskey":"5", "echo":"6",
-               "organ":"4", "bird":"5", "miss":"6"}
+               "organ":"4", "bird":"5", "miss":"6", "pad":"7"}
   extras = [SelfChoice("workspace", workspace + whimsical.keys())]
 
   def _process_recognition(self, node, extras):

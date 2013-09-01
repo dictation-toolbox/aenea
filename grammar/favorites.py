@@ -7,8 +7,7 @@ from raul import SelfChoice
 grammar_context = AppContext(executable="notepad")
 grammar = Grammar("favorites", context=grammar_context)
 
-favorites = {"dir":
-    {"downloads":"/home/alexr/Downloads",
+favorites =  {"downloads":"/home/alexr/Downloads",
      "home":"/home/alexr",
      "projects":"/home/alexr/projects",
      "media":"/home/alexr/media",
@@ -17,17 +16,15 @@ favorites = {"dir":
      "expire":"/home/alexr/expire",
      "norgan":"/home/alexr/norgan",
      "business fake bio":"/home/alexr/business/fakebio",
-     "norgan keys":"/home/alexr/norgan/keys"}}
+     "norgan keys":"/home/alexr/norgan/keys"}
 
 class Favorites(CompoundRule):
-  spec = "fave [kind] [key]"
+  spec = "fave  <key>"
 
-  extras = [SelfChoice("kind", favorites),
-            SelfChoice("key", favorites["dir"])]
+  extras = [SelfChoice("key", favorites)]
 
   def _process_recognition(self, node, extras):
-    value = favorites[extras["kind"]][extras["key"]]
-
+    value = favorites[str(extras["key"])]
     with ComSat() as connection:
       connection.getRPCProxy().callText(value)
 

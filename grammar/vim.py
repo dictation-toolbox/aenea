@@ -23,6 +23,28 @@ class VimContext(Context):
 grammar_context = AppContext(executable="notepad") & VimContext()
 grammar = Grammar("vim", context=grammar_context)
 
+class EasyMotion(CompoundRule):
+  spec = "<command> [<end>] [<inout>]"
+  command = SelfChoice("command", ["leap", "jump"])
+  end = SelfChoice("end", ["start", "end"])
+  inout = SelfChoice("inout", ["in", "out"])
+
+  extras = [command, end, inout]
+
+  def _process_recognition(self, node, extras):
+    command = str(extras["command"])
+    location = str(extras.get("end", "start"))
+    inout = str(extras.get("inout", "in"))
+
+    shortcut = {("leap", "start"):"b",
+                ("leap", "end"):"ge",
+                ("jump", "start"):"w",
+                ("jump", "end"):"e"}[(command, location)]
+
+    with ComSat() as cs:
+      rpc = cs.getRPCProxy()
+      rpc.callKeys("Escape backslash backslash " + shortcut)
+
 class VimSearch(CompoundRule):
   spec = "vim <cmd> [<number>]"
   cmd = {"query":"/", "query back":"?",
@@ -101,6 +123,7 @@ class VIMRule(CompoundRule):
     with ComSat() as cs:
       cs.getRPCProxy().callText("%i%s" % (number, extras["cmd"]))
 
+grammar.add_rule(EasyMotion())
 grammar.add_rule(VIMRule())
 grammar.add_rule(VimCommand())
 grammar.add_rule(VIMRule2())
