@@ -12,7 +12,7 @@ grammar_context = AppContext(executable="notepad")
 grammar = Grammar("notepad_example", context=grammar_context)
 
 class MouseClick(CompoundRule):
-  spec = "zap [<cmd>]"
+  spec = "click [<cmd>]"
   cmd = ["one", "two", "to", "too", "three"]
   extras = [SelfChoice("cmd", cmd)]
 
@@ -45,12 +45,12 @@ class TranslateSpecial(CompoundRule):
   spec = "<cmd>"
   # say: law raw slaw sraw claw craw
   cmd = {"act":"Escape", "syn":"a", "inns":"i", "vim replace":"R", "Kerry":"Home", "dolly":"End",
-         "care":"Home", "doll":"End", "unslap":"Up End", "termie":"F2"}
+         "care":"Home", "doll":"End", "termie":"Super_L Return"}
   extras = [Choice("cmd", cmd)]
 
   def _process_recognition(self, node, extras):
     with ComSat() as cs:
-      cs.getRPCProxy().callKeys(str(extras["cmd"]).split())
+      cs.getRPCProxy().callKeyStack(str(extras["cmd"]).split())
 
 class Translate(CompoundRule):
   spec = "<cmd>"
@@ -267,7 +267,7 @@ class Capitalization(CompoundRule):
     elif cmd == "jumble":
       var = "".join(name)
     elif cmd == "foma":
-      var = "".join(word.split("\\")[0] for word in name)
+      var = " ".join(word.split("\\")[0] for word in name)
     elif cmd == "twitter":
       var = "".join(name).lower()
     elif cmd == "twitshout":
@@ -326,43 +326,43 @@ class TBInbox(CompoundRule):
         cs.getRPCProxy().callPhantomClick(*self.coords[location])
       cs.getRPCProxy().callPhantomClick(400, 130, phantom=False)
 
-class IonFlipFlop(CompoundRule):
-  spec = "<flip>"
-  flip = ["flip", "flop"]
-  extras = [SelfChoice("flip", flip)]
-
-  def _process_recognition(self, node, extras):
-    flip = str(extras["flip"])
-    flip = {"flip":"Tab", "flop":"p"}[flip]
-    with ComSat() as cs:
-      cs.getRPCProxy().callModifiedKeys(["&" + flip])
-      
-class IonTab(CompoundRule):
-  spec = "[frame | flip] <tab>"
-  tab = ["zero", "one", "two", "too", "to", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
-  extras = [SelfChoice("tab", tab)]
-
-  def _process_recognition(self, node, extras):
-    tab = str(extras["tab"])
-    tab = int(numbers.get(tab, tab))
-       
-    with ComSat() as cs:
-      cs.getRPCProxy().callSetIonTab(tab)
-      
-class IonTwinkle(CompoundRule):
-  spec = "[twinkle | work] <workspace>"
-  workspace = ["one", "to", "too", "two", "three", "four", "five", "six"]
-  whimsical = {"quebec":"4", "whiskey":"5", "echo":"6",
-               "organ":"4", "bird":"5", "miss":"6", "pad":"7"}
-  extras = [SelfChoice("workspace", workspace + whimsical.keys())]
-
-  def _process_recognition(self, node, extras):
-    workspace = str(extras["workspace"])
-    workspace = self.whimsical.get(workspace, workspace)
-    workspace = int(numbers.get(workspace, workspace))
-       
-    with ComSat() as cs:
-      cs.getRPCProxy().callSetIonWorkspace(workspace)
+#class IonFlipFlop(CompoundRule):
+#  spec = "<flip>"
+#  flip = ["flip", "flop"]
+#  extras = [SelfChoice("flip", flip)]
+#
+#  def _process_recognition(self, node, extras):
+#    flip = str(extras["flip"])
+#    flip = {"flip":"Tab", "flop":"p"}[flip]
+#    with ComSat() as cs:
+#      cs.getRPCProxy().callModifiedKeys(["&" + flip])
+#      
+#class IonTab(CompoundRule):
+#  spec = "[frame | flip] <tab>"
+#  tab = ["zero", "one", "two", "too", "to", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+#  extras = [SelfChoice("tab", tab)]
+#
+#  def _process_recognition(self, node, extras):
+#    tab = str(extras["tab"])
+#    tab = int(numbers.get(tab, tab))
+#       
+#    with ComSat() as cs:
+#      cs.getRPCProxy().callSetIonTab(tab)
+#      
+#class IonTwinkle(CompoundRule):
+#  spec = "[twinkle | work] <workspace>"
+#  workspace = ["one", "to", "too", "two", "three", "four", "five", "six"]
+#  whimsical = {"quebec":"4", "whiskey":"5", "echo":"6",
+#               "organ":"4", "bird":"5", "miss":"6", "pad":"7"}
+#  extras = [SelfChoice("workspace", workspace + whimsical.keys())]
+#
+#  def _process_recognition(self, node, extras):
+#    workspace = str(extras["workspace"])
+#    workspace = self.whimsical.get(workspace, workspace)
+#    workspace = int(numbers.get(workspace, workspace))
+#       
+#    with ComSat() as cs:
+#      cs.getRPCProxy().callSetIonWorkspace(workspace)
 
 grammar.add_rule(Translate())
 grammar.add_rule(TranslateSpecial())
@@ -382,9 +382,9 @@ grammar.add_rule(TBNotJunk())
 grammar.add_rule(Capitalization())
 grammar.add_rule(TBInbox())
 grammar.add_rule(TBBodyPane())
-grammar.add_rule(IonTwinkle())
-grammar.add_rule(IonFlipFlop())
-grammar.add_rule(IonTab())
+#grammar.add_rule(IonTwinkle())
+#grammar.add_rule(IonFlipFlop())
+#grammar.add_rule(IonTab())
 grammar.add_rule(PythonPrivate())
 
 #---------------------------------------------------------------------------

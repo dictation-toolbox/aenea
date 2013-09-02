@@ -117,7 +117,8 @@ class SimpleCommand(CompoundRule):
              "apt get dist upgrade":"apt-get dist-upgrade",
              "apt get install":"apt-get install", "pea socks":"ps aux | grep -i",
              "screen resume":"screen -r", "screen list":"screen -li",
-             "screen start":"screen", "load key map":"xmodmap ~/.keymap"}
+             "screen start":"screen", "load key map":"xmodmap ~/.keymap",
+             "tab slap":"\t\n"}
 
   extras = [SelfChoice("command", commands), SelfChoice("sudo", ["sudo"])]
 

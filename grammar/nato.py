@@ -11,7 +11,8 @@ class MetaKey(CompoundRule):
   spec = "<modifiers> <key>"
 
   modifier_keys = {"control":"Control_L", "altar":"Alt_L",
-                   "shift":"Shift_L", "vorpal":"Hyper_L"}
+                   "shift":"Shift_L", "vorpal":"Hyper_L",
+                   "zach":"Super_R"}
   modifier = SelfChoice("modifier", modifier_keys)
 
   extras = [Repetition(modifier, name="modifiers", max=4),

@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
-import comsat, sys, os, time
+import comsat, sys, os, time, random
+
+for i in range(random.randint(1, 10)):
+  print
 
 class Handler(object):
   def __init__(self):
@@ -39,8 +42,16 @@ class Handler(object):
     else:
       self.runCommand("mousemove_relative %i %i" % (x, y))
 
+  def callKeyStack(self, keys):
+    """Presses keys in the order specified, then releases them in the opposite order."""
+    if isinstance(keys, basestring):
+      keys = keys.split()
+    push = ["keydown %s" % key for key in keys]
+    pop = ["keyup %s" % key for key in reversed(keys)]
+    self.callRaw(push + pop)
+
   def callKeys(self, keys):
-    """Presses keys, then releases them in opposite order."""
+    """Presses keys in sequence."""
     if isinstance(keys, basestring):
       keys = keys.split()
     self.runCommand(' '.join("key %s" % key for key in keys))
@@ -109,7 +120,8 @@ class Handler(object):
         active_pid = int(self.callRaw(["getwindowpid %i" % active_id]))
       except:
         active_pid = -1
-      state["in_terminal"] = ("urxvt" in self.readCommand("aux | grep %i" % active_pid, executable="ps"))
+      psocks = self.readCommand("aux | grep %i" % active_pid, executable="ps")
+      state["in_terminal"] = ("urxvt" in psocks or "xfce4-terminal" in psocks)
     else:
       state["in_terminal"] = False
 

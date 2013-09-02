@@ -43,13 +43,14 @@ class ComSat(object):
       while True:
         try:
           self.pocket = Pocket(self.sock.accept()[0])
-          sys.stderr.write("server: Client connected.\n")
+#          sys.stderr.write("server: Client connected.\n")
           try:
             while True:
               self.process()
               yield
           except socket.error:
-            sys.stderr.write("Lost connection.\n")
+            pass
+#            sys.stderr.write("Lost connection.\n")
         finally:
           self.pocket.sock.close()
     finally:
@@ -68,7 +69,7 @@ class ComSat(object):
         conn = socket.socket()
         conn.connect((host, config.PORT))
         if conn is not None:
-          sys.stderr.write("client: Client connected.\n")
+#          sys.stderr.write("client: Client connected.\n")
           self.pocket = Pocket(conn)
         else:
           sys.stderr.write("Could not connect.\n")
@@ -84,6 +85,8 @@ class ComSat(object):
       cmd, args = tup
     else:
       cmd, args, kw = tup
+
+    print cmd, args
 
     if not cmd.startswith("call"):
       sys.stderr.write("Illegal cmd %s.\n" % cmd)
