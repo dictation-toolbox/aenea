@@ -1,7 +1,10 @@
-from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal)
+from dragonfly import (Grammar, Key, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, RuleRef)
 import natlink, os
 
+from proxy_actions import *
+
 from comsat import ComSat
+import actions
 
 from raul import SelfChoice, processDictation, NUMBERS as numbers
 
@@ -68,7 +71,7 @@ class Translate(CompoundRule):
          "and":" & ", "and and":" && ", "or":" | ",
          "or or":" || ", "xor":" ^ ", "xor xor":" ^^ ", "bang":"!", "hash bang shell":"#!/bin/sh",
          "hash bang bash":"#!/bin/sh", "hash bang python":"#!/usr/bin/python",
-         "hash":"#", "ash":"/", "back ash":"\\", "mod":" % ", "plus":" + ",
+         "pound":"#", "ash":"/", "back ash":"\\", "mod":" % ", "plus":" + ",
          "minus":" - ", "plus assign":" += ", "minus assign":" -= ",
          "times assign":" *= ", "divide assign":" /= ", "mod assign":" %= ",
          "times":" * ", "divide":" / ", "pie and":" and ", "pie or":" or ",
@@ -109,6 +112,7 @@ class DocString(CompoundRule):
       index = processDictation(extras["ind"])
     else:
       index = ""
+    Key("H, i").execute()
     with ComSat() as cs:
       ds = "'''"
       cs.getRPCProxy().callText("%s%s%s" % (ds, index, ds))
@@ -130,7 +134,7 @@ class DubDocString(CompoundRule):
       cs.getRPCProxy().callText("%s%s%s" % (ds, index, ds))
       if not index:
         cs.getRPCProxy().callKeys("Left " * 3)
-      
+
 class TemplateIndices(CompoundRule):
   spec = "diamond [<ind>]"
 
@@ -196,6 +200,7 @@ class SquareSingQuote(CompoundRule):
       cs.getRPCProxy().callText("['%s']" % index)
       if not index:
         cs.getRPCProxy().callKeys("Left Left")
+
 class SquareQuote(CompoundRule):
   spec = "square quote [<ind>]"
  
@@ -368,7 +373,7 @@ grammar.add_rule(Translate())
 grammar.add_rule(TranslateSpecial())
 grammar.add_rule(ArrayIndices())
 grammar.add_rule(ParIndices())
-grammar.add_rule(LetMeTalk())
+grammar.add_rule(LetMeTalk()) 
 grammar.add_rule(DubDocString())
 grammar.add_rule(DocString())
 grammar.add_rule(ScratchMove())
