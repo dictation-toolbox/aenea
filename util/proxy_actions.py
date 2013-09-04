@@ -40,8 +40,12 @@ class ProxyBase(object):
 # Key
 
 def _get_key_symbols():
-  with open("keys.txt") as keyfile:
-    return [line.strip() for line in keyfile]
+  try:
+    with open("keys.txt") as keyfile:
+      return [line.strip() for line in keyfile]
+  except:
+    with open("C:\\NatLink\\NatLink\\MacroSystem\\keys.txt") as keyfile:
+      return [line.strip() for line in keyfile]
 
 _modifier_keys = {
         "a": "Alt_L",

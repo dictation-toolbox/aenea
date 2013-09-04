@@ -2,8 +2,12 @@
 
 import comsat, sys, os, time, random
 
+# to help see when the server has started while in a bash loop
 for i in range(random.randint(1, 10)):
   print
+
+
+XDOTOOL_COMMAND_BREAK = set(("text",))
 
 class Handler(object):
   def __init__(self):
@@ -126,6 +130,34 @@ class Handler(object):
       state["in_terminal"] = False
 
     return state
+
+  def callGetGeometry(self, window_id=None):
+    if window_id is None:
+      window_id, _ = self.callGetActiveWindow()
+    geo = dict([val.lower() for val in line.split("=")]
+               for line in self.readCommand(("getwindowgeometry --shell %i"
+                                             % window_id)).strip().split("\n"))
+    geo = dict((key, int(value)) for (key, value) in geo.iteritems())
+    return geo["x"], geo["y"], geo["width"], geo["height"], geo["screen"]
+
+  def _transform_relative_mouse_event(self, event):
+    x, y, width, height, screen = self.callGetGeometry()
+    dx, dy = map(int, map(float, event.split()[1:]))
+    return ["mousemove %i %i" % (x + dx, y + dy)]
+
+  def callEvents(self, events):
+    transformed_events = [[]]
+    for event in events:
+      if event.startswith("mousemove_active"):
+        transformed_events[-1].extend(self._transform_relative_mouse_event(event))
+      elif event.split()[0] in XDOTOOL_COMMAND_BREAK:
+        transformed_events[-1].append(event)
+        transformed_events.append([])
+      else:
+        transformed_events[-1].append(event)
+
+    for events in transformed_events:
+      self.callRaw(events)
 
 cs = comsat.ComSat()
 cs.handlers.append(Handler())
