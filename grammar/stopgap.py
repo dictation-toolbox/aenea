@@ -1,6 +1,8 @@
 from dragonfly import (Grammar, Key, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, RuleRef)
 import natlink, os
 
+from proxy_contexts import *
+
 from proxy_actions import *
 
 from comsat import ComSat

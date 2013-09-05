@@ -18,18 +18,21 @@ class ProxyAppContext(dragonfly.Context):
                window_class_name = None,
                max_depth = None,
                visible = None,
+               name = None,
                pid = None,
                screen = None,
                desktop = None):
     arguments = []
     if window_class is not None:
-      arguments.append("class " + window_class)
+      arguments.append("class \"%s\"" % window_class.replace('"', '\"'))
     if window_class_name is not None:
-      arguments.append("classname " + window_class_name)
+      arguments.append("classname \"%s\"" % window_class_name.replace('"', '\"'))
     if max_depth is not None:
       arguments.append("maxdepth %i" % int(max_depth))
     if visible is not None:
       arguments.append("onlyvisible")
+    if name is not None:
+      arguments.append("name \"%s\"" % name.replace('"', '\"'))
     if pid is not None:
       arguments.append("pid %i" % int(pid))
     if screen is not None:
@@ -41,16 +44,16 @@ class ProxyAppContext(dragonfly.Context):
     self.arguments = ["--%s" % argument for argument in arguments]
     self._custom_parse()
 
-    def _custom_parse(self):
-      pass
+  def _custom_parse(self):
+    pass
 
-    def _get_proxy_matches(self):
-      with communications as proxy:
-        response = proxy.callReadRawCommand("search " + " ".join(self.arguments))
-        window_id, window_title = proxy.callGetActiveWindow()
-        return ([window_id for window_id in response.split("\n") if window_id.strip()],
-                window_id,
-                window_title)
+  def _get_proxy_matches(self):
+    with communications as proxy:
+      response = proxy.callReadRawCommand("search " + " ".join(self.arguments))
+      window_id, window_title = proxy.callGetActiveWindow()
+      return ([window_id for window_id in response.split("\n") if window_id.strip()],
+              window_id,
+              window_title)
 
   def matches(self, windows_executable, windows_title, windows_handle):
     matching_windows, window_id, window_title = self._get_proxy_matches()

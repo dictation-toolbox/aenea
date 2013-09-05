@@ -65,7 +65,7 @@ class Handler(object):
     window_id = self.readCommand("getactivewindow")
     if window_id:
       window_id = int(window_id)
-      window_title = self.readCommand("getwindowname %i" % window_id)
+      window_title = self.readCommand("getwindowname %i" % window_id).strip()
       return window_id, window_title
     else:
       return None, None
@@ -159,7 +159,7 @@ class Handler(object):
     for events in transformed_events:
       self.callRaw(events)
 
-  def callReadRawEvent(self, event):
+  def callReadRawCommand(self, event):
     return self.readCommand(event)
 
 cs = comsat.ComSat()
