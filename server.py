@@ -159,6 +159,9 @@ class Handler(object):
     for events in transformed_events:
       self.callRaw(events)
 
+  def callReadRawEvent(self, event):
+    return self.readCommand(event)
+
 cs = comsat.ComSat()
 cs.handlers.append(Handler())
 

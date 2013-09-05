@@ -79,7 +79,7 @@ class TestActions(unittest.TestCase):
     self.assertEqual(parse("right"), ["click 3"])
 
     self.assertEqual(parse("wheelup:5"), ["click 4"] * 5)
-    self.assertEqual(parse("wheelup:5/9"), ["click 4", "sleep 0.9"] * 5)
+    self.assertEqual(parse("wheelup:5/9"), ["click 4", "sleep %f" % 0.9] * 5)
 
   def test_mouse_drag(self):
     parse = partial(self.get_events, ProxyMouse)

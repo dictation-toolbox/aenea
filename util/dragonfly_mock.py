@@ -4,3 +4,6 @@ class DynStrActionBase(object):
 
   def execute(self):
     self._execute_events(self.actions)
+
+class Context(object):
+  pass
