@@ -8,7 +8,6 @@ grammar = Grammar("reload_configuration", context=grammar_context)
 class ReloadConfiguration(CompoundRule):
   spec = "reload aenea configuration"
   extras = []
-  print "Reloading stopgap."
 
   def _process_recognition(self, node, extras):
     with ComSat() as cs:

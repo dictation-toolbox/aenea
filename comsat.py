@@ -86,8 +86,6 @@ class ComSat(object):
     else:
       cmd, args, kw = tup
 
-    print cmd, args
-
     if not cmd.startswith("call"):
       sys.stderr.write("Illegal cmd %s.\n" % cmd)
     else:

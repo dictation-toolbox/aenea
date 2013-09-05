@@ -11,7 +11,6 @@ class ShellContext(Context):
 
   def matches(self, executable, title, handle):
     with ComSat() as cs:
-      print cs.getRPCProxy().callGetState()["in_terminal"]
       return cs.getRPCProxy().callGetState()["in_terminal"]
 
 grammar_context = (AppContext(executable="notepad") & ShellContext()) & (~vim.VimContext())
