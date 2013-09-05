@@ -14,11 +14,11 @@ class ProxyAppContext(dragonfly.Context):
   """matches based on the properties of the currently active window.
      use subclasses ProxyAppContextOr, ProxyAppContextAnd."""
   def __init__(self,
+               name = None,
                window_class = None,
                window_class_name = None,
                max_depth = None,
                visible = None,
-               name = None,
                pid = None,
                screen = None,
                desktop = None):
@@ -39,10 +39,11 @@ class ProxyAppContext(dragonfly.Context):
       arguments.append("screen %i" % int(screen))
     if desktop is not None:
       arguments.append("desktop %i" % int(desktop))
+    assert len(arguments) == 1
     dragonfly.Context.__init__(self)
-    self._str = "proxy app context"
     self.arguments = ["--%s" % argument for argument in arguments]
     self._custom_parse()
+    self._str = "".join(self.arguments)
 
   def _custom_parse(self):
     pass
@@ -51,7 +52,7 @@ class ProxyAppContext(dragonfly.Context):
     with communications as proxy:
       response = proxy.callReadRawCommand("search " + " ".join(self.arguments))
       window_id, window_title = proxy.callGetActiveWindow()
-      return ([window_id for window_id in response.split("\n") if window_id.strip()],
+      return ([int(matching) for matching in response.split("\n") if matching.strip()],
               window_id,
               window_title)
 
@@ -59,13 +60,19 @@ class ProxyAppContext(dragonfly.Context):
     matching_windows, window_id, window_title = self._get_proxy_matches()
     return window_id is not None and window_id in matching_windows
 
-class ProxyAppContextOr(ProxyAppContext):
-  def _custom_parse(self):
-    self.arguments.append("--any")
+def ProxyAppContextOr(self, **kw):
+  items = kw.items()
+  value = ProxyAppContext(*dict([items[0]]))
+  for (key, value) in items:
+    value |= ProxyAppContext(*dict([value]))
+  return value
 
-class ProxyAppContextAnd(ProxyAppContext):
-  def _custom_parse(self):
-    self.arguments.append("--all")
+def ProxyAppContextAnd(self, **kw):
+  items = kw.items()
+  value = ProxyAppContext(*dict([items[0]]))
+  for (key, value) in items:
+    value &= ProxyAppContext(*dict([value]))
+  return value
 
 class ProxyAnyWindowActive(dragonfly.Context):
   def __init__(self):
@@ -83,3 +90,5 @@ class ProxyNoWindowActive(dragonfly.Context):
     with communications as proxy:
       window_id, window_title = proxy.callGetActiveWindow()
       return window_id is None
+
+__all__ = ["ProxyAppContext", "ProxyAppContextAnd", "ProxyAppContextOr", "ProxyAnyWindowActive", "ProxyNoWindowActive"]

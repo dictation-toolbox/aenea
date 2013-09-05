@@ -165,3 +165,26 @@ class ProxyMouse(ProxyBase, dragonfly.DynStrActionBase):
   def _execute_events(self, events):
     with communications as proxy:
       proxy.callEvents(events)
+
+################################################################################
+# click without moving mouse
+
+class ProxyMousePhantomClick(ProxyMouse):
+  """specification is similar to that for mouse except you should only
+     specify one move as more events may behave strangely.
+     the intended usage is as these examples,
+       "(55 274), 1"         # left click once at those coordinates
+       "<9 222>, 1:2/10"     # left double-click at those coordinates
+       "1:down, [1 1], 1:up" # drag what is there to the upper left corner
+     """
+  def _parse_spec(self, spec):
+    return ProxyMouse._parse_spec(self, spec) + ["mousemove restore"]
+
+################################################################################
+# do nothing
+
+class NoAction(dragonfly.ActionBase):
+  def execute(self):
+    pass
+
+__all__ = ["ProxyKey", "ProxyText", "ProxyMouse", "NoAction", "ProxyMousePhantomClick"]
