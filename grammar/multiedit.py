@@ -1,66 +1,12 @@
 # This file is a command-module for Dragonfly.
+#
+# (based on the multiedit module from dragonfly-modules project)
+# (heavily modified, you probably want the original)
+# (the original copyright notice is reproduced below)
+#
 # (c) Copyright 2008 by Christo Butcher
 # Licensed under the LGPL, see <http://www.gnu.org/licenses/>
 #
-
-"""
-Command-module for cursor movement and **editing**
-============================================================================
-
-This module allows the user to control the cursor and 
-efficiently perform multiple text editing actions within a 
-single phrase.
-
-
-Example commands
-----------------------------------------------------------------------------
-
-*Note the "/" characters in the examples below are simply 
-to help the reader see the different parts of each voice 
-command.  They are not present in the actual command and 
-should not be spoken.*
-
-Example: **"up 4 / down 1 page / home / space 2"**
-   This command will move the cursor up 4 lines, down 1 page,
-   move to the beginning of the line, and then insert 2 spaces.
-
-Example: **"left 7 words / backspace 3 / insert hello Cap world"**
-   This command will move the cursor left 7 words, then delete
-   the 3 characters before the cursor, and finally insert
-   the text "hello World".
-
-Example: **"home / space 4 / down / 43 times"**
-   This command will insert 4 spaces at the beginning of 
-   of this and the next 42 lines.  The final "43 times" 
-   repeats everything in front of it that many times.
-
-
-Discussion of this module
-----------------------------------------------------------------------------
-
-This command-module creates a powerful voice command for 
-editing and cursor movement.  This command's structure can 
-be represented by the following simplified language model:
-
- - *CommandRule* -- top-level rule which the user can say
-    - *repetition* -- sequence of actions (name = "sequence")
-       - *KeystrokeRule* -- rule that maps a single 
-         spoken-form to an action
-    - *optional* -- optional specification of repeat count
-       - *integer* -- repeat count (name = "n")
-       - *literal* -- "times"
-
-The top-level command rule has a callback method which is 
-called when this voice command is recognized.  The logic 
-within this callback is very simple:
-
-1. Retrieve the sequence of actions from the element with 
-   the name "sequence".
-2. Retrieve the repeat count from the element with the name
-   "n".
-3. Execute the actions the specified number of times.
-
-"""
 
 try:
     import pkg_resources
@@ -72,6 +18,7 @@ except ImportError:
 from dragonfly import Config, Section, Item, MappingRule, CompoundRule, Grammar, IntegerRef, Dictation, RuleRef, Alternative, Repetition
 from proxy_nicknames import *
 
+vim_context = AppRegexContext(name=".*VIM.*")
 
 #---------------------------------------------------------------------------
 # Here we globally defined the release action which releases all
@@ -80,105 +27,106 @@ from proxy_nicknames import *
 #  Note that it is harmless to release ("...:up") a key multiple
 #  times or when that key is not held down at all.
 
-release = Key("Shift_L, Control_L")
+release = Key("Shift_L:up, Control_L:up")
 
 #---------------------------------------------------------------------------
 # Set up this module's configuration.
 
-config = Config("multi edit")
-config.cmd = Section("Language section")
-config.cmd.map = Item(
-    # Here we define the *default* command map.  If you would like to
-    #  modify it to your personal taste, please *do not* make changes
-    #  here.  Instead change the *config file* called "_multiedit.txt".
-        {
-        # Spoken-form    ->    ->    ->     Action object
-        #### Cursor manipulation
-        "up [<n>]": Key("Up:%(n)d"),
-        "down [<n>]": Key("Down:%(n)d"),
-        "left [<n>]": Key("Left:%(n)d"),
-        "right [<n>]": Key("Right:%(n)d"),
-        "gope [<n>]": Key("Prior:%(n)d"),
-        "drop [<n>]": Key("Next:%(n)d"),
-        "port [<n>]": Key("Escape, [ %(n)dwi ]"),
-        "yope [<n>]": Key("Escape, [ %(n)dbi ]"),
-        "top": Key("1, s-g"),
-        "toe": Key("G"),
+command_table = {
+  # Spoken-form        normal command              VIM (can set to None if same as normal)
 
-        #### Various keys
-        "space [<n>]": Key("space:%(n)d"),
-        "punch [<n>]": Key("Tab:%(n)d"),
-        "slap [<n>]": Key("Return:%(n)d"),
-        "chuck [<n>]": Key("Delete:%(n)d"),
-        "back [<n>]": Key("BackSpace:%(n)d"),
+  #### Cursor manipulation
+  "up [<n>]":(         Key("Up:%(n)d"),            None),
+  "down [<n>]":(       Key("Down:%(n)d"),          None),
+  "left [<n>]":(       Key("Left:%(n)d"),          None),
+  "right [<n>]":(      Key("Right:%(n)d"),         None),
+  "gope [<n>]":(       Key("Prior:%(n)d"),         None),
+  "drop [<n>]":(       Key("Next:%(n)d"),          None),
+  "port [<n>]":(       Key("c-Left:%(n)d"),        Key("Escape, [ %(n)dbi ]") ),
+  "yope [<n>]":(       Key("c-Right:%(n)d"),       Key("Escape, [ %(n)dwwi ]") ),
+  "care":(             Key("Home"),                None),
+  "doll":(             Key("End"),                 None),
+  "top":(              Key("c-Home"),              Key("Escape, 1, s-g, i") ),
+  "toe":(              Key("c-End"),               Key("Escape, s-g, i") ),
+  }
 
-#        #********* BEGIN Problem Actions
-#        "amp [<n>]": Key("ampersand:%(n)d"),
-#        "apostrophe [<n>]": Key("apostrophe:%(n)d"),
-#        "star [<n>]": Key("asterisk:%(n)d"),
-#        "at [<n>]": Key("at:%(n)d"),
-#        "slosh [<n>]": Key("backslash:%(n)d"),
-#        "backtick [<n>]": Key("backtick:%(n)d"),
-#        "bar [<n>]": Key("bar:%(n)d"),
-#        "hat [<n>]": Key("caret:%(n)d"),
-#        "colon [<n>]": Key("colon:%(n)d"),
-#        "drip [<n>]": Key("comma:%(n)d"),
-#        "doll [<n>]": Key("dollar:%(n)d"),
-#        "dot [<n>]": Key("dot:%(n)d"),
-#        "quote [<n>]": Key("dquote:%(n)d"),
-#        "gets [<n>]": Key("equal:%(n)d"),
-#        "bang [<n>]": Key("exclamation:%(n)d"),
-#        "hash [<n>]": Key("hash:%(n)d"),
-#        "hyph [<n>]": Key("hyphen:%(n)d"),
-#        "minus [<n>]": Key("minus:%(n)d"),
-#        "percent [<n>]": Key("percent:%(n)d"),
-#        "plus [<n>]": Key("plus:%(n)d"),
-#        "quest [<n>]": Key("question:%(n)d"),
-#        "slash [<n>]": Key("slash:%(n)d"),
-#        "smote [<n>]": Key("squote:%(n)d"),
-#        "tilde [<n>]": Key("tilde:%(n)d"),
-#        "rail [<n>]": Key("underscore:%(n)d"),
-#        #********* END Problem Actions
+# Set up vim default values.
+for (key, (command, vim_command)) in command_table.iteritems():
+  if vim_command is None:
+    command_table[key] = (command, command)
 
+a = """
 
-        #### Lines
-#        "wipe [<n>]": release + Key("home, s-down:%(n)d, s-home, del"), # del lines down
-#        "weiss [<n>]": release + Key("home, s-up:%(n)d, s-home, del"), # del lines up
-        "strip": release + Key("Escape, d, s-4, i"), # del from cursor to line end
-        "striss": release + Key("Escape, d, s-6, i"), # del from cursor to line home
-#        "nab [<n>]": release + Key("home, s-down:%(n)d, s-home, c-c, right"), # copy lines
-#        "trance [<n>]": release + Key("home, s-down:%(n)d, s-home, c-c, home, c-v"), # duplicate lines down
+  #### Various keys
+  "space [<n>]":(      Key("space:%(n)d"),
+  "punch [<n>]":(      Key("tab:%(n)d"),
+  "slap [<n>]":(       Key("enter:%(n)d"),
+  "chuck [<n>]":(      Key("del:%(n)d"),
+  "back [<n>]":(       Key("backspace:%(n)d"),
+  "fly":(              Key("escape"),
+  "pop":(              Key("apps"), # right click
 
-        ### words
-        "bump [<n>]": release + Key("Escape, %(n)ddw, i"), # del words right
-        "whack [<n>]": release + Key("Escape, %(n)ddb, i"),# del words left
-        "whack [<n>]": release + Key("Escape, %(n)ddaw, i"),# del whole words right
+  #### Symbols
+  "amp [<n>]":(        Key("ampersand:%(n)d"),
+  "apostrophe [<n>]":( Key("apostrophe:%(n)d"),
+  "star [<n>]":(       Key("asterisk:%(n)d"),
+  "at [<n>]":(         Key("at:%(n)d"),
+  "slosh [<n>]":(      Key("backslash:%(n)d"),
+  "backtick [<n>]":(   Key("backtick:%(n)d"),
+  "bar [<n>]":(        Key("bar:%(n)d"),
+  "hat [<n>]":(        Key("caret:%(n)d"),
+  "colon [<n>]":(      Key("colon:%(n)d"),
+  "drip [<n>]":(       Key("comma:%(n)d"),
+  "doll [<n>]":(       Key("dollar:%(n)d"),
+  "dot [<n>]":(        Key("dot:%(n)d"),
+  "quote [<n>]":(      Key("dquote:%(n)d"),
+  "gets [<n>]":(       Key("equal:%(n)d"),
+  "bang [<n>]":(       Key("exclamation:%(n)d"),
+  "hash [<n>]":(       Key("hash:%(n)d"),
+  "hyph [<n>]":(       Key("hyphen:%(n)d"),
+  "minus [<n>]":(       Key("minus:%(n)d"),
+  "percent [<n>]":(     Key("percent:%(n)d"),
+  "plus [<n>]":(       Key("plus:%(n)d"),
+  "quest [<n>]":(       Key("question:%(n)d"),
+  "slash [<n>]":(       Key("slash:%(n)d"),
+  "smote [<n>]":(       Key("squote:%(n)d"),
+  "tilde [<n>]":(       Key("tilde:%(n)d"),
+  "rail [<n>]":(       Key("underscore:%(n)d"),
 
-        ### copy/paste
-#        "pace": release + Key("c-v"),
-#        "dupe <n>": release + Key("c-c, c-v:%(n)d"),
-#        "cop": release + Key("c-c"),
-#        "cut": release + Key("c-x"),
-#        "gob": release + Key("c-a"),
-#
-#        "(shift|mark)": Key("shift:down"),
-#        "wave": Key("shift:up, right"),
-#        #        "boss": Key("ctrl:down"),
-#        #        "shun": Key("ctrl:up"),
-#        "release [all]": release,
+  #### Lines
+  "wipe [<n>]":(               release + Key("home, s-down:%(n)d, s-home, del"),
+  "weiss [<n>]":(               release + Key("home, s-up:%(n)d, s-home, del"),
+  "strip":(                     release + Key("s-end, del"),
+  "striss":(                   release + Key("s-home, del"),
+  "nab [<n>]":(                 release + Key("home, s-down:%(n)d, s-home, c-c, right"),
+  "trance [<n>]":(             release + Key("home, s-down:%(n)d, s-home, c-c, home, c-v"),
 
-        ### other
-#        "switch": release + Key("ctrl:down, tab"),
-        "say <text>": release + Text("%(text)s"),
-#        "mimic <text>": release + Mimic(extra="text"),
+  ### words
+  "bump [<n>]":(               release + Key("right:2, c-left, cs-right:%(n)d, del"),
+  "whack [<n>]":(               release + Key("left, c-right, cs-left:%(n)d, del"),
+  "yose [<n>]":(               release + Key("right:2, c-left, cs-right:%(n)d, c-c, right"),
+  "porche [<n>]":(             release + Key("left, c-right, cs-left:%(n)d, c-c, left"),
+
+  ### copy/paste
+  "pace":(                     release + Key("c-v"),
+  "dupe <n>":(                 release + Key("c-c, c-v:%(n)d"),
+  "cop":(                       release + Key("c-c"),
+  "cut":(                       release + Key("c-x"),
+  "gob":(                       release + Key("c-a"),
+
+  "(shift|mark)":(             Key("shift:down"),
+  "wave":(                     Key("shift:up, right"),
+  "release [all]":(             release,
+
+  ### other
+  "switch":(                   release + Key("ctrl:down, tab"),
+  "say <text>":(               release + Text("%(text)s"),
+  "mimic <text>":(             release + Mimic(extra="text"),
         },
-    namespace={
-        "Key": Key,
-        "Text": Text,
-        }
-)
-namespace = config.load()
+        """
 
+  
+a="""
 #---------------------------------------------------------------------------
 # Here we prepare the list of formatting functions from the config file.
 
@@ -214,8 +162,7 @@ if format_functions:
 
 else:
     FormatRule = None
-
-
+"""
 #---------------------------------------------------------------------------
 # Here we define the keystroke rule.
 
@@ -234,7 +181,6 @@ else:
 class KeystrokeRule(MappingRule):
     exported = False
 
-    mapping = config.cmd.map
     extras = [
         IntegerRef("n", 1, 100),
         Dictation("text"),
@@ -243,13 +189,12 @@ class KeystrokeRule(MappingRule):
     defaults = {
         "n": 1,
         }
-    # Note: when processing a recognition, the *value* of 
-    #  this rule will be an action object from the right side 
-    #  of the mapping given above.  This is default behavior 
-    #  of the MappingRule class' value() method.  It also 
-    #  substitutes any "%(...)." within the action spec
-    #  with the appropriate spoken values.
 
+    def _get_mode_index(self):
+      if vim_context.matches(None, None, None):
+        return 1
+      else:
+        return 0
 
 #---------------------------------------------------------------------------
 # Here we create an element which is the sequence of keystrokes.
@@ -257,11 +202,19 @@ class KeystrokeRule(MappingRule):
 # First we create an element that references the keystroke rule.
 #  Note: when processing a recognition, the *value* of this element
 #  will be the value of the referenced rule: an action.
+
+mapping = dict((key, value[0]) for (key, value) in command_table.iteritems())
+vim_mapping = dict((key, value[1]) for (key, value) in command_table.iteritems())
+
 alternatives = []
-alternatives.append(RuleRef(rule=KeystrokeRule()))
-if FormatRule:
-    alternatives.append(RuleRef(rule=FormatRule()))
+vim_alternatives = []
+
+alternatives.append(RuleRef(rule=KeystrokeRule(mapping=mapping, name="c")))
+vim_alternatives.append(RuleRef(rule=KeystrokeRule(mapping=vim_mapping, name="d")))
+#if FormatRule:
+#    alternatives.append(RuleRef(rule=FormatRule()))
 single_action = Alternative(alternatives)
+vim_single_action = Alternative(vim_alternatives)
 
 # Second we create a repetition of keystroke elements.
 #  This element will match anywhere between 1 and 16 repetitions
@@ -272,7 +225,17 @@ single_action = Alternative(alternatives)
 #  will be a sequence of the contained elements: a sequence of
 #  actions.
 sequence = Repetition(single_action, min=1, max=16, name="sequence")
+vim_sequence = Repetition(vim_single_action, min=1, max=16, name="sequence")
 
+extras = [
+    sequence, # Sequence of actions defined above.
+    IntegerRef("n", 1, 100), # Times to repeat the sequence.
+]
+
+vim_extras = [
+    vim_sequence, # Sequence of actions defined above.
+    IntegerRef("n", 1, 100), # Times to repeat the sequence.
+]
 
 #---------------------------------------------------------------------------
 # Here we define the top-level rule which the user can say.
@@ -285,10 +248,7 @@ sequence = Repetition(single_action, min=1, max=16, name="sequence")
 class RepeatRule(CompoundRule):
     # Here we define this rule's spoken-form and special elements.
     spec = "<sequence> [[[and] repeat [that]] <n> times]"
-    extras = [
-        sequence, # Sequence of actions defined above.
-        IntegerRef("n", 1, 100), # Times to repeat the sequence.
-    ]
+
     defaults = {
         "n": 1, # Default repeat count.
     }
@@ -307,13 +267,13 @@ class RepeatRule(CompoundRule):
                 action.execute()
                 #release.execute()
 
-
 #---------------------------------------------------------------------------
 # Create and load this module's grammar.
 
-grammar = Grammar("multi edit")   # Create this module's grammar.
-grammar.add_rule(RepeatRule())    # Add the top-level rule.
-grammar.load()                    # Load the grammar.
+grammar = Grammar("multi edit")
+grammar.add_rule(RepeatRule(extras=vim_extras, name="b", context=vim_context))
+grammar.add_rule(RepeatRule(extras=extras, name="a", context=(~vim_context)))
+grammar.load()
 
 # Unload function which will be called at unload time.
 def unload():

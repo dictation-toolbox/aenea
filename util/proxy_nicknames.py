@@ -10,5 +10,6 @@ MousePhantomClick = proxy_actions.ProxyMousePhantomClick
 AppContext = proxy_contexts.ProxyAppContext
 AppContextOr = proxy_contexts.ProxyAppContextOr
 AppContextAnd = proxy_contexts.ProxyAppContextAnd
+AppRegexContext = proxy_contexts.ProxyAppRegexContext
 
-__all__ = ["Key", "Text", "Mouse", "AppContextOr", "AppContextAnd", "AppContext", "NoAction", "MousePhantomClick"]
+__all__ = ["Key", "Text", "Mouse", "AppContextOr", "AppContextAnd", "AppContext", "AppRegexContext", "NoAction", "MousePhantomClick"]

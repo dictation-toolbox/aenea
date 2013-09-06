@@ -1,5 +1,6 @@
 """provides proxy contexts for currently active application matching"""
 
+import re
 import proxy
 import types
 
@@ -18,7 +19,7 @@ class ProxyBaseAppContext(dragonfly.Context):
   def __init__(self,
                window_class = DONT_CARE,
                window_class_name = DONT_CARE,
-               window_title = DONT_CARE,
+               name = DONT_CARE,
                role = DONT_CARE,
                pid = DONT_CARE,
                type = DONT_CARE,
@@ -26,7 +27,7 @@ class ProxyBaseAppContext(dragonfly.Context):
                client_machine = DONT_CARE):
     # a little hackery is worth it for an easier to use API.
     self.arguments = {}
-    for key in ("window_class", "window_class_name", "window_title", "role",
+    for key in ("window_class", "window_class_name", "name", "role",
                 "pid", "type", "locale", "client_machine"):
       value = locals()[key]
       if value is not DONT_CARE:
@@ -40,11 +41,11 @@ class ProxyBaseAppContext(dragonfly.Context):
     for (key, value) in self.arguments.iteritems():
       matches[key] = False
       if (key in properties and
-          self._property_match(properties[key], self.arguments[key])):
+          self._property_match(key, properties[key], self.arguments[key])):
         matches[key] = True
     return matches
 
-  def _property_match(self, actual, desired):
+  def _property_match(self, key, actual, desired):
     """overload to change how we should compare actual and desired properties"""
     return actual == desired
 
@@ -68,4 +69,9 @@ class ProxyAppContextOr(ProxyBaseAppContext):
   def _reduce_matches(self, matches):
     return any(matches.itervalues())
 
-__all__ = ["ProxyAppContextAnd", "ProxyAppContextOr"]
+class ProxyAppRegexContext(ProxyBaseAppContext):
+  def _property_match(self, key, actual, desired):
+    print actual, desired, bool(re.match(desired, actual))
+    return bool(re.match(desired, actual))
+
+__all__ = ["ProxyAppContextAnd", "ProxyAppContextOr", "ProxyAppContext", "ProxyAppRegexContext"]
