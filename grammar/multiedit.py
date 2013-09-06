@@ -15,7 +15,7 @@ try:
 except ImportError:
     pass
 
-from dragonfly import Config, Section, Item, MappingRule, CompoundRule, Grammar, IntegerRef, Dictation, RuleRef, Alternative, Repetition
+from dragonfly import Config, Section, Item, MappingRule, CompoundRule, Grammar, IntegerRef, Dictation, RuleRef, Alternative, Repetition, Literal
 from proxy_nicknames import *
 
 vim_context = AppRegexContext(name=".*VIM.*")
@@ -32,6 +32,9 @@ release = Key("Shift_L:up, Control_L:up")
 #---------------------------------------------------------------------------
 # Set up this module's configuration.
 
+def Nested(command):
+  return Text(command) + Key("Left:%i" % (len(command) / 2))
+
 command_table = {
   # Spoken-form        normal command              VIM (can set to None if same as normal)
 
@@ -46,8 +49,8 @@ command_table = {
   "yope [<n>]":(       Key("c-Right:%(n)d"),       Key("Escape, [ %(n)dwwi ]") ),
   "care":(             Key("Home"),                None),
   "doll":(             Key("End"),                 None),
-  "top":(              Key("c-Home"),              Key("Escape, 1, s-g, i") ),
-  "toe":(              Key("c-End"),               Key("Escape, s-g, i") ),
+  "file top":(         Key("c-Home"),              Key("Escape, 1, s-g, i") ),
+  "file toe":(         Key("c-End"),               Key("Escape, s-g, i") ),
 
   #### Various keys
   "ace [<n>]":(        Key("space:%(n)d"),         None),
@@ -82,6 +85,15 @@ command_table = {
   "tilde [<n>]":(      Key("asciitilde:%(n)d"),    None),
   "rail [<n>]":(       Key("underscore:%(n)d"),    None),
 
+  #### Nested
+  "circle":(           Nested("()"),               None),
+  "square":(           Nested("[]"),               None),
+  "box":(              Nested("[]"),               None),
+  "diamond":(          Nested("<>"),               None),
+  "hexy":(             Nested("{}"),               None),
+  "nest quote":(       Nested("\"\""),             None),
+  "nest smote":(       Nested("''"),               None),
+    
   #### Legacy symbols (probably will remove these later)
   "oop [<n>]":(        Key("period:%(n)d"),        None),
   "dub quote [<n>]":( Key("quotedbl:%(n)d"),       None),
@@ -105,44 +117,88 @@ command_table = {
   "line down [<n>]":(Key("Home, Shift_L:down, End, Shift_L:up, c-q, Delete, Down:%(n)d, Home, Return, Up, c-k"),
                                           Key("Escape, [ dd%(n)dj ], Home, [ 1P ], i") ),
 
-  ### words
+  #### Words
   "bump [<n>]":(     Key("Right:2, c-Left, cs-Right:%(n)d, Delete:2"),
-                                          Key("Escape, [ wbd%(n)dwi ]")),
+                                          Key("Escape, [ lwbd%(n)dwi ]")),
   "whack [<n>]":(    Key("Left, c-Right, cs-Left:%(n)d, Delete:2"),
-                                          Key("Escape, [ w%(n)dbd%(n)dwi ]")),
+                                          Key("Escape, [ lw%(n)dbd%(n)dwi ]")),
+  }
+
+# Python specific
+python_command_table = {
+  # Spoken-form        normal command              VIM (can set to None if same as normal)
+  "private":(         Nested("____"),             None),
+  "dub dock string":(         Nested('""""""'),             None),
+  "dock string":(         Nested("''''''"),             None),
+  "square sing":(     Nested("['']"),             None),
+  "box sing":(        Nested("['']"),             None),
+  "square dub":(     Nested('[""]'),             None),
+  "box dub":(        Nested('[""]'),             None),
+  "int":(              Text("int"),                None),
+  "float":(              Text("float"),                None),
+  "stir":(              Text("str"),                None),
+  "list":(              Text("list"),                None),
+  "dictionary":(              Text("dict"),                None),
+  "set":(              Text("set"),                None),
+  "tuple":(              Text("tuple"),                None),
+  "lazy range":(              Text("xrange"),                None),
+  "range":(              Text("range"),                None),
+  "is instance":(              Text("isinstance"),                None),
+  "iter":(              Text("iter"),                None),
+  "items":(              Text("items"),                None),
+  "keys":(              Text("keys"),                None),
+  "values":(              Text("values"),                None),
+  "get atter":(              Text("getattr"),                None),
+  "set atter":(              Text("setattr"),                None),
+  "has atter":(              Text("hasattr"),                None),
+  "print":(              Text("print"),                None),
+  "if test":(              Text("if "),                None),
+  "elif":(              Text("elif "),                None),
+  "else":(              Text("else"),                None),
+  "in it":(              Text("init"),                None),
+  "repper":(              Text("repr"),                None),
+  "deaf":(              Text("def "),                None),
+  "and":(              Text("and "),                None),
+  "or":(              Text("or "),                None),
+  "not":(              Text("not "),                None),
+  "for loop":(              Text("for "),                None),
+  "bit or":(              Text("| "),                None),
+  "bit and":(              Text("& "),                None),
+  "bit xor":(              Text("^ "),                None),
+  "times":(              Text("* "),                None),
+  "divided":(              Text("/ "),                None),
+  "plus":(              Text("+ "),                None),
+  "minus":(              Text("- "),                None),
+  "plus equal":(              Text("+= "),                None),
+  "minus equal":(              Text("-= "),                None),
+  "times equal":(              Text("*= "),                None),
+  "divided equal":(              Text("/= "),                None),
+  "mod equal":(              Text("%%= "),                None),
+  "as name":(              Text("as "),                None),
+  "in":(              Text("in "),                None),
+  "while":(              Text("while "),                None),
+  "class":(              Text("class "),                None),
+  "with context":(              Text("with "),                None),
+  "import":(              Text("import "),                None),
+  "from":(              Text("from "),                None),
+  "raise":(              Text("raise "),                None),
+  "return":(              Text("return "),                None),
+  "none":(              Text("None "),                None),
+  "try":(              Text("try"),                None),
+  "except":(              Text("except"),                None),
+  "lambda":(              Text("lambda "),                None),
+  "assert":(              Text("assert "),                None),
+  "self":(              Text("self"),                None),
+  "self dot":(              Text("self."),                None),
+  "pass":(              Text("pass"),                None),
   }
 
 # Set up vim default values.
-for (key, (command, vim_command)) in command_table.iteritems():
-  if vim_command is None:
-    command_table[key] = (command, command)
+for table in (command_table, python_command_table):
+  for (key, (command, vim_command)) in table.iteritems():
+    if vim_command is None:
+      table[key] = (command, command)
 
-a = """
-
-  #### Symbols
-
-
-
-
-  ### copy/paste
-  "pace":(                     release + Key("c-v"),
-  "dupe <n>":(                 release + Key("c-c, c-v:%(n)d"),
-  "cop":(                       release + Key("c-c"),
-  "cut":(                       release + Key("c-x"),
-  "gob":(                       release + Key("c-a"),
-
-  "(shift|mark)":(             Key("shift:down"),
-  "wave":(                     Key("shift:up, right"),
-  "release [all]":(             release,
-
-  ### other
-  "switch":(                   release + Key("ctrl:down, tab"),
-  "say <text>":(               release + Text("%(text)s"),
-  "mimic <text>":(             release + Mimic(extra="text"),
-        },
-        """
-
-  
 a="""
 #---------------------------------------------------------------------------
 # Here we prepare the list of formatting functions from the config file.
@@ -221,6 +277,7 @@ class KeystrokeRule(MappingRule):
 #  will be the value of the referenced rule: an action.
 
 mapping = dict((key, value[0]) for (key, value) in command_table.iteritems())
+command_table.update(python_command_table)
 vim_mapping = dict((key, value[1]) for (key, value) in command_table.iteritems())
 
 alternatives = []
@@ -247,11 +304,13 @@ vim_sequence = Repetition(vim_single_action, min=1, max=16, name="sequence")
 extras = [
     sequence, # Sequence of actions defined above.
     IntegerRef("n", 1, 100), # Times to repeat the sequence.
+    Alternative([Literal("hi")], name="finish"),
 ]
 
 vim_extras = [
     vim_sequence, # Sequence of actions defined above.
     IntegerRef("n", 1, 100), # Times to repeat the sequence.
+    Alternative([Literal("hi")], name="finish"),
 ]
 
 #---------------------------------------------------------------------------
@@ -264,7 +323,7 @@ vim_extras = [
 #  actions and the number of times to repeat them.
 class RepeatRule(CompoundRule):
     # Here we define this rule's spoken-form and special elements.
-    spec = "<sequence> [[[and] repeat [that]] <n> times]"
+    spec = "<sequence> [<finish>] [[[and] repeat [that]] <n> times]"
 
     defaults = {
         "n": 1, # Default repeat count.
@@ -277,8 +336,10 @@ class RepeatRule(CompoundRule):
     #     . extras["sequence"] gives the sequence of actions.
     #     . extras["n"] gives the repeat count.
     def _process_recognition(self, node, extras):
-        sequence = extras["sequence"]   # A sequence of actions.
-        count = extras["n"]             # An integer repeat count.
+        sequence = extras["sequence"]
+        if "finish" in extras:
+          sequence.append(extras["finish"])
+        count = extras["n"]
         for i in range(count):
             for action in sequence:
                 action.execute()

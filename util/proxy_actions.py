@@ -124,7 +124,7 @@ class ProxyText(ProxyBase, dragonfly.DynStrActionBase):
 
   def _execute_events(self, events):
     with communications as proxy:
-      proxy.callEvents(["text " + events])
+      proxy.callText(events)
 
 ################################################################################
 # Mouse
