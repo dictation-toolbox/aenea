@@ -71,7 +71,6 @@ class ProxyAppContextOr(ProxyBaseAppContext):
 
 class ProxyAppRegexContext(ProxyBaseAppContext):
   def _property_match(self, key, actual, desired):
-    print actual, desired, bool(re.match(desired, actual))
     return bool(re.match(desired, actual))
 
 __all__ = ["ProxyAppContextAnd", "ProxyAppContextOr", "ProxyAppContext", "ProxyAppRegexContext"]

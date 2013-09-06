@@ -48,6 +48,68 @@ command_table = {
   "doll":(             Key("End"),                 None),
   "top":(              Key("c-Home"),              Key("Escape, 1, s-g, i") ),
   "toe":(              Key("c-End"),               Key("Escape, s-g, i") ),
+
+  #### Various keys
+  "ace [<n>]":(        Key("space:%(n)d"),         None),
+  "tab [<n>]":(        Key("Tab:%(n)d"),           None),
+  "slap [<n>]":(       Key("Return:%(n)d"),        None),
+  "chuck [<n>]":(      Key("Delete:%(n)d"),        None),
+  "scratch [<n>]":(    Key("BackSpace:%(n)d"),     None),
+  "act":(              Key("Escape"),              None),
+
+  #### Symbols
+  "amp [<n>]":(        Key("ampersand:%(n)d"),     None),
+  "star [<n>]":(       Key("asterisk:%(n)d"),      None),
+  "at sign [<n>]":(    Key("at:%(n)d"),            None),
+  "back ash [<n>]":(   Key("backslash:%(n)d"),     None),
+  "backtick [<n>]":(   Key("grave:%(n)d"),         None),
+  "bar [<n>]":(        Key("bar:%(n)d"),           None),
+  "hat [<n>]":(        Key("asciicircum:%(n)d"),   None),
+  "yeah [<n>]":(       Key("colon:%(n)d"),         None),
+  "drip [<n>]":(       Key("comma:%(n)d"),         None),
+  "dollar [<n>]":(     Key("dollar:%(n)d"),        None),
+  "dot [<n>]":(        Key("period:%(n)d"),        None),
+  "quote [<n>]":(      Key("quotedbl:%(n)d"),      None),
+  "eek [<n>]":(        Key("equal:%(n)d"),         None),
+  "bang [<n>]":(       Key("exclam:%(n)d"),        None),
+  "pound [<n>]":(      Key("numbersign:%(n)d"),    None),
+  "hyph [<n>]":(       Key("minus:%(n)d"),         None),
+  "percent [<n>]":(    Key("percent:%(n)d"),       None),
+  "cross [<n>]":(      Key("plus:%(n)d"),          None),
+  "quest [<n>]":(      Key("question:%(n)d"),      None),
+  "ash [<n>]":(        Key("slash:%(n)d"),         None),
+  "smote [<n>]":(      Key("apostrophe:%(n)d"),    None),
+  "tilde [<n>]":(      Key("asciitilde:%(n)d"),    None),
+  "rail [<n>]":(       Key("underscore:%(n)d"),    None),
+
+  #### Legacy symbols (probably will remove these later)
+  "oop [<n>]":(        Key("period:%(n)d"),        None),
+  "dub quote [<n>]":( Key("quotedbl:%(n)d"),       None),
+  "sing quote [<n>]":(  Key("apostrophe:%(n)d"),   None),
+
+  # Spoken-form      normal command       VIM (can set to None if same as normal)
+
+  #### Lines
+  "wipe [<n>]":(     Key("Home, Shift_L:down, Down:%(n)d, Up, End, Delete, Shift_L:up, BackSpace"),
+                                          Key("Escape, [ d%(n)ddi ]") ),
+  "strip":(          Key("s-End, Delete"),
+                                          Key("Escape, l, d, dollar, a") ),
+  "striss":(         Key("s-Home, Delete"),
+                                          Key("Escape, l, d, asciicircum, i") ),
+  "nab [<n>]":(      Key("Home, Shift_L:down, Down:%(n)d, Up, End, Shift_L:up, c-j, End"),
+                                          Key("Escape, [ y%(n)dyi ]") ),
+  "trance [<n>]":(   Key("Home, Shift_L:down, Down:%(n)d, Up:2, End, Shift_L:up, c-j, End, Return, c-k"),
+                                          Key("Escape, [ y%(n)dy%(n)djpi ]") ),
+  "lineup [<n>]":(   Key("Home, Shift_L:down, End, Shift_L:up, c-q, Delete, Up:%(n)d, Home, Return, Up, c-k"),
+                                          Key("Escape, [ dd%(n)dk ], Home, [ 1P ], i") ),
+  "line down [<n>]":(Key("Home, Shift_L:down, End, Shift_L:up, c-q, Delete, Down:%(n)d, Home, Return, Up, c-k"),
+                                          Key("Escape, [ dd%(n)dj ], Home, [ 1P ], i") ),
+
+  ### words
+  "bump [<n>]":(     Key("Right:2, c-Left, cs-Right:%(n)d, Delete:2"),
+                                          Key("Escape, [ wbd%(n)dwi ]")),
+  "whack [<n>]":(    Key("Left, c-Right, cs-Left:%(n)d, Delete:2"),
+                                          Key("Escape, [ w%(n)dbd%(n)dwi ]")),
   }
 
 # Set up vim default values.
@@ -57,55 +119,10 @@ for (key, (command, vim_command)) in command_table.iteritems():
 
 a = """
 
-  #### Various keys
-  "space [<n>]":(      Key("space:%(n)d"),
-  "punch [<n>]":(      Key("tab:%(n)d"),
-  "slap [<n>]":(       Key("enter:%(n)d"),
-  "chuck [<n>]":(      Key("del:%(n)d"),
-  "back [<n>]":(       Key("backspace:%(n)d"),
-  "fly":(              Key("escape"),
-  "pop":(              Key("apps"), # right click
-
   #### Symbols
-  "amp [<n>]":(        Key("ampersand:%(n)d"),
-  "apostrophe [<n>]":( Key("apostrophe:%(n)d"),
-  "star [<n>]":(       Key("asterisk:%(n)d"),
-  "at [<n>]":(         Key("at:%(n)d"),
-  "slosh [<n>]":(      Key("backslash:%(n)d"),
-  "backtick [<n>]":(   Key("backtick:%(n)d"),
-  "bar [<n>]":(        Key("bar:%(n)d"),
-  "hat [<n>]":(        Key("caret:%(n)d"),
-  "colon [<n>]":(      Key("colon:%(n)d"),
-  "drip [<n>]":(       Key("comma:%(n)d"),
-  "doll [<n>]":(       Key("dollar:%(n)d"),
-  "dot [<n>]":(        Key("dot:%(n)d"),
-  "quote [<n>]":(      Key("dquote:%(n)d"),
-  "gets [<n>]":(       Key("equal:%(n)d"),
-  "bang [<n>]":(       Key("exclamation:%(n)d"),
-  "hash [<n>]":(       Key("hash:%(n)d"),
-  "hyph [<n>]":(       Key("hyphen:%(n)d"),
-  "minus [<n>]":(       Key("minus:%(n)d"),
-  "percent [<n>]":(     Key("percent:%(n)d"),
-  "plus [<n>]":(       Key("plus:%(n)d"),
-  "quest [<n>]":(       Key("question:%(n)d"),
-  "slash [<n>]":(       Key("slash:%(n)d"),
-  "smote [<n>]":(       Key("squote:%(n)d"),
-  "tilde [<n>]":(       Key("tilde:%(n)d"),
-  "rail [<n>]":(       Key("underscore:%(n)d"),
 
-  #### Lines
-  "wipe [<n>]":(               release + Key("home, s-down:%(n)d, s-home, del"),
-  "weiss [<n>]":(               release + Key("home, s-up:%(n)d, s-home, del"),
-  "strip":(                     release + Key("s-end, del"),
-  "striss":(                   release + Key("s-home, del"),
-  "nab [<n>]":(                 release + Key("home, s-down:%(n)d, s-home, c-c, right"),
-  "trance [<n>]":(             release + Key("home, s-down:%(n)d, s-home, c-c, home, c-v"),
 
-  ### words
-  "bump [<n>]":(               release + Key("right:2, c-left, cs-right:%(n)d, del"),
-  "whack [<n>]":(               release + Key("left, c-right, cs-left:%(n)d, del"),
-  "yose [<n>]":(               release + Key("right:2, c-left, cs-right:%(n)d, c-c, right"),
-  "porche [<n>]":(             release + Key("left, c-right, cs-left:%(n)d, c-c, left"),
+
 
   ### copy/paste
   "pace":(                     release + Key("c-v"),

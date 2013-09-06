@@ -1,9 +1,12 @@
-from dragonfly import (Grammar, Key, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, RuleRef)
+from dragonfly import (Grammar, Key, CompoundRule, Choice, Dictation, List, Optional, Literal, RuleRef)
+import dragonfly
 import natlink, os
 
 from proxy_contexts import *
 
 from proxy_actions import *
+
+from proxy_nicknames import *
 
 from comsat import ComSat
 import actions
@@ -13,7 +16,7 @@ from raul import SelfChoice, processDictation, NUMBERS as numbers
 #---------------------------------------------------------------------------
 # Create this module's grammar and the context under which it'll be active.
 
-grammar_context = AppContext(executable="notepad")# & (~ProxyAppContext("VIM"))
+grammar_context = dragonfly.AppContext(executable="notepad") & (~AppRegexContext(".*VirtualBox.*"))
 grammar = Grammar("notepad_example", context=grammar_context)
 
 class MouseClick(CompoundRule):
@@ -49,7 +52,7 @@ class QuadCommand(CompoundRule):
 class TranslateSpecial(CompoundRule):
   spec = "<cmd>"
   # say: law raw slaw sraw claw craw
-  cmd = {"act":"Escape", "syn":"a", "inns":"i", "vim replace":"R", "Kerry":"Home", "dolly":"End",
+  cmd = {"syn":"a", "inns":"i", "vim replace":"R", "Kerry":"Home", "dolly":"End",
          "care":"Home", "doll":"End", "termie":"Super_L Return"}
   extras = [Choice("cmd", cmd)]
 
@@ -221,10 +224,7 @@ class SquareQuote(CompoundRule):
 
 class ScratchMove(CompoundRule):
   spec = "<cmd> [<ind>]"
-  cmds = {"scratch":"BackSpace", "back scratch":"Delete", "up":"Up", "down":"Down",
-           "left":"Left", "right":"Right", "ace":"ace", "slap":"Return",
-           "dub quote":'shift apostrophe', "sing quote":"apostrophe",
-           "tab":"Tab"}
+  cmds = {"dub quote":'shift apostrophe', "sing quote":"apostrophe"}
   cmd = cmds.keys()
   extras = [Dictation("ind"), SelfChoice("cmd", cmd)]
  
