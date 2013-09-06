@@ -1,2 +1,3 @@
-* software.iso contains software licensed under various licenses that permit redistribution in unmodified form owned by other people. I have included them because one of the more time consuming parts of getting this working was finding all the right versions that played nice with each other.
-* all other code in this repository was created by me is released to the public domain. There are no restrictions placed on its use, modification, distribution, or distribution of modified versions.
+* software.iso contains software licensed under various licenses that permit redistribution in unmodified form written by other people. I have included them because one of the more time consuming parts of getting this working was finding all the right versions that played nice with each other.
+* all files in the grammar directory are in the public domain, except for multiedit.txt/py , which i adapted from a post on the Dragonfly forums (which was itself adapted from dragonfly-modules). it is released under the LGPL. This is noted at the top of the file.
+* the files under util are also released under the LGPL
