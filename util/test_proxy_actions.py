@@ -6,6 +6,8 @@ import mock
 import proxy_actions
 from proxy_actions import *
 
+import comsat
+
 from functools import partial
 
 class MockComsat(object):

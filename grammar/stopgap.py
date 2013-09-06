@@ -13,7 +13,7 @@ from raul import SelfChoice, processDictation, NUMBERS as numbers
 #---------------------------------------------------------------------------
 # Create this module's grammar and the context under which it'll be active.
 
-grammar_context = AppContext(executable="notepad")
+grammar_context = AppContext(executable="notepad")# & (~ProxyAppContext("VIM"))
 grammar = Grammar("notepad_example", context=grammar_context)
 
 class MouseClick(CompoundRule):

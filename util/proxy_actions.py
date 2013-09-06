@@ -3,13 +3,12 @@
 
 import comsat
 import types
+import pyparsing
 
 try:
   import dragonfly
 except ImportError:
   import dragonfly_mock as dragonfly
-
-from constants import LINUX_KEY_SYMBOLS
 
 import proxy
 communications = proxy.communications
@@ -58,6 +57,8 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
      indicates hyper."""
      
   _parser = _make_key_parser()
+  _text_clause = (pyparsing.Literal("[") + pyparsing.Word(pyparsing.alphanums) +
+                  pyparsing.Literal("]"))
 
   def _parse_spec(self, spec):
     def handle_pause(pause_spec):
@@ -69,6 +70,14 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
      
     actions = []
     for key in spec.split(","):
+      try:
+        text_parse = self._text_clause.parseString(key.strip())
+        if len(text_parse) == 3:
+          actions.append("type " + text_parse[1])
+          continue
+      except pyparsing.ParseException:
+        pass
+
       modifier_part, key_part, command_part, outer_pause_part = \
           self._parser.parseString(key.strip())
 

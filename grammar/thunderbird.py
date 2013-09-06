@@ -4,12 +4,9 @@ from proxy_nicknames import *
 
 import aenea
 
-mail_context = compose_context = thunderbird_context = aenea.global_context
-
 thunderbird_context = AppContext(window_class="Icedove") & aenea.global_context
 mail_context = thunderbird_context & AppContext(window_class_name="Mail")
 compose_context = thunderbird_context  & AppContext(window_class_name="Msgcompose")
-
 
 email_grammar = Grammar("email", context=mail_context)
 compose_grammar = Grammar("composed", context=compose_context)
@@ -51,6 +48,10 @@ email_grammar.load()
 compose_grammar.load()
 
 def unload():
-  global grammar
-  if grammar: grammar.unload()
-  grammar = None
+  global email_grammar
+  global compose_grammar
+  if email_grammar:
+    email_grammar.unload()
+  if compose_grammar:
+    compose_grammar.unload()
+  email_grammar = compose_grammar = None

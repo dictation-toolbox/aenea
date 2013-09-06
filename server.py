@@ -6,8 +6,17 @@ import comsat, sys, os, time, random
 for i in range(random.randint(1, 10)):
   print
 
+XPROP_PROPERTIES = {
+    "_NET_WM_DESKTOP(CARDINAL)":"desktop",
+    "WM_WINDOW_ROLE(STRING)":"role",
+    "_NET_WM_WINDOW_TYPE(ATOM)":"type",
+    "_NET_WM_PID(CARDINAL)":"pid",
+    "WM_LOCALE_NAME(STRING)":"locale",
+    "WM_CLIENT_MACHINE(STRING)":"client_machine",
+    "WM_NAME(STRING)":"name"
+    }
 
-XDOTOOL_COMMAND_BREAK = set(("text",))
+XDOTOOL_COMMAND_BREAK = set(("type",))
 
 class Handler(object):
   def __init__(self):
@@ -31,6 +40,28 @@ class Handler(object):
     with os.popen("%s type --file -" % executable, "w") as fd:
       fd.write(message)
     sys.stderr.write("echo \"%s\" | %s type --file -\n" % (message.replace("\n", "\\n"), executable))
+
+  def callGetCurrentWindowProperties(self):
+    window_id, window_title = self.callGetActiveWindow()
+    if window_id is None:
+      return {}
+
+    properties = {}
+    for line in self.readCommand("-id %s" % window_id, "xprop").split("\n"):
+      split = line.split(" = ", 1)
+      if len(split) == 2:
+        rawkey, value = split
+        if split[0] in XPROP_PROPERTIES:
+          properties[XPROP_PROPERTIES[rawkey]] = value
+        elif rawkey == "WM_CLASS(STRING)":
+#          try:
+            window_class_name, window_class = value.split('", "')
+            properties["window_class_name"] = window_class_name[1:]
+            properties["window_class"] = window_class[:-1]
+#          except Exception:
+#            sys.stderr.write("could not parse window class", value)
+
+    return properties
 
   def callLog(self, message):
     sys.stderr.write(message + "\n")
@@ -157,10 +188,11 @@ class Handler(object):
         transformed_events[-1].append(event)
 
     for events in transformed_events:
+      print "\t" * 3, events
       self.callRaw(events)
 
-  def callReadRawCommand(self, event):
-    return self.readCommand(event)
+  def callReadRawCommand(self, event, command="xdotool"):
+    return self.readCommand(event, command)
 
 cs = comsat.ComSat()
 cs.handlers.append(Handler())
