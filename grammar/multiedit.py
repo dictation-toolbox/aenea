@@ -367,7 +367,7 @@ class LiteralRule(CompoundRule):
 #  actions and the number of times to repeat them.
 class RepeatRule(CompoundRule):
   # Here we define this rule's spoken-form and special elements.
-  spec = "<sequence> [ ( literal <format_rule> )  | <finish> ] [repeat <n> times]"
+  spec = "[ <sequence> ] [ ( literal <format_rule> )  | <finish> ] [repeat <n> times]"
 
   defaults = {
     "n": 1, # Default repeat count.
@@ -380,7 +380,7 @@ class RepeatRule(CompoundRule):
   #   . extras["sequence"] gives the sequence of actions.
   #   . extras["n"] gives the repeat count.
   def _process_recognition(self, node, extras):
-    sequence = extras["sequence"]
+    sequence = extras.get("sequence", [])
     count = extras["n"]
     for i in range(count):
       for action in sequence:
