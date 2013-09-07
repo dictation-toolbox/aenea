@@ -84,6 +84,8 @@ command_table = {
   "smote [<n>]":(      Key("apostrophe:%(n)d"),    None),
   "tilde [<n>]":(      Key("asciitilde:%(n)d"),    None),
   "rail [<n>]":(       Key("underscore:%(n)d"),    None),
+  "push [<n>]":(       Key("parenleft:%(n)d"),     None),
+  "pop [<n>]":(        Key("parenright:%(n)d"),    None),
 
   #### Nested
   "circle":(           Nested("()"),               None),
@@ -158,13 +160,13 @@ python_command_table = {
   "in it":(            Text("init"),               None),
   "repper":(           Text("repr"),               None),
   "deaf":(             Text("def "),               None),
-  "and":(              Text("and "),               None),
-  "or":(               Text("or "),                None),
-  "not":(              Text("not "),               None),
+  "log and":(          Text("and "),               None),
+  "log or":(           Text("or "),                None),
+  "log not":(          Text("not "),               None),
   "for loop":(         Text("for "),               None),
-  "bit or":(           Text("| "),                 None),
+  "bit ore":(          Text("| "),                 None),
   "bit and":(          Text("& "),                 None),
-  "bit xor":(          Text("^ "),                 None),
+  "bit ex or":(        Text("^ "),                 None),
   "times":(            Text("* "),                 None),
   "divided":(          Text("/ "),                 None),
   "plus":(             Text("+ "),                 None),
@@ -183,7 +185,9 @@ python_command_table = {
   "from":(             Text("from "),              None),
   "raise":(            Text("raise "),             None),
   "return":(           Text("return "),            None),
-  "none":(             Text("None "),              None),
+  "none":(             Text("None"),               None),
+  "none":(             Text("True"),               None),
+  "none":(             Text("False"),              None),
   "try":(              Text("try"),                None),
   "except":(           Text("except"),             None),
   "lambda":(           Text("lambda "),            None),
@@ -194,49 +198,65 @@ python_command_table = {
   "delete":(           Text("del "),               None),
   }
 
+def format_score(text):
+  return "_".join(text)
+
+def format_camel(text):
+  return text[0] + "".join([word.capitalize() for word in text[1:]])
+
+def format_proper(text):
+  return "".join(word.capitalize() for word in text)
+
+def format_relpath(text):
+  return "/".join(text)
+
+def format_abspath(text):
+  return "/" + format_relpath(text)
+
+def format_scoperesolve(text):
+  return "::".join(text)
+
+def format_jumble(text):
+  return "".join(text)
+
+def format_dotword(text):
+  return ".".join(text)
+
+def format_dashword(text):
+  return "-".join(text)
+
+def format_natwords(text):
+  return " ".join(text)
+
+class FormatRule(CompoundRule):
+  spec = ("[upper | natural] ( proper | camel | rel-path | abs-path | score | "
+          "scope-resolve | jumble | dotword | dashword | natwords) [<dictation>]")
+  extras = [Dictation(name="dictation")]
+  
+  def value(self, node):
+    # TODO: this is terrible, fix it.
+    words = [word.split("\\", 1)[0].replace("-", "") for word in node.words()]
+    uppercase = words[0] == "upper"
+    lowercase = words[0] != "natural"
+    if words[0] in ("upper", "natural"):
+      del words[0]
+
+    function = globals()["format_%s" % words[0].replace(" ", "")]
+    formatted = function(words[1:])
+
+    if lowercase:
+      formatted = formatted.lower()
+    if uppercase:
+      formatted = formatted.upper()
+
+    return Text(formatted)
+
 # Set up vim default values.
 for table in (command_table, python_command_table):
   for (key, (command, vim_command)) in table.iteritems():
     if vim_command is None:
       table[key] = (command, command)
 
-a="""
-#---------------------------------------------------------------------------
-# Here we prepare the list of formatting functions from the config file.
-
-# Retrieve text-formatting functions from this module's config file.
-#  Each of these functions must have a name that starts with "format_".
-format_functions = {}
-if namespace:
-    for name, function in namespace.items():
-        if name.startswith("format_") and callable(function):
-            spoken_form = function.__doc__.strip()
-
-            # We wrap generation of the Function action in a function so
-            #  that its *function* variable will be local.  Otherwise it
-            #  would change during the next iteration of the namespace loop.
-            def wrap_function(function):
-                def _function(dictation):
-                    formatted_text = function(dictation)
-                    Text(formatted_text).execute()
-
-                return Function(_function)
-
-            action = wrap_function(function)
-            format_functions[spoken_form] = action
-
-
-# Here we define the text formatting rule.
-# The contents of this rule were built up from the "format_*"
-#  functions in this module's config file.
-if format_functions:
-    class FormatRule(MappingRule):
-        mapping = format_functions
-        extras = [Dictation("dictation")]
-
-else:
-    FormatRule = None
-"""
 #---------------------------------------------------------------------------
 # Here we define the keystroke rule.
 
@@ -253,22 +273,16 @@ else:
 # More information about Key() actions can be found here:
 #  http://dragonfly.googlecode.com/svn/trunk/dragonfly/documentation/actionkey.html
 class KeystrokeRule(MappingRule):
-    exported = False
+  exported = False
 
-    extras = [
-        IntegerRef("n", 1, 100),
-        Dictation("text"),
-        Dictation("text2"),
-        ]
-    defaults = {
-        "n": 1,
-        }
-
-    def _get_mode_index(self):
-      if vim_context.matches(None, None, None):
-        return 1
-      else:
-        return 0
+  extras = [
+    IntegerRef("n", 1, 100),
+    Dictation("text"),
+    Dictation("text2"),
+    ]
+  defaults = {
+    "n": 1,
+    }
 
 #---------------------------------------------------------------------------
 # Here we create an element which is the sequence of keystrokes.
@@ -281,13 +295,18 @@ mapping = dict((key, value[0]) for (key, value) in command_table.iteritems())
 command_table.update(python_command_table)
 vim_mapping = dict((key, value[1]) for (key, value) in command_table.iteritems())
 
-alternatives = []
-vim_alternatives = []
+format_rule = RuleRef(name="format_rule", rule=FormatRule(name="i"))
 
-alternatives.append(RuleRef(rule=KeystrokeRule(mapping=mapping, name="c")))
-vim_alternatives.append(RuleRef(rule=KeystrokeRule(mapping=vim_mapping, name="d")))
-#if FormatRule:
-#    alternatives.append(RuleRef(rule=FormatRule()))
+alternatives = [
+      RuleRef(rule=KeystrokeRule(mapping=mapping, name="c")),
+      format_rule
+    ]
+
+vim_alternatives = [
+      RuleRef(rule=KeystrokeRule(mapping=vim_mapping, name="e")),
+      format_rule
+    ]
+
 single_action = Alternative(alternatives)
 vim_single_action = Alternative(vim_alternatives)
 
@@ -317,45 +336,55 @@ vim_extras = [
 #---------------------------------------------------------------------------
 # Here we define the top-level rule which the user can say.
 
+class LiteralRule(CompoundRule):
+  spec = "literal <format_rule>"
+
+  extras = [format_rule]
+
+  def _process_recognition(self, node, extras):
+    extras["format_rule"].execute()
+
 # This is the rule that actually handles recognitions. 
 #  When a recognition occurs, it's _process_recognition() 
 #  method will be called.  It receives information about the 
 #  recognition in the "extras" argument: the sequence of 
 #  actions and the number of times to repeat them.
 class RepeatRule(CompoundRule):
-    # Here we define this rule's spoken-form and special elements.
-    spec = "<sequence> [<finish>] [[[and] repeat [that]] <n> times]"
+  # Here we define this rule's spoken-form and special elements.
+  spec = "<sequence> [ literal <format_rule> ] [repeat <n> times]"
 
-    defaults = {
-        "n": 1, # Default repeat count.
-    }
+  defaults = {
+    "n": 1, # Default repeat count.
+  }
 
-    # This method gets called when this rule is recognized.
-    # Arguments:
-    #  - node -- root node of the recognition parse tree.
-    #  - extras -- dict of the "extras" special elements:
-    #     . extras["sequence"] gives the sequence of actions.
-    #     . extras["n"] gives the repeat count.
-    def _process_recognition(self, node, extras):
-        sequence = extras["sequence"]
-        if "finish" in extras:
-          sequence.append(extras["finish"])
-        count = extras["n"]
-        for i in range(count):
-            for action in sequence:
-                action.execute()
-                #release.execute()
+  # This method gets called when this rule is recognized.
+  # Arguments:
+  #  - node -- root node of the recognition parse tree.
+  #  - extras -- dict of the "extras" special elements:
+  #   . extras["sequence"] gives the sequence of actions.
+  #   . extras["n"] gives the repeat count.
+  def _process_recognition(self, node, extras):
+    sequence = extras["sequence"]
+    count = extras["n"]
+    for i in range(count):
+      for action in sequence:
+        action.execute()
+        #release.execute()
+      if "format_rule" in extras:
+        extras["format_rule"].execute()
 
 #---------------------------------------------------------------------------
 # Create and load this module's grammar.
 
 grammar = Grammar("multi edit")
-grammar.add_rule(RepeatRule(extras=vim_extras, name="b", context=vim_context))
-grammar.add_rule(RepeatRule(extras=extras, name="a", context=(~vim_context)))
+grammar.add_rule(RepeatRule(extras=vim_extras + [format_rule], name="b", context=vim_context))
+grammar.add_rule(RepeatRule(extras=extras + [format_rule], name="a", context=(~vim_context)))
+grammar.add_rule(LiteralRule())
+
 grammar.load()
 
 # Unload function which will be called at unload time.
 def unload():
-    global grammar
-    if grammar: grammar.unload()
-    grammar = None
+  global grammar
+  if grammar: grammar.unload()
+  grammar = None
