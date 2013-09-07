@@ -8,7 +8,7 @@
 # Licensed under the LGPL, see <http://www.gnu.org/licenses/>
 #
 
-import raul
+import aenea, raul
 
 try:
     import pkg_resources
@@ -395,7 +395,7 @@ class RepeatRule(CompoundRule):
 #---------------------------------------------------------------------------
 # Create and load this module's grammar.
 
-grammar = Grammar("multi edit")
+grammar = Grammar("multi edit", context=aenea.global_context)
 grammar.add_rule(RepeatRule(extras=vim_extras + [format_rule, Alternative(finishes, name="finish")], name="b", context=vim_context))
 grammar.add_rule(RepeatRule(extras=extras + [format_rule, Alternative(finishes, name="finish")], name="a", context=(~vim_context)))
 grammar.add_rule(LiteralRule())
