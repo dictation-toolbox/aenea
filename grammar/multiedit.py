@@ -17,7 +17,7 @@ try:
 except ImportError:
     pass
 
-from dragonfly import Config, Section, Item, MappingRule, CompoundRule, Grammar, IntegerRef, Dictation, RuleRef, Alternative, Repetition, Literal
+from dragonfly import Config, Section, Item, MappingRule, CompoundRule, Grammar, IntegerRef, Dictation, RuleRef, Alternative, Repetition, Literal, Sequence
 from proxy_nicknames import *
 
 vim_context = AppRegexContext(name=".*VIM.*")
@@ -201,7 +201,7 @@ python_command_table = {
   }
 
 def format_snakeword(text):
-  return text[0][0].upper() + text[0][1:] + "_" + format_score(text[1:])
+  return text[0][0].upper() + text[0][1:] + ("_" if len(text) > 1 else "") + format_score(text[1:])
 
 def format_score(text):
   return "_".join(text)
@@ -303,19 +303,28 @@ command_table.update(python_command_table)
 vim_mapping = dict((key, value[1]) for (key, value) in command_table.iteritems())
 
 format_rule = RuleRef(name="format_rule", rule=FormatRule(name="i"))
-
 alternatives = [
       RuleRef(rule=KeystrokeRule(mapping=mapping, name="c")),
-      format_rule
+      format_rule,
     ]
 
 vim_alternatives = [
       RuleRef(rule=KeystrokeRule(mapping=vim_mapping, name="e")),
-      format_rule
+      format_rule,
     ]
 
 single_action = Alternative(alternatives)
 vim_single_action = Alternative(vim_alternatives)
+
+# Can only be used as the last element
+alphabet_mapping = dict((key, Text(value)) for (key, value) in raul.LETTERS.iteritems())
+numbers_mapping = dict((key, Text(value)) for (key, value) in raul.DIGITS.iteritems())
+alphanumeric_mapping = dict((key, Text(value)) for (key, value) in raul.ALPHANUMERIC.iteritems())
+
+alphabet_rule = Sequence([Literal("letters"), Repetition(RuleRef(name="x", rule=MappingRule(name="t", mapping=alphabet_mapping)), min=1, max=20)])
+numbers_rule = Sequence([Literal("digits"), Repetition(RuleRef(name="y", rule=MappingRule(name="u", mapping=numbers_mapping)), min=1, max=20)])
+alphanumeric_rule = Sequence([Literal("alphanumeric"), Repetition(RuleRef(name="z", rule=MappingRule(name="v", mapping=alphanumeric_mapping)), min=1, max=20)])
+finishes = [alphabet_rule, numbers_rule, alphanumeric_rule]
 
 # Second we create a repetition of keystroke elements.
 #  This element will match anywhere between 1 and 16 repetitions
@@ -358,7 +367,7 @@ class LiteralRule(CompoundRule):
 #  actions and the number of times to repeat them.
 class RepeatRule(CompoundRule):
   # Here we define this rule's spoken-form and special elements.
-  spec = "<sequence> [ literal <format_rule> ] [repeat <n> times]"
+  spec = "<sequence> [ ( literal <format_rule> )  | <finish> ] [repeat <n> times]"
 
   defaults = {
     "n": 1, # Default repeat count.
@@ -379,13 +388,16 @@ class RepeatRule(CompoundRule):
         #release.execute()
       if "format_rule" in extras:
         extras["format_rule"].execute()
+      if "finish" in extras:
+        for action in extras["finish"][1]:
+          action.execute()
 
 #---------------------------------------------------------------------------
 # Create and load this module's grammar.
 
 grammar = Grammar("multi edit")
-grammar.add_rule(RepeatRule(extras=vim_extras + [format_rule], name="b", context=vim_context))
-grammar.add_rule(RepeatRule(extras=extras + [format_rule], name="a", context=(~vim_context)))
+grammar.add_rule(RepeatRule(extras=vim_extras + [format_rule, Alternative(finishes, name="finish")], name="b", context=vim_context))
+grammar.add_rule(RepeatRule(extras=extras + [format_rule, Alternative(finishes, name="finish")], name="a", context=(~vim_context)))
 grammar.add_rule(LiteralRule())
 
 grammar.load()
