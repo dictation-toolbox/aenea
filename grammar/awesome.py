@@ -25,7 +25,11 @@ class Basics(CompoundRule):
               "down":[awesome, "j"],
               "left":[awesome, shift, "k"],
               "right":[awesome, shift, "j"],
-              "change screen":[awesome, "o"]}
+              "change screen":[awesome, "o"],
+              "close client":[awesome, shift, "c"],
+              "snap":[awesome, control, "Return"],
+              "full":[awesome, "m"]
+              }
 
   extras = [SelfChoice("command", commands)]
 
