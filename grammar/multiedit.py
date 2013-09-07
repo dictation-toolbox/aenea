@@ -8,6 +8,8 @@
 # Licensed under the LGPL, see <http://www.gnu.org/licenses/>
 #
 
+import raul
+
 try:
     import pkg_resources
 
@@ -198,11 +200,14 @@ python_command_table = {
   "delete":(           Text("del "),               None),
   }
 
+def format_snakeword(text):
+  return text[0][0].upper() + text[0][1:] + "_" + format_score(text[1:])
+
 def format_score(text):
   return "_".join(text)
 
 def format_camel(text):
-  return text[0] + "".join([word.capitalize() for word in text[1:]])
+  return text[0] + "".join([word[0].upper() + word[1:] for word in text[1:]])
 
 def format_proper(text):
   return "".join(word.capitalize() for word in text)
@@ -225,29 +230,31 @@ def format_dotword(text):
 def format_dashword(text):
   return "-".join(text)
 
-def format_natwords(text):
+def format_natword(text):
   return " ".join(text)
 
 class FormatRule(CompoundRule):
   spec = ("[upper | natural] ( proper | camel | rel-path | abs-path | score | "
-          "scope-resolve | jumble | dotword | dashword | natwords) [<dictation>]")
+          "scope-resolve | jumble | dotword | dashword | natword | snakeword) [<dictation>]")
   extras = [Dictation(name="dictation")]
   
   def value(self, node):
-    # TODO: this is terrible, fix it.
-    words = [word.split("\\", 1)[0].replace("-", "") for word in node.words()]
+    words = node.words()
+
     uppercase = words[0] == "upper"
     lowercase = words[0] != "natural"
-    if words[0] in ("upper", "natural"):
-      del words[0]
-
-    function = globals()["format_%s" % words[0].replace(" ", "")]
-    formatted = function(words[1:])
 
     if lowercase:
-      formatted = formatted.lower()
+      words = [word.lower() for word in words]
     if uppercase:
-      formatted = formatted.upper()
+      words = [word.upper() for word in words]
+
+    words = [word.split("\\", 1)[0].replace("-", "") for word in words]
+    if words[0].lower() in ("upper", "natural"):
+      del words[0]
+
+    function = globals()["format_%s" % words[0].lower()]
+    formatted = function(words[1:])
 
     return Text(formatted)
 
