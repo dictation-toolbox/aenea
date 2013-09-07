@@ -188,7 +188,6 @@ class Handler(object):
         transformed_events[-1].append(event)
 
     for events in transformed_events:
-      print "\t" * 3, events
       self.callRaw(events)
 
   def callReadRawCommand(self, event, command="xdotool"):
