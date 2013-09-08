@@ -7,6 +7,12 @@ from comsat import ComSat
 from raul import SelfChoice
 import raul
 
+# SSH_LOVED_HOSTS = {"my favorite server":"my.favorite.server.com"}
+from personal import SSH_LOVED_HOSTS
+
+# for use with autojump
+# JUMP_PLACES = {"spoken form":"written form"}
+from personal import JUMP_PLACES
 
 class ShellContext(Context):
   def __init__(self):
@@ -58,12 +64,12 @@ class ListDirectoryContents(CompoundRule):
 
 class SSH(CompoundRule):
   spec = "[secure] shell [<host>]"
-  extras = [Alternative(map(Literal, raul.SSH_LOVED_HOSTS), name="host")]
+  extras = [Alternative(map(Literal, SSH_LOVED_HOSTS), name="host")]
 
   def _process_recognition(self, node, extras):
     text = "ssh "
     if "host" in extras:
-      text += raul.SSH_LOVED_HOSTS[extras["host"]]
+      text += SSH_LOVED_HOSTS[extras["host"]]
     Text(text).execute()
 
 class Git(CompoundRule):
@@ -100,8 +106,7 @@ class Git(CompoundRule):
 
 class ShellJump(CompoundRule):
   spec = "jump [<place>]"
-  place = {"sightseer":"citeseerx", "euro since":"eurosys", "aenea":"aenea",
-           "just this once":"justthisonce", "zombies":"zombies", "ducttape":"ducttape"}
+  place = JUMP_PLACES
 
   extras = [SelfChoice("place", place)]
 

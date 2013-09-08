@@ -114,6 +114,8 @@ command_table = {
                                           Key("Escape, l, d, asciicircum, i") ),
   "nab [<n>]":(      Key("Home, Shift_L:down, Down:%(n)d, Up, End, Shift_L:up, c-j, End"),
                                           Key("Escape, [ y%(n)dyi ]") ),
+  "plop [<n>]":(     Key("c-v"),
+                                          Key("Escape, dollar, [ %(n)dpi ]") ),
   "trance [<n>]":(   Key("Home, Shift_L:down, Down:%(n)d, Up:2, End, Shift_L:up, c-j, End, Return, c-k"),
                                           Key("Escape, [ y%(n)dy%(n)djpi ]") ),
   "lineup [<n>]":(   Key("Home, Shift_L:down, End, Shift_L:up, c-q, Delete, Up:%(n)d, Home, Return, Up, c-k"),
@@ -165,6 +167,7 @@ python_command_table = {
   "log and":(          Text("and "),               None),
   "log or":(           Text("or "),                None),
   "log not":(          Text("not "),               None),
+  "not":(              Text("not "),               None),
   "for loop":(         Text("for "),               None),
   "bit ore":(          Text("| "),                 None),
   "bit and":(          Text("& "),                 None),
@@ -188,8 +191,8 @@ python_command_table = {
   "raise":(            Text("raise "),             None),
   "return":(           Text("return "),            None),
   "none":(             Text("None"),               None),
-  "none":(             Text("True"),               None),
-  "none":(             Text("False"),              None),
+  "true":(             Text("True"),               None),
+  "false":(            Text("False"),              None),
   "try":(              Text("try"),                None),
   "except":(           Text("except"),             None),
   "lambda":(           Text("lambda "),            None),
@@ -198,6 +201,13 @@ python_command_table = {
   "self dot":(         Text("self."),              None),
   "pass":(             Text("pass"),               None),
   "delete":(           Text("del "),               None),
+  "assign":(           Text("= "),                 None),
+  "compare eek":(      Text("== "),                None),
+  "compare not eek":(  Text("!= "),                None),
+  "compare greater":(  Text("> "),                 None),
+  "compare less":(     Text("< "),                 None),
+  "compare geck":(     Text(">= "),                None),
+  "compare lack":(     Text("<= "),                None),
   }
 
 def format_snakeword(text):
@@ -233,9 +243,12 @@ def format_dashword(text):
 def format_natword(text):
   return " ".join(text)
 
+def format_broodingnarrative(text):
+  return ""
+
 class FormatRule(CompoundRule):
   spec = ("[upper | natural] ( proper | camel | rel-path | abs-path | score | "
-          "scope-resolve | jumble | dotword | dashword | natword | snakeword) [<dictation>]")
+          "scope-resolve | jumble | dotword | dashword | natword | snakeword | brooding-narrative) [<dictation>]")
   extras = [Dictation(name="dictation")]
   
   def value(self, node):

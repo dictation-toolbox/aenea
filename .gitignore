@@ -1,3 +1,4 @@
 *.pyc
 .*.swp
 multiedit.py
+util/personal.py

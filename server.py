@@ -68,7 +68,8 @@ class Handler(object):
 
   def callText(self, message):
     """Types a string as is."""
-    self.writeCommand(message)
+    if message:
+      self.writeCommand(message)
 
   def callMouse(self, x, y, absolute=True):
     """Moves the mouse to the specified coordinates."""
