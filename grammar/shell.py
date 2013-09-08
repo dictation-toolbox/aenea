@@ -1,9 +1,12 @@
-from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, Context, Repetition)
+from proxy_nicknames import *
+from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, Context, Repetition, MappingRule, RuleRef, DictListRef, DictList, Alternative)
 import natlink, os
 vim = __import__("_vim")
 from comsat import ComSat
 
 from raul import SelfChoice
+import raul
+
 
 class ShellContext(Context):
   def __init__(self):
@@ -53,10 +56,23 @@ class ListDirectoryContents(CompoundRule):
         suffix += " "
       connection.getRPCProxy().callText("ls %s %s" % (flags, suffix))
 
+class SSH(CompoundRule):
+  spec = "[secure] shell [<host>]"
+  extras = [Alternative(map(Literal, raul.SSH_LOVED_HOSTS), name="host")]
+
+  def _process_recognition(self, node, extras):
+    text = "ssh "
+    if "host" in extras:
+      text += raul.SSH_LOVED_HOSTS[extras["host"]]
+    Text(text).execute()
+
 class Git(CompoundRule):
   spec = "git [<command>] [<options>]"
   self_commands = ["add", "commit", "checkout", "branch", "diff", "log", "merge",
                    "pull", "push", "remote", "reset", "status"]
+  # TODO: really needs to be rewritten in the syntax aware way
+  for stash_command in ("list", "show", "drop", "pop", "apply", "branch", "save", "clear", ""):
+    self_commands.append("stash %s" % stash_command)
   commands = {"remove":"rm", "unlink":"rm", "move":"mv", "add update":"add -u"}
   commands.update(zip(self_commands, self_commands))
   options = {"v":"v", "verbose":"v", ".":".", "here":".", "m":"m", "message":"m"}
@@ -99,7 +115,7 @@ class SimpleCommand(CompoundRule):
   spec = "[<sudo>] <command>"
   commands = {"remove dirt":"rmdir", "make dirt":"mkdir", "copy":"cp",
              "move":"mv", "rim":"rm", "unlink":"rm", "editor":"gvim", "editor console":"vim",
-             "shell":"ssh", "grep":"grep", "grubby":"grep -i", "grubber":"grep -r",
+             "grep":"grep", "grubby":"grep -i", "grubber":"grep -r",
              "grubby ear":"grep -ir", "find":"find", "said it":"sed -e", "unique":"uniq",
              "awkward":"awk", "diff":"diff", "sort":"sort", "x arguments":"xargs",
              "tar":"tar", "gzip":"gzip", "the zip":"bzip", "elziemay":"lzma",
@@ -144,6 +160,7 @@ grammar.add_rule(ChangeDirectory())
 grammar.add_rule(SimpleCommand())
 grammar.add_rule(Git())
 grammar.add_rule(SimpleCommand2())
+grammar.add_rule(SSH())
 
 grammar.load()
 

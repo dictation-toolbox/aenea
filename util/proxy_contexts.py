@@ -13,6 +13,14 @@ communications = proxy.communications
 
 DONT_CARE = object()
 
+class AlwaysContext(dragonfly.Context):
+  def matches(self, windows_executable, windows_title, windows_handle):
+    return True
+
+class NeverContext(dragonfly.Context):
+  def matches(self, windows_executable, windows_title, windows_handle):
+    return False
+
 class ProxyBaseAppContext(dragonfly.Context):
   """matches based on the properties of the currently active window.
      see also ProxyAppContextOr, ProxyAppContextAnd."""
