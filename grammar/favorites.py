@@ -7,12 +7,13 @@ from raul import SelfChoice
 grammar_context = AppContext(executable="notepad")
 grammar = Grammar("favorites", context=grammar_context)
 
+# {"spoken form":"written form"}
 from personal import FAVORITES
 
 class Favorites(CompoundRule):
   spec = "fave  <key>"
 
-  extras = [SelfChoice("key", favorites)]
+  extras = [SelfChoice("key", FAVORITES)]
 
   def _process_recognition(self, node, extras):
     value = favorites[str(extras["key"])]

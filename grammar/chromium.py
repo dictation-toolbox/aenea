@@ -15,16 +15,16 @@ class ChromiumRule(MappingRule):
       "open window":                            Key("c-n"),
       "reopen [<n>] ( frame | frames )":        Key("cs-t"),
       "[ go to ] frame [<n>]":                  Key("c-%(n)d"),
-      "frame left [<n>]":                       Key("cs-Tab:%(n)d"),
-      "frame right [<n>]":                      Key("c-Tab:%(n)d"),
+      "frame left [<n>]":                       Key("cs-tab:%(n)d"),
+      "frame right [<n>]":                      Key("c-tab:%(n)d"),
       "search [<text>]":                        Key("c-k") + Text("%(text)s"),
       "find [<text>]":                          Key("c-f") + Text("%(text)s"),
       "history":                                Key("c-h"),
       "reload":                                 Key("c-r"),
       "next [<n>]":                             Key("c-g:%(n)d"),
       "previous [<n>]":                         Key("cs-g:%(n)d"),
-      "back [<n>]":                             Key("a-Left:%(n)d"),
-      "forward [<n>]":                          Key("a-Right:%(n)d"),
+      "back [<n>]":                             Key("a-left:%(n)d"),
+      "forward [<n>]":                          Key("a-right:%(n)d"),
       }
 
   extras = [IntegerRef("n", 1, 10), Dictation("text")]

@@ -15,6 +15,7 @@ class MockComsat(object):
   def __init__(self):
     self.proxy = mock.MagicMock()
     self.proxy.callEvents = mock.MagicMock(return_value=None, side_effect=self.raw.extend)
+    self.proxy.callText = mock.MagicMock(return_value=None, side_effect=lambda text: self.raw.append("type " + text))
 
   def __enter__(self):
     return self
@@ -35,8 +36,8 @@ class TestActions(unittest.TestCase):
 
   def test_key(self):
     parse = partial(self.get_events, ProxyKey)
-    self.assertEqual(parse("H"), ["keydown Shift_L", "key h", "keyup Shift_L"])
-    self.assertEqual(parse("H, e"), ["keydown Shift_L", "key h", "keyup Shift_L", "key e"])
+    self.assertEqual(parse("H"), ["key H"])
+    self.assertEqual(parse("H, e"), ["key H", "key e"])
 
     self.assertEqual(parse("c-Home"), ["keydown Control_L", "key Home", "keyup Control_L"])
     self.assertEqual(parse("c-Home:2"), ["keydown Control_L", "key Home", "key Home", "keyup Control_L"])
@@ -49,9 +50,9 @@ class TestActions(unittest.TestCase):
   
   def test_key_multiple_modifiers(self):
     parse = partial(self.get_events, ProxyKey)
-    keys = parse("caw-H")
+    keys = parse("scaw-H")
     mods = ("Shift_L", "Control_L", "Super_L", "Alt_L")
-    self.assertEqual(keys[4], "key h")
+    self.assertEqual(keys[4], "key H")
     self.assertItemsEqual(keys[:4], ["keydown %s" % mod for mod in mods])
     self.assertItemsEqual(keys[-4:], ["keyup %s" % mod for mod in mods])
     mod_up, mod_down = [[x.split()[1] for x in mod_string]
@@ -62,9 +63,15 @@ class TestActions(unittest.TestCase):
     parse = partial(self.get_events, ProxyKey)
     self.assertEqual(parse("a:up"), ["keyup a"])
 
+  def test_key_windows(self):
+    parse = partial(self.get_events, ProxyKey)
+    sequence = ["keydown Super_L", "key Delete", "keyup Super_L", "key greater", "key Left",
+                "key F9", "key KP_7"]
+    self.assertEqual(parse("w-del, rangle, left, f9, np7"), sequence)
+
   def test_text(self):
     parse = partial(self.get_events, ProxyText)
-    self.assertEqual(parse("Hello world!"), ["text Hello world!"])
+    self.assertEqual(parse("Hello world!"), ["type Hello world!"])
 
   def test_mouse_move(self):
     parse = partial(self.get_events, ProxyMouse)

@@ -19,13 +19,30 @@ class ProxyBase(object):
 ################################################################################
 # Key
 
+# mapping from windows key names to the equivalent linux symbols (where different). 
+WINDOWS_MAPPING = {"pgup":"Prior", "pgdown":"Next", "backspace":"BackSpace",
+                   "del":"Delete", "backtick":"grave", "caret":"asciicircum",
+                   "dot":"period", "dquote":"quotedbl", "exclamation":"exclam",
+                   "hash":"numbersign", "hyphen":"minus", "squote":"apostrophe",
+                   "tilde":"asciitilde", "langle":"less", "rangle":"greater",
+                   "lbracket":"bracketleft", "rbracket":"bracketright",
+                   "lparen":"parenleft", "rparen":"parenright",
+                   "lbrace":"braceleft", "rbrace":"braceright", "apps":"Menu",
+                   "win":"Super_L", "npadd":"KP_Add", "npdec":"KP_Decimal",
+                   "npdiv":"KP_Divide", "npmul":"KP_Multiply"}
+for key in (["left", "right", "up", "down", "home", "end", "tab", "insert",
+             "escape"] + ["f%i" % i for i in xrange(1, 13)]):
+  WINDOWS_MAPPING[key] = key[0].upper() + key[1:]
+for index in xrange(10):
+  WINDOWS_MAPPING["np%i" % index] = "KP_%i" % index
+
 def _get_key_symbols():
   try:
     with open("keys.txt") as keyfile:
-      return [line.strip() for line in keyfile]
+      return [line.strip() for line in keyfile] + list(WINDOWS_MAPPING)
   except:
     with open("C:\\NatLink\\NatLink\\MacroSystem\\keys.txt") as keyfile:
-      return [line.strip() for line in keyfile]
+      return [line.strip() for line in keyfile] + list(WINDOWS_MAPPING)
 
 _modifier_keys = {
         "a": "Alt_L",
@@ -83,10 +100,7 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
 
       modifiers = ([_modifier_keys[c] for c in modifier_part[0]]
                    if modifier_part else [])
-      key = key_part[0]
-      if key.isalpha() and key.isupper():
-        key = key.lower()
-        modifiers.append("Shift_L")
+      key = WINDOWS_MAPPING.get(key_part[0], key_part[0])
       outer_pause = handle_pause(outer_pause_part)
 
       # regular keypress event
