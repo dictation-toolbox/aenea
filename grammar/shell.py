@@ -123,7 +123,7 @@ class SimpleCommand(CompoundRule):
              "grep":"grep", "grubby":"grep -i", "grubber":"grep -r",
              "grubby ear":"grep -ir", "find":"find", "said it":"sed -e", "unique":"uniq",
              "awkward":"awk", "diff":"diff", "sort":"sort", "x arguments":"xargs",
-             "tar":"tar", "gzip":"gzip", "the zip":"bzip", "elziemay":"lzma",
+             "tar":"tar", "gzip":"gzip", "be zip":"bzip2", "elziemay":"lzma",
              "zip":"zip", "zipper":"zip -r", "unzip":"unzip", "edit cron tab":"crontab -e -u alexr",
              "shall echo":"echo", "edit root cron tab":"sudo crontab -u root",
              "process snapshot":"ps", "table of processes":"top", "top":"top",
