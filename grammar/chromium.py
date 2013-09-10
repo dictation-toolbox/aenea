@@ -13,7 +13,7 @@ class ChromiumRule(MappingRule):
       "close [<n>] ( frame | frames )":         Key("c-w:%(n)d"),
       "open frame":                             Key("c-t"),
       "open window":                            Key("c-n"),
-      "reopen [<n>] ( frame | frames )":        Key("cs-t"),
+      "reopen [<n>] ( frame | frames )":        Key("cs-t:%(n)d"),
       "[ go to ] frame [<n>]":                  Key("c-%(n)d"),
       "frame left [<n>]":                       Key("cs-tab:%(n)d"),
       "frame right [<n>]":                      Key("c-tab:%(n)d"),
