@@ -1,4 +1,4 @@
-from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, Context, MappingRule, IntegerRef)
+from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, Context, MappingRule, IntegerRef, Pause)
 import natlink, os, time
 
 from proxy_nicknames import Key, Text
@@ -6,6 +6,9 @@ from proxy_nicknames import Key, Text
 from comsat import ComSat
 
 from raul import SelfChoice, processDictation, NUMBERS as numbers
+
+leader = Key("backslash")
+escape_leader = Key("Escape") + Pause("30") + Key("backslash")
 
 class VimContext(Context):
   def __init__(self):
@@ -44,6 +47,19 @@ class EasyMotion(CompoundRule):
                 ("jump", "end"):"e"}[(command, location)]
 
     (Key("Escape, backslash:2") + Text(shortcut)).execute()
+
+# i guess if you write a vim plugin you get to name it but i can't claim to understand these two...
+class LustyJuggler(MappingRule):
+  mapping = {"jug | juggle":escape_leader + Text("lj"),
+             "(jug | juggle) <n>":escape_leader + Key("l, j, %(n)d") + Pause("20") + Key("Return") + Pause("20") + Key("i")}
+  extras = [IntegerRef("n", 0, 10)]
+
+class LustyExplorer(MappingRule):
+  mapping = {"rusty":escape_leader + Key("l, r"),
+             "rusty absolute":escape_leader + Key("r, f"),
+             "rusty <name>":escape_leader + Key("l, r") + Text("%(name)s"),
+             "rusty absolute <name>":escape_leader + Key("l, f") + Text("%(name)s")}
+  extras = [Dictation("name")]
 
 class VimSearch(CompoundRule):
   spec = "vim <cmd> [<number>]"
@@ -87,6 +103,8 @@ grammar.add_rule(EasyMotion())
 grammar.add_rule(VimCommand())
 grammar.add_rule(VimSearch())
 grammar.add_rule(GoCommand())
+grammar.add_rule(LustyJuggler())
+grammar.add_rule(LustyExplorer())
 
 grammar.load()
 
