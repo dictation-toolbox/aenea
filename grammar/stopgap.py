@@ -62,9 +62,7 @@ class TranslateSpecial(CompoundRule):
 class Translate(CompoundRule):
   spec = "<cmd>"
  
-  cmd = {"slot":"[",
-         "straw":"]", "claw":"{", "draw":"}",
-         "hash bang shell":"#!/bin/sh",
+  cmd = {"hash bang shell":"#!/bin/sh",
          "hash bang bash":"#!/bin/sh", "hash bang python":"#!/usr/bin/python"}
 
   extras = [SelfChoice("cmd", cmd)]

@@ -98,11 +98,6 @@ command_table = {
   "nest quote":(       Nested("\"\""),             None),
   "nest smote":(       Nested("''"),               None),
     
-  #### Legacy symbols (probably will remove these later)
-  "oop [<n>]":(        Key("period:%(n)d"),        None),
-  "dub quote [<n>]":( Key("quotedbl:%(n)d"),       None),
-  "sing quote [<n>]":(  Key("apostrophe:%(n)d"),   None),
-
   # Spoken-form      normal command       VIM (can set to None if same as normal)
 
   #### Lines
@@ -117,7 +112,7 @@ command_table = {
   "plop [<n>]":(     Key("c-v"),
                                           Key("Escape, dollar, [ %(n)dpi ]") ),
   "trance [<n>]":(   Key("Home, Shift_L:down, Down:%(n)d, Up:2, End, Shift_L:up, c-j, End, Return, c-k"),
-                                          Key("Escape, [ y%(n)dy%(n)djpi ]") ),
+                                          Key("Escape, [ y%(n)dy%(n)djkpi ]") ),
   "lineup [<n>]":(   Key("Home, Shift_L:down, End, Shift_L:up, c-q, Delete, Up:%(n)d, Home, Return, Up, c-k"),
                                           Key("Escape, [ dd%(n)dk ], Home, [ 1P ], i") ),
   "line down [<n>]":(Key("Home, Shift_L:down, End, Shift_L:up, c-q, Delete, Down:%(n)d, Home, Return, Up, c-k"),
