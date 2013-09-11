@@ -1,5 +1,7 @@
-from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, Context)
-import natlink, os
+from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, Context, MappingRule, IntegerRef)
+import natlink, os, time
+
+from proxy_nicknames import Key, Text
 
 from comsat import ComSat
 
@@ -41,9 +43,7 @@ class EasyMotion(CompoundRule):
                 ("jump", "start"):"w",
                 ("jump", "end"):"e"}[(command, location)]
 
-    with ComSat() as cs:
-      rpc = cs.getRPCProxy()
-      rpc.callKeys("Escape backslash backslash " + shortcut)
+    (Key("Escape, backslash:2") + Text(shortcut)).execute()
 
 class VimSearch(CompoundRule):
   spec = "vim <cmd> [<number>]"
@@ -60,6 +60,8 @@ class VimSearch(CompoundRule):
       rpc.callText("%i%s" % (number, cmd))
       if "search" in str(extras["cmd"]):
         rpc.callKeys(["Return"])
+    if "search" in str(extras["cmd"]):
+      Text("i").execute()
 
 class VimCommand(CompoundRule):
   spec = "vim <cmd>"
@@ -73,64 +75,18 @@ class VimCommand(CompoundRule):
       rpc.callKeys("Escape")
       cmd = self.cmd[str(extras["cmd"])]
       rpc.callText(":%s\n" % cmd)
+    if cmd == "w":
+      time.sleep(0.2) # vim does not seem to notice the keystroke unless it occurs after the save is complete
+      Key("i").execute()
 
-class VIMRule4(CompoundRule):
-  spec = "<cmd> <cmd2>"
-  cmd = {"Grab":"y", "Inc.":"y", "Dell":"d"}
-  extras = [Choice("cmd", cmd), Choice("cmd2", cmd)]
-
-  def _process_recognition(self, node, extras):
-    if extras["cmd"] == extras["cmd2"]:
-      with ComSat() as cs:
-        cs.getRPCProxy().callText("%s%s" % ((extras["cmd"],) * 2))
-
-class VIMRule3point5(CompoundRule):
-  spec = "<cmd> word"
-  cmd = {"Grab":"y", "Inc.":"y", "Dell":"d", "back dell":"d a"}
-  extras = [SelfChoice("cmd", cmd)]
-
-  def _process_recognition(self, node, extras):
-    with ComSat() as cs:
-      cs.getRPCProxy().callModifiedKeys("%s w" % self.cmd[str(extras["cmd"])])
-        
-class VIMRule3(CompoundRule):
-  spec = "<cmd> rest"
-  cmd = {"Grab":"y", "Inc.":"y", "Dell":"d"}
-  extras = [Choice("cmd", cmd)]
-
-  def _process_recognition(self, node, extras):
-    with ComSat() as cs:
-      cs.getRPCProxy().callText("%s$" % extras["cmd"])
-
-class VIMRule2(CompoundRule):
-  cmd = {"Grab":"y", "Inc.":"y", "Dell":"d"}
-  extras = [Choice("cmd", cmd), Choice("number", numbers)]
-  spec = "<cmd> <number>"
-
-  def _process_recognition(self, node, extras):
-    number = int(numbers[str(extras["number"])])
-    with ComSat() as cs:
-      cs.getRPCProxy().callText("%s%i%s" % (extras["cmd"], number, extras["cmd"]))
-
-class VIMRule(CompoundRule):
-  spec = "<number> <cmd>"
-  extras = [Choice("cmd", {"J":"j", "K":"k", "H":"h", "L":"l", "P":"p",
-                   "word":"w", "Oscar":"o", "go":"G",
-                   "up Oscar":"O"}), Dictation("number", numbers)]
-
-  def _process_recognition(self, node, extras):
-    number = int(processDictation(numbers[str(extras["number"])]))
-    with ComSat() as cs:
-      cs.getRPCProxy().callText("%i%s" % (number, extras["cmd"]))
+class GoCommand(MappingRule):
+  mapping = {"<n> go":Key("Escape") + Text("%(n)dGi")}
+  extras = [IntegerRef("n", 1, 1000)] #  for longer files i can just use manual keystroke commands
 
 grammar.add_rule(EasyMotion())
-grammar.add_rule(VIMRule())
 grammar.add_rule(VimCommand())
-grammar.add_rule(VIMRule2())
-grammar.add_rule(VIMRule3())
-grammar.add_rule(VIMRule3point5())
-grammar.add_rule(VIMRule4())
 grammar.add_rule(VimSearch())
+grammar.add_rule(GoCommand())
 
 grammar.load()
 
