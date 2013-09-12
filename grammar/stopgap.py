@@ -52,7 +52,9 @@ class QuadCommand(CompoundRule):
 class TranslateSpecial(CompoundRule):
   spec = "<cmd>"
   # say: law raw slaw sraw claw craw
-  cmd = {"syn":"a", "inns":"i", "vim replace":"R", "termie":"Super_L Return"}
+  cmd = {"syn":"a", "inns":"i", "vim replace":"R", "termie":"Super_L Return", "chrome browsing":"Hyper_L f",
+        "chrome login":"Hyper_L a", "chrome social":"Hyper_L s", "chrome google":"Hyper_L g",
+        "chrome secure":"Hyper_L"}
   extras = [Choice("cmd", cmd)]
 
   def _process_recognition(self, node, extras):
