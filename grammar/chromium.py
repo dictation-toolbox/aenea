@@ -4,7 +4,7 @@ from proxy_nicknames import *
 
 import aenea
 
-chromium_context = AppContext(window_class_name="chromium", window_class="Chromium") & aenea.global_context
+chromium_context = AppRegexContext(window_class_name="(c|C)hromium", window_class="(c|C)hromium.*") & aenea.global_context
 
 chromium_grammar = Grammar("chromium", context=chromium_context)
 
