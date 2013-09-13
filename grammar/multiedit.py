@@ -41,10 +41,10 @@ command_table = {
   # Spoken-form        normal command              VIM (can set to None if same as normal)
 
   #### Cursor manipulation
-  "up [<n>]":(         Key("Up:%(n)d"),            None),
-  "down [<n>]":(       Key("Down:%(n)d"),          None),
-  "left [<n>]":(       Key("Left:%(n)d"),          None),
-  "right [<n>]":(      Key("Right:%(n)d"),         None),
+  "up [<n>]":(         Key("Up:%(n)d"),            Key("Escape, [ %(n)dki ]")),
+  "down [<n>]":(       Key("Down:%(n)d"),          Key("Escape, [ %(n)dji ]")),
+  "left [<n>]":(       Key("Left:%(n)d"),          Key("Escape, [ %(n)dhi ]")),
+  "right [<n>]":(      Key("Right:%(n)d"),         Key("Escape, [ %(n)dli ]")),
   "gope [<n>]":(       Key("Prior:%(n)d"),         None),
   "drop [<n>]":(       Key("Next:%(n)d"),          None),
   "port [<n>]":(       Key("c-Left:%(n)d"),        Key("Escape, [ %(n)dbi ]") ),
@@ -117,12 +117,25 @@ command_table = {
                                           Key("Escape, [ dd%(n)dk ], Home, [ 1P ], i") ),
   "line down [<n>]":(Key("Home, Shift_L:down, End, Shift_L:up, c-q, Delete, Down:%(n)d, Home, Return, Up, c-k"),
                                           Key("Escape, [ dd%(n)dj ], Home, [ 1P ], i") ),
+  "squishy [<n>]":(  Key("End, Delete, space"),
+                                          Key("Escape, [ %(n)dJi ]") ),
 
   #### Words
   "bump [<n>]":(     Key("Right:2, c-Left, cs-Right:%(n)d, Delete:2"),
                                           Key("Escape, [ lwbd%(n)dwi ]")),
   "whack [<n>]":(    Key("Left, c-Right, cs-Left:%(n)d, Delete:2"),
                                           Key("Escape, [ lw%(n)dbd%(n)dwi ]")),
+  }
+
+# VIM only commands
+vim_command_table = {
+  # Spoken-form                VIM (can set to None if same as normal)
+  "squishy space [<n>]":       Key("Escape, [ %(n)dgJi ]"),
+
+  "slowly up [<n>]":           Key("Up:%(n)d"),
+  "slowly down [<n>]":         Key("Down:%(n)d"),
+  "slowly left [<n>]":         Key("Left:%(n)d"),
+  "slowly right [<n>]":        Key("Right:%(n)d"),
   }
 
 # Python specific
@@ -285,6 +298,7 @@ class KeystrokeRule(MappingRule):
 mapping = dict((key, value[0]) for (key, value) in command_table.iteritems())
 command_table.update(python_command_table)
 vim_mapping = dict((key, value[1]) for (key, value) in command_table.iteritems())
+vim_mapping.update(vim_command_table)
 
 format_rule = RuleRef(name="format_rule", rule=FormatRule(name="i"))
 alternatives = [
