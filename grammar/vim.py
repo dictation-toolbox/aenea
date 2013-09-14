@@ -7,8 +7,11 @@ from comsat import ComSat
 
 from raul import SelfChoice, processDictation, NUMBERS as numbers
 
-leader = Key("backslash")
-escape_leader = Key("Escape") + Pause("30") + Key("backslash")
+LEADER_KEY = "comma"
+
+leader = Key(LEADER_KEY)
+escape = Key("Escape")
+escape_leader = escape + Pause("30") + leader
 
 class VimContext(Context):
   def __init__(self):
@@ -44,9 +47,9 @@ class EasyMotion(CompoundRule):
     shortcut = {("leap", "start"):"b",
                 ("leap", "end"):"ge",
                 ("jump", "start"):"w",
-                ("jump", "end"):"e"}[(command, location)]
+                ("jump", "end"):"E"}[(command, location)]
 
-    (Key("Escape, backslash:2") + Text(shortcut)).execute()
+    (escape_leader + leader + Text(shortcut)).execute()
 
 # i guess if you write a vim plugin you get to name it but i can't claim to understand these two...
 class LustyJuggler(MappingRule):
@@ -60,6 +63,15 @@ class LustyExplorer(MappingRule):
              "rusty <name>":escape_leader + Key("l, r") + Text("%(name)s"),
              "rusty absolute <name>":escape_leader + Key("l, f") + Text("%(name)s")}
   extras = [Dictation("name")]
+
+class CommandT(MappingRule):
+  mapping = {"command tea":escape_leader + Key("t"),
+             "command tea [<text>]":escape_leader + Key("t") + Pause("20") + Text("%(text)s\n"),
+             "command tea buffer":escape + Text(":CommandTBuffer\n"),
+             "command tea buffer [<text>]":escape_leader + Key("t") + Pause("20") + Text("%(text)s\n"),
+             "command tea (tags | tag)":escape + Text(":CommandTTag\n"),
+             "command tea jump":escape + Text(":CommandTJump\n")}
+  extras = [Dictation("text")]
 
 class VimSearch(CompoundRule):
   spec = "vim <cmd> [<number>]"
@@ -105,6 +117,7 @@ grammar.add_rule(VimSearch())
 grammar.add_rule(GoCommand())
 grammar.add_rule(LustyJuggler())
 grammar.add_rule(LustyExplorer())
+grammar.add_rule(CommandT())
 
 grammar.load()
 
