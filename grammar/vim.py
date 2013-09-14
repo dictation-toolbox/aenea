@@ -73,6 +73,13 @@ class CommandT(MappingRule):
              "command tea jump":escape + Text(":CommandTJump\n")}
   extras = [Dictation("text")]
 
+class Fugitive(MappingRule):
+  mapping = {"git status":escape + Text(":Gstatus\n"),
+             "git commit":escape + Text(":Gcommit\n"),
+             "git diff":escape + Text(":Gdiff\n"),
+             "git move":escape + Text(":Gmove\n"),
+             "git remove":escape + Text(":Gremove\n")}
+
 class VimSearch(CompoundRule):
   spec = "vim <cmd> [<number>]"
   cmd = {"query":"/", "query back":"?",
@@ -94,7 +101,7 @@ class VimSearch(CompoundRule):
 class VimCommand(CompoundRule):
   spec = "vim <cmd>"
   cmd = {"write":"w", "write and quit":"wq", "quit bang":"q!", "quit":"q",
-         "undo":"u", "redo":":redo"}
+         "undo":"u", "redo":":redo", "[buf] close":"bd"}
   extras = [SelfChoice("cmd", cmd)]
 
   def _process_recognition(self, node, extras):
@@ -118,6 +125,7 @@ grammar.add_rule(GoCommand())
 grammar.add_rule(LustyJuggler())
 grammar.add_rule(LustyExplorer())
 grammar.add_rule(CommandT())
+grammar.add_rule(Fugitive())
 
 grammar.load()
 
