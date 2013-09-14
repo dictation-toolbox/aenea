@@ -43,8 +43,8 @@ command_table = {
   #### Cursor manipulation
   "up [<n>]":(         Key("Up:%(n)d"),            Key("Escape, [ %(n)dki ]")),
   "down [<n>]":(       Key("Down:%(n)d"),          Key("Escape, [ %(n)dji ]")),
-  "left [<n>]":(       Key("Left:%(n)d"),          Key("Escape, [ %(n)dhi ]")),
-  "right [<n>]":(      Key("Right:%(n)d"),         Key("Escape, [ %(n)dli ]")),
+  "left [<n>]":(       Key("Left:%(n)d"),          None),
+  "right [<n>]":(      Key("Right:%(n)d"),         None),
   "gope [<n>]":(       Key("Prior:%(n)d"),         None),
   "drop [<n>]":(       Key("Next:%(n)d"),          None),
   "port [<n>]":(       Key("c-Left:%(n)d"),        Key("Escape, [ %(n)dbi ]") ),
@@ -97,7 +97,7 @@ command_table = {
   "hexy":(             Nested("{}"),               None),
   "nest quote":(       Nested("\"\""),             None),
   "nest smote":(       Nested("''"),               None),
-    
+ 
   # Spoken-form      normal command       VIM (can set to None if same as normal)
 
   #### Lines
