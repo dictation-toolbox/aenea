@@ -1,11 +1,13 @@
-from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, Context, MappingRule, IntegerRef, Pause)
+from dragonfly import (Grammar, CompoundRule, Choice, Dictation, List, Optional, Literal, Context, MappingRule, IntegerRef, Pause)
 import natlink, os, time
 
-from proxy_nicknames import Key, Text
+from proxy_nicknames import Key, Text, AppRegexContext
 
 from comsat import ComSat
 
 from raul import SelfChoice, processDictation, NUMBERS as numbers
+
+import aenea
 
 LEADER_KEY = "comma"
 
@@ -13,43 +15,24 @@ leader = Key(LEADER_KEY)
 escape = Key("Escape")
 escape_leader = escape + Pause("30") + leader
 
-class VimContext(Context):
-  def __init__(self):
-    self._str = "VimContext"
+vim_context = aenea.global_context & AppRegexContext(name="(?i)^.* vim$")
 
-  def matches(self, executable, title, handle):
-    with ComSat() as cs:
-      active_title = cs.getRPCProxy().callGetState()["active_title"]
-      if active_title:
-        active_title = active_title.strip().lower()
-      else:
-        return False
+command_t_context = AppRegexContext(name="^GoToFile.*$") & vim_context
+fugitive_index_context = AppRegexContext(name="^index.*\.git.*$") & vim_context
 
-      return (active_title.startswith("vim ") or active_title.endswith(" vim") or
-              " vim " in active_title)
+grammar = Grammar("vim", context=vim_context)
 
-grammar_context = AppContext(executable="notepad") & VimContext()
-grammar = Grammar("vim", context=grammar_context)
-
-class EasyMotion(CompoundRule):
-  spec = "<command> [<end>] [<inout>]"
-  command = SelfChoice("command", ["leap", "jump"])
-  end = SelfChoice("end", ["start", "end"])
-  inout = SelfChoice("inout", ["in", "out"])
-
-  extras = [command, end, inout]
-
-  def _process_recognition(self, node, extras):
-    command = str(extras["command"])
-    location = str(extras.get("end", "start"))
-    inout = str(extras.get("inout", "in"))
-
-    shortcut = {("leap", "start"):"b",
-                ("leap", "end"):"ge",
-                ("jump", "start"):"w",
-                ("jump", "end"):"E"}[(command, location)]
-
-    (escape_leader + leader + Text(shortcut)).execute()
+class EasyMotion(MappingRule):
+  mapping = {"easy jump [start] [<place>]":escape_leader + leader + Key("W") + Text("%(place)s"),
+             "easy jump end [<place>]":escape_leader + leader + Key("E") + Text("%(place)s"),
+             "easy hop [start] [<place>]":escape_leader + leader + Key("w") + Text("%(place)s"),
+             "easy hop end [<place>]":escape_leader + leader + Key("e") + Text("%(place)s"),
+             "easy leap [start] [<place>]":escape_leader + leader + Key("B") + Text("%(place)s"),
+             "easy leap end [<place>]":escape_leader + leader + Key("g, E") + Text("%(place)s"),
+             "easy bounce [start] [<place>]":escape_leader + leader + Key("b") + Text("%(place)s"),
+             "easy bounce end [<place>]":escape_leader + leader + Key("g, e") + Text("%(place)s")}
+  extras = [Dictation("place")]
+  default = {"place":""}
 
 # i guess if you write a vim plugin you get to name it but i can't claim to understand these two...
 class LustyJuggler(MappingRule):

@@ -52,7 +52,7 @@ class Handler(object):
       if len(split) == 2:
         rawkey, value = split
         if split[0] in XPROP_PROPERTIES:
-          properties[XPROP_PROPERTIES[rawkey]] = value
+          properties[XPROP_PROPERTIES[rawkey]] = value[1:-1] if "(STRING)" in rawkey else value
         elif rawkey == "WM_CLASS(STRING)":
 #          try:
             window_class_name, window_class = value.split('", "')

@@ -22,7 +22,7 @@ class ShellContext(Context):
     with ComSat() as cs:
       return cs.getRPCProxy().callGetState()["in_terminal"]
 
-grammar_context = (AppContext(executable="notepad") & ShellContext()) & (~vim.VimContext())
+grammar_context = (AppContext(executable="notepad") & ShellContext()) & (~vim.vim_context)
 grammar = Grammar("shell", context=grammar_context)
 
 class ChangeDirectory(CompoundRule):
