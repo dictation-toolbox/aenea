@@ -63,48 +63,28 @@ class Fugitive(MappingRule):
              "git move":escape + Text(":Gmove\n"),
              "git remove":escape + Text(":Gremove\n")}
 
-class VimSearch(CompoundRule):
-  spec = "vim <cmd> [<number>]"
-  cmd = {"query":"/", "query back":"?",
-         "search":"/", "search back":"?"}
-  extras = [SelfChoice("cmd", cmd), SelfChoice("number", numbers)]
+class VimCommand(MappingRule):
+  mapping = {
+      "vim query [<text>]":escape + Text("/%(text)sa"),
+      "vim query back [<text>]":escape + Text("?%(text)si"),
+      "vim search":escape + Text("/\na"),
+      "vim search back":escape + Text("?\ni"),
 
-  def _process_recognition(self, node, extras):
-    number = int(numbers.get(str(extras.get("number", "one")), "1"))
-    with ComSat() as cs:
-      rpc = cs.getRPCProxy()
-      rpc.callKeys("Escape")
-      cmd = self.cmd[str(extras["cmd"])]
-      rpc.callText("%i%s" % (number, cmd))
-      if "search" in str(extras["cmd"]):
-        rpc.callKeys(["Return"])
-    if "search" in str(extras["cmd"]):
-      Text("i").execute()
-
-class VimCommand(CompoundRule):
-  spec = "vim <cmd>"
-  cmd = {"write":"w", "write and quit":"wq", "quit bang":"q!", "quit":"q",
-         "undo":"u", "redo":":redo", "[buf] close":"bd"}
-  extras = [SelfChoice("cmd", cmd)]
-
-  def _process_recognition(self, node, extras):
-    with ComSat() as cs:
-      rpc = cs.getRPCProxy()
-      rpc.callKeys("Escape")
-      cmd = self.cmd[str(extras["cmd"])]
-      rpc.callText(":%s\n" % cmd)
-    if cmd == "w":
-      time.sleep(0.2) # vim does not seem to notice the keystroke unless it occurs after the save is complete
-      Key("i").execute()
-
-class GoCommand(MappingRule):
-  mapping = {"<n> go":Key("Escape") + Text("%(n)dGi")}
-  extras = [IntegerRef("n", 1, 1000)] #  for longer files i can just use manual keystroke commands
+      "vim write":escape + Text(":w\ni"),
+      "vim write and quit":escape + Text(":wq\ni"),
+      "vim quit bang":escape + Text(":q!\ni"),
+      "vim quit":escape + Text(":q\ni"),
+      "vim undo [<number>]":escape + Text("%(number)dui"),
+      "vim redo":escape + Text(":redo\ni"),
+      "vim [buf] close":escape + Text(":bd\ni"),
+      "vim [buf] close bang":escape + Text(":bd!\ni"),
+      "<number> go":escape + Text("%(number)dG"),
+    }
+  extras = [IntegerRef("number", 1, 1000), Dictation("text")]
+  defaults = {"text":"", "number":1}
 
 grammar.add_rule(EasyMotion())
 grammar.add_rule(VimCommand())
-grammar.add_rule(VimSearch())
-grammar.add_rule(GoCommand())
 grammar.add_rule(LustyJuggler())
 grammar.add_rule(LustyExplorer())
 grammar.add_rule(CommandT())
