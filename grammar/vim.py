@@ -70,15 +70,15 @@ class VimCommand(MappingRule):
       "vim search":escape + Text("/\na"),
       "vim search back":escape + Text("?\ni"),
 
-      "vim write":escape + Text(":w\ni"),
-      "vim write and quit":escape + Text(":wq\ni"),
-      "vim quit bang":escape + Text(":q!\ni"),
-      "vim quit":escape + Text(":q\ni"),
-      "vim undo [<number>]":escape + Text("%(number)dui"),
-      "vim redo":escape + Text(":redo\ni"),
-      "vim [buf] close":escape + Text(":bd\ni"),
-      "vim [buf] close bang":escape + Text(":bd!\ni"),
-      "<number> go":escape + Text("%(number)dG"),
+      "vim write":escape + Text(":w\na"),
+      "vim write and quit":escape + Text(":wq\na"),
+      "vim quit bang":escape + Text(":q!\na"),
+      "vim quit":escape + Text(":q\na"),
+      "vim undo [<number>]":escape + Text("%(number)dua"),
+      "vim redo":escape + Text(":redo\na"),
+      "vim [buf] close":escape + Text(":bd\na"),
+      "vim [buf] close bang":escape + Text(":bd!\na"),
+      "<number> go":escape + Text("%(number)dGa"),
     }
   extras = [IntegerRef("number", 1, 1000), Dictation("text")]
   defaults = {"text":"", "number":1}
