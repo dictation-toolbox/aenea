@@ -210,4 +210,23 @@ class NoAction(dragonfly.ActionBase):
   def execute(self):
     pass
 
-__all__ = ["ProxyKey", "ProxyText", "ProxyMouse", "NoAction", "ProxyMousePhantomClick"]
+################################################################################
+# take a different action depending on which context is currently active.
+# only works with proxy contexts.
+
+class ProxyContextAction(dragonfly.ActionBase):
+  def __init__(self, default=None, actions=[]):
+    self.actions = action
+    self.default = default
+
+  def add_context(self, context, action):
+    self.actions.append((context, action))
+
+  def execute(self):
+    for (context, action) in self.actions:
+      if context.matches(None, None, None):
+        return action.execute()
+    else:
+      return self.default.execute()
+
+__all__ = ["ProxyKey", "ProxyText", "ProxyMouse", "NoAction", "ProxyMousePhantomClick", "ProxyContextAction"]

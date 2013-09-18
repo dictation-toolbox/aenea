@@ -35,54 +35,76 @@ fugitive_index_context = AppRegexContext(name="^index.*\.git.*$") & vim_context
 
 grammar = Grammar("verbal_emacs", context=vim_context)
 
-class Motion(MappingRule):
+class PrimitiveMotion(MappingRule):
   mapping = {
-    "[<number>] up":Text("%(number)ik"),
-    "[<number>] down":Text("%(number)ij"),
-    "[<number>] left":Text("%(number)ih"),
-    "[<number>] right":Text("%(number)il"),
+    "up":Text("k"),
+    "down":Text("j"),
+    "left":Text("h"),
+    "right":Text("l"),
 
-    "[<number>] lope":Text("%(number)ib"),
-    "[<number>] yope":Text("%(number)iw"),
-    "[<number>] elope":Text("%(number)ige"),
-    "[<number>] e yope":Text("%(number)ie"),
+    "lope":Text("b"),
+    "yope":Text("w"),
+    "elope":Text("ge"),
+    "e yope":Text("e"),
 
-    "[<number>] lopert":Text("%(number)iB"),
-    "[<number>] yopert":Text("%(number)iW"),
-    "[<number>] elopert":Text("%(number)igE"),
-    "[<number>] eyopert":Text("%(number)iE"),
+    "lopert":Text("B"),
+    "yopert":Text("W"),
+    "elopert":Text("gE"),
+    "eyopert":Text("E"),
     
-    "[<number>] apla":Text("%(number)i{"),
-    "[<number>] anla":Text("%(number)i}"),
-    "[<number>] sapla":Text("%(number)i("),
-    "[<number>] sanla":Text("%(number)i)"),
+    "apla":Text("{"),
+    "anla":Text("}"),
+    "sapla":Text("("),
+    "sanla":Text(")"),
 
-    "[<number>] paven":Text("%(number)i^"),
-    "[<number>] riven":Text("%(number)i$"),
+    "paven":Text("^"),
+    "riven":Text("$"),
 
-    "[<number>] screepaven":Text("%(number)ig^"),
-    "[<number>] screeriven":Text("%(number)ig$"),
+    "screepaven":Text("g^"),
+    "screeriven":Text("g$"),
 
-    "[<number>] scree up":Text("%(number)igk"),
-    "[<number>] scree down":Text("%(number)igj"),
+    "scree up":Text("gk"),
+    "scree down":Text("gj"),
 
-    "[<number>] wynac":Text("%(number)iG"),
-    "tect":Text("%%"),
+    "wynac":Text("G"),
 
-    "matu":Text("M"),
+    "wynac top":Text("H"),
+    "wynac toe":Text("L"),
 
-    "[<number>] wynac top":Text("%(number)iH"),
-    "[<number>] wynac toe":Text("%(number)iL"),
+    # CamelCaseMotion plugin
+    "calalope":Text(",b"),
+    "calayope":Text(",w"),
+    "end calayope":Text(",e"),
+    "inner calalope":Text("i,b"),
+    "inner calayope":Text("i,w"),
+    "inner end calayope":Text("i,e"),
+  }
 
-    "[<number>] phytic":Text("%(number)if"),
-    "[<number>] fitton":Text("%(number)iF"),
+#    "phytic":Text("f"),
+#    "fitton":Text("F"),
 
-    "[<number>] pre phytic":Text("%(number)it"),
-    "[<number>] pre fitton":Text("%(number)iT"),
-    }
-  
-  extras = [IntegerRef("number", 1, 1000)]
-  defaults = {"number":1}
+#    "pre phytic":Text("t"),
+#    "pre fitton":Text("T"),
+#"tect":Text("%%"),
+#"matu":Text("M"),
+
+  for (spoken_object, command_object) in (("(lope | yope)", "w"),
+                                          ("(lopert | yopert)", "W")):
+    for (spoken_modifier, command_modifier) in (("inner", "i"),
+                                                ("outer", "a")):
+      mapping["%s %s" % (spoken_modifier, spoken_object)] = Text(command_modifier + command_object)
+
+class Motion(CompoundRule):
+  spec = "[<count>] <motion>"
+  extras = [IntegerRef("count", 1, 1000), RuleRef(PrimitiveMotion(), name="motion")]
+  defaults = {"count":1}
+
+  def value(self, node):
+    delegates = node.children[0].children[0].children
+    value = delegates[1].value()
+    if delegates[0].value() is not None:
+      value = Text("%s" % delegates[0].value()) + value
+    return value
 
 class VimCommand(CompoundRule):
   spec = ("<motion>")
@@ -93,7 +115,7 @@ class VimCommand(CompoundRule):
 
 grammar.add_rule(VimCommand())
 
-# grammar.load()
+#grammar.load()
 
 def unload():
   global grammar
