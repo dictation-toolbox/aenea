@@ -40,7 +40,7 @@ def _get_key_symbols():
   try:
     with open("keys.txt") as keyfile:
       return [line.strip() for line in keyfile] + list(WINDOWS_MAPPING)
-  except:
+  except Exception:
     with open("C:\\NatLink\\NatLink\\MacroSystem\\keys.txt") as keyfile:
       return [line.strip() for line in keyfile] + list(WINDOWS_MAPPING)
 
