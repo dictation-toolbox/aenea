@@ -35,6 +35,14 @@ fugitive_index_context = AppRegexContext(name="^index.*\.git.*$") & vim_context
 
 grammar = Grammar("verbal_emacs", context=vim_context)
 
+class NumericDelegateRule(CompoundRule):
+  def value(self, node):
+    delegates = node.children[0].children[0].children
+    value = delegates[1].value()
+    if delegates[0].value() is not None:
+      value = Text("%s" % delegates[0].value()) + value
+    return value
+
 class PrimitiveMotion(MappingRule):
   mapping = {
     "up":Text("k"),
@@ -57,11 +65,11 @@ class PrimitiveMotion(MappingRule):
     "sapla":Text("("),
     "sanla":Text(")"),
 
-    "paven":Text("^"),
-    "riven":Text("$"),
+    "care":Text("^"),
+    "dollin ":Text("$"),
 
-    "screepaven":Text("g^"),
-    "screeriven":Text("g$"),
+    "screecare":Text("g^"),
+    "screedoll":Text("g$"),
 
     "scree up":Text("gk"),
     "scree down":Text("gj"),
@@ -94,24 +102,85 @@ class PrimitiveMotion(MappingRule):
                                                 ("outer", "a")):
       mapping["%s %s" % (spoken_modifier, spoken_object)] = Text(command_modifier + command_object)
 
-class Motion(CompoundRule):
+class PrimitiveOperator(MappingRule):
+  mapping = {
+    "dell":Text("d"),
+    "chaos":Text("c"),
+    "yank":Text("y"),
+    "swap case":Text("g~"),
+    "uppercase":Text("gU"),
+    "lowercase":Text("gu"),
+    "external filter":Text("!"),
+    "external format":Text("="),
+    "format text":Text("gq"),
+    "rotate thirteen":Text("g?"),
+    "indent left":Text("<"),
+    "indent right":Text(">"),
+    "define fold":Text("zf"),
+  }
+
+class KeyInsertion(MappingRule):
+  mapping = {"space":Text(" ")}
+
+class Operator(NumericDelegateRule):
+  spec = "[<count>] <operator>"
+  extras = [IntegerRef("count", 1, 1000), RuleRef(PrimitiveOperator(), name="operator")]
+
+class Motion(NumericDelegateRule):
   spec = "[<count>] <motion>"
   extras = [IntegerRef("count", 1, 1000), RuleRef(PrimitiveMotion(), name="motion")]
-  defaults = {"count":1}
+
+class OperatorApplication(CompoundRule):
+  spec = "[<operator>] <motion>"
+  extras = [RuleRef(Operator(name="a"), name="operator"), RuleRef(Motion(name="b"), name="motion")]
 
   def value(self, node):
-    delegates = node.children[0].children[0].children
-    value = delegates[1].value()
-    if delegates[0].value() is not None:
-      value = Text("%s" % delegates[0].value()) + value
-    return value
+    children = node.children[0].children[0].children
+    if children[0].value() is not None:
+      return children[0].value() + children[1].value()
+    else:
+      return children[1].value()
+
+class PrimitiveInsertion(CompoundRule):
+  spec = "<insertion>"
+  extras = [Alternative([
+      RuleRef(KeyInsertion()),
+#      SymbolInsertion(),
+#      NestInsertion(),
+#      VariableInsertion(),
+#      PythonInsertion(),
+    ], name="insertion")]
+
+  def value(self, node):
+    children = node.children[0].children[0].children
+    return children[0].value()
+
+class InsertModeEntry(MappingRule):
+  mapping = {
+    "inns":Key("i"),
+    "syn":Key("a"),
+  }
+
+class Insertion(CompoundRule):
+  spec = "[<mode_switch>] <insertions>"
+  extras = [Repetition(RuleRef(PrimitiveInsertion()), max=15, name="insertions"),
+            RuleRef(InsertModeEntry(), name="mode_switch")]
+
+  def value(self, node):
+    children = node.children[0].children[0].children
+    accumulate = children[0].value()
+    if accumulate is None:
+      accumulate = Key("a")
+    for child in children[1].value():
+      accumulate = accumulate + child
+    return accumulate
 
 class VimCommand(CompoundRule):
-  spec = ("<motion>")
-  extras = [RuleRef(Motion(), name="motion")]
+  spec = ("<app>")
+  extras = [RuleRef(Insertion(), name="app")]
 
   def _process_recognition(self, node, extras):
-    extras["motion"].execute()
+    extras["app"].execute()
 
 grammar.add_rule(VimCommand())
 
