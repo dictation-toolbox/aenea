@@ -20,7 +20,7 @@ except ImportError:
 from dragonfly import Config, Section, Item, MappingRule, CompoundRule, Grammar, IntegerRef, Dictation, RuleRef, Alternative, Repetition, Literal, Sequence
 from proxy_nicknames import *
 
-vim_context = AppRegexContext(name=".*VIM.*")
+vim_context = AppRegexContext(name=".*VIM.*") & ~AppRegexContext(name="(?i)^.*prototypeve.*$")
 
 #---------------------------------------------------------------------------
 # Here we globally defined the release action which releases all
