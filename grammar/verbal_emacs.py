@@ -67,7 +67,7 @@ class PrimitiveMotion(MappingRule):
     "sanla":Text(")"),
 
     "care":Text("^"),
-    "dollin ":Text("$"),
+    "doll":Text("$"),
 
     "screecare":Text("g^"),
     "screedoll":Text("g$"),
@@ -105,6 +105,7 @@ class PrimitiveMotion(MappingRule):
 
 class PrimitiveOperator(MappingRule):
   mapping = {
+    "relo":Text(""),
     "dell":Text("d"),
     "chaos":Text("c"),
     "yank":Text("y"),
@@ -171,6 +172,11 @@ class NestedInsertion(MappingRule):
     "nest quote":       Nested("\"\""),
     "nest smote":       Nested("''"),
   }
+
+class SpellingInsertion(MappingRule):
+  mapping = raul.ALPHANUMERIC
+  def value(self, node):
+    return Text(MappingRule.value(self, node))
 
 def format_snakeword(text):
   return text[0][0].upper() + text[0][1:] + ("_" if len(text) > 1 else "") + format_score(text[1:])
@@ -288,23 +294,6 @@ class PythonInsertion(MappingRule):
     "compare lack":     Text("<= "),
   }
 
-class SpellingInsertion(CompoundRule):
-  def value(self, node):
-    children = node.children[0].children[0].children
-    return Text(children[-1].value())
-
-class LettersInsertion(SpellingInsertion):
-  spec = "letters [<letters>]"
-  extras = [RuleRef(MappingRule(mapping=raul.LETTERS, name="letter"), name="letters")]
-
-class NumbersInsertion(SpellingInsertion):
-  spec = "numbers [<numbers>]"
-  extras = [RuleRef(MappingRule(mapping=raul.NUMBERS, name="number"), name="numbers")]
-
-class AlphanumericInsertion(SpellingInsertion):
-  spec = "alphanumeric [<alphanumeric>]"
-  extras = [RuleRef(MappingRule(mapping=raul.ALPHANUMERIC, name="an"), name="alphanumeric")]
-
 class Operator(NumericDelegateRule):
   spec = "[<count>] <operator>"
   extras = [DigitalInteger("count", 1, 5), RuleRef(PrimitiveOperator(), name="operator")]
@@ -320,9 +309,9 @@ class OperatorApplication(CompoundRule):
   def value(self, node):
     children = node.children[0].children[0].children
     if children[0].value() is not None:
-      return children[0].value() + children[1].value()
+      return "c", (children[0].value() + children[1].value())
     else:
-      return children[1].value()
+      return "c", (children[1].value())
 
 class PrimitiveInsertion(CompoundRule):
   spec = "<insertion>"
@@ -332,9 +321,7 @@ class PrimitiveInsertion(CompoundRule):
       RuleRef(IdentifierInsertion()),
       RuleRef(NestedInsertion()),
       RuleRef(PythonInsertion()),
-      RuleRef(LettersInsertion()),
-      RuleRef(NumbersInsertion()),
-      RuleRef(AlphanumericInsertion()),
+      RuleRef(SpellingInsertion()),
     ], name="insertion")]
 
   def value(self, node):
@@ -358,28 +345,49 @@ class InsertModeEntry(MappingRule):
 
 class Insertion(CompoundRule):
   spec = "[<mode_switch>] <insertions>"
-  extras = [Repetition(RuleRef(PrimitiveInsertionRepetition()), max=12, name="insertions"),
+  extras = [Repetition(RuleRef(PrimitiveInsertionRepetition()), max=None, name="insertions"),
             RuleRef(InsertModeEntry(), name="mode_switch")]
 
   def value(self, node):
     children = node.children[0].children[0].children
-    accumulate = children[0].value()
-    if accumulate is None:
-      accumulate = Key("a")
-    for child in children[1].value():
+    accumulate = children[1].value()[0]
+    for child in children[1].value()[1:]:
       accumulate = accumulate + child
-    return accumulate + Key("Escape:2")
+    return ("i", (children[0].value(), accumulate))
+
+def execute_insertion_buffer(insertion_buffer):
+  if not insertion_buffer:
+    return
+
+  if insertion_buffer[0][0] is not None:
+    insertion_buffer[0][0].execute()
+  else:
+    Key("a").execute()
+  
+  for insertion in insertion_buffer:
+    insertion[1].execute()
+
+  Key("escape:2").execute()
 
 class VimCommand(CompoundRule):
   spec = ("<app>")
-  extras = [RuleRef(Insertion(), name="app")]
+  extras = [Repetition(Alternative([RuleRef(OperatorApplication()), RuleRef(Insertion())]), max=25, name="app")]
 
   def _process_recognition(self, node, extras):
-    extras["app"].execute()
+    insertion_buffer = []
+    for command in extras["app"]:
+      mode, command = command
+      if mode == "i":
+        insertion_buffer.append(command)
+      else:
+        execute_insertion_buffer(insertion_buffer)
+        insertion_buffer = []
+        command.execute()
+    execute_insertion_buffer(insertion_buffer)
 
 grammar.add_rule(VimCommand())
 
-#grammar.load()
+# grammar.load()
 
 def unload():
   global grammar
