@@ -355,6 +355,15 @@ class Insertion(CompoundRule):
       accumulate = accumulate + child
     return ("i", (children[0].value(), accumulate))
 
+class LiteralIdentifierInsertion(CompoundRule):
+  spec = "[<mode_switch>] literal <insertion>"
+  extras = [RuleRef(IdentifierInsertion(name="iliteral"), name="insertion"),
+            RuleRef(InsertModeEntry(name="abcde"), name="mode_switch")]
+
+  def value(self, node):
+    children = node.children[0].children[0].children
+    return ("i", (children[0].value(), children[2].value()))
+
 def execute_insertion_buffer(insertion_buffer):
   if not insertion_buffer:
     return
@@ -370,12 +379,18 @@ def execute_insertion_buffer(insertion_buffer):
   Key("escape:2").execute()
 
 class VimCommand(CompoundRule):
-  spec = ("<app>")
-  extras = [Repetition(Alternative([RuleRef(OperatorApplication()), RuleRef(Insertion())]), max=25, name="app")]
+  spec = ("[<app>] [<literal>]")
+  extras = [Repetition(Alternative([RuleRef(OperatorApplication()), RuleRef(Insertion())]), max=25, name="app"),
+            RuleRef(LiteralIdentifierInsertion(), name="literal")]
 
   def _process_recognition(self, node, extras):
     insertion_buffer = []
-    for command in extras["app"]:
+    commands = []
+    if "app" in extras:
+      commands.extend(extras["app"])
+    if "literal" in extras:
+      commands.append(extras["literal"])
+    for command in commands:
       mode, command = command
       if mode == "i":
         insertion_buffer.append(command)
