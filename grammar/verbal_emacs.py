@@ -29,7 +29,7 @@ line_command_key = Key(LINE_COMMAND_KEY)
 escape = Key("Escape")
 escape_leader = escape + Pause("30") + leader
 
-vim_context = aenea.global_context & AppRegexContext(name="(?i)^.* vim$") & AppRegexContext(name="(?i)^.*prototypeve.*$")
+vim_context = AppRegexContext(name="(?i).*VIM.*") & ~AppRegexContext(name="(?i)^.*verbal_emacs.*$")
 
 command_t_context = AppRegexContext(name="^GoToFile.*$") & vim_context
 fugitive_index_context = AppRegexContext(name="^index.*\.git.*$") & vim_context
@@ -387,7 +387,7 @@ class VimCommand(CompoundRule):
 
 grammar.add_rule(VimCommand())
 
-# grammar.load()
+grammar.load()
 
 def unload():
   global grammar

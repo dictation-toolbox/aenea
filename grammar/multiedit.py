@@ -20,7 +20,8 @@ except ImportError:
 from dragonfly import Config, Section, Item, MappingRule, CompoundRule, Grammar, IntegerRef, Dictation, RuleRef, Alternative, Repetition, Literal, Sequence
 from proxy_nicknames import *
 
-vim_context = AppRegexContext(name=".*VIM.*") & ~AppRegexContext(name="(?i)^.*prototypeve.*$")
+vim_context = AppRegexContext(name="(?i).*VIM.*")
+disable_context = ~AppRegexContext(name="(?i)^.*(verbal_emacs|multiedit).*$") & vim_context
 
 #---------------------------------------------------------------------------
 # Here we globally defined the release action which releases all
@@ -393,7 +394,7 @@ class RepeatRule(CompoundRule):
 #---------------------------------------------------------------------------
 # Create and load this module's grammar.
 
-grammar = Grammar("multi edit", context=aenea.global_context)
+grammar = Grammar("multi edit", context=aenea.global_context & ~disable_context)
 grammar.add_rule(RepeatRule(extras=vim_extras + [format_rule, Alternative(finishes, name="finish")], name="b", context=vim_context))
 grammar.add_rule(RepeatRule(extras=extras + [format_rule, Alternative(finishes, name="finish")], name="a", context=(~vim_context)))
 grammar.add_rule(LiteralRule())
