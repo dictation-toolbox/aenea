@@ -161,5 +161,5 @@ class Insertion(CompoundRule):
     accumulate = children[1].value()[0]
     for child in children[1].value()[1:]:
       accumulate = accumulate + child
-    return ("i", (children[0].value(), accumulate))
+    return [("i", (children[0].value(), accumulate))]
 ruleInsertion = RuleRef(Insertion(), name="Insertion")

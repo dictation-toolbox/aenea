@@ -1,5 +1,5 @@
 from dragonfly import MappingRule, Alternative, RuleRef, CompoundRule
-from proxy_nicknames import Text, Key
+from proxy_nicknames import Text, Key, NoAction
 
 from verbal_emacs.common import NumericDelegateRule, ruleDigitalInteger, ruleLetterMapping
 from verbal_emacs.operators import ruleOperatorApplication
@@ -33,5 +33,9 @@ class Command(CompoundRule):
       prefix += '"' + delegates[1].value()[1]
     if prefix:
       value = Text(prefix) + value
-    return "c", value
+    # TODO: ugly hack; should fix the grammar or generalize.
+    if "chaos" in zip(*node.results)[0]:
+      return [("c", value), ("i", (NoAction(),) * 2)]
+    else:
+      return ["c", value]
 ruleCommand = RuleRef(Command(), name="Command")

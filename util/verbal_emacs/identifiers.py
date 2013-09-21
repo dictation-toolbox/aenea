@@ -1,6 +1,8 @@
 from dragonfly import CompoundRule, Dictation, RuleRef, MappingRule
 from proxy_nicknames import Text, Key
 
+from verbal_emacs.common import ruleDigitalInteger
+
 class InsertModeEntry(MappingRule):
   mapping = {
     "inns":Key("i"),

@@ -27,6 +27,7 @@ class PrimitiveMotion(MappingRule):
     "sanla":Text(")"),
 
     "care":Text("^"),
+    "hard care":Text("0"),
     "doll":Text("$"),
 
     "screecare":Text("g^"),

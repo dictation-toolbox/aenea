@@ -61,9 +61,10 @@ class VimCommand(CompoundRule):
     insertion_buffer = []
     commands = []
     if "app" in extras:
-      commands.extend(extras["app"])
+      for chunk in extras["app"]:
+        commands.extend(chunk)
     if "literal" in extras:
-      commands.append(extras["literal"])
+      commands.extend(extras["literal"])
     for command in commands:
       mode, command = command
       if mode == "i":
