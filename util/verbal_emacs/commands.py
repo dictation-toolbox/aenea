@@ -1,8 +1,7 @@
 from dragonfly import MappingRule, Alternative, RuleRef
-from aenea import DigitalInteger
 from proxy_nicknames import Text, Key
 
-from verbal_emacs.common import NumericDelegateRule
+from verbal_emacs.common import NumericDelegateRule, ruleDigitalInteger
 from verbal_emacs.operators import ruleOperatorApplication
 
 class PrimitiveCommand(MappingRule):
@@ -21,7 +20,7 @@ class Command(NumericDelegateRule):
   extras = [Alternative([ruleOperatorApplication,
                          rulePrimitiveCommand,
                         ], name="command"),
-            DigitalInteger("count", 1, 4)]
+            ruleDigitalInteger[4]]
 
   def value(self, node):
     rval = "c", NumericDelegateRule.value(self, node)

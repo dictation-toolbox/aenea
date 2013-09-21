@@ -1,8 +1,7 @@
 from dragonfly import MappingRule, RuleRef, CompoundRule
-from aenea import DigitalInteger
 from proxy_nicknames import Text
 
-from verbal_emacs.common import NumericDelegateRule
+from verbal_emacs.common import NumericDelegateRule, ruleDigitalInteger
 from verbal_emacs.motions import ruleMotion
 
 class PrimitiveOperator(MappingRule):
@@ -26,7 +25,7 @@ rulePrimitiveOperator = RuleRef(PrimitiveOperator(), name="PrimitiveOperator")
 
 class Operator(NumericDelegateRule):
   spec = "[<count>] <PrimitiveOperator>"
-  extras = [DigitalInteger("count", 1, 4),
+  extras = [ruleDigitalInteger[4],
             rulePrimitiveOperator]
 ruleOperator = RuleRef(Operator(), name="Operator")
 

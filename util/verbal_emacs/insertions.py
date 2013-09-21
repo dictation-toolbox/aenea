@@ -1,21 +1,22 @@
 from dragonfly import MappingRule, CompoundRule, Dictation, RuleRef, Repetition, Alternative
-from aenea import DigitalInteger, Nested
+from aenea import Nested
 from proxy_nicknames import Text, Key
 from raul import DIGITS, LETTERS
 
 from verbal_emacs.identifiers import ruleIdentifierInsertion, ruleInsertModeEntry
+from verbal_emacs.common import ruleDigitalInteger
 
 class KeyInsertion(MappingRule):
   mapping = {
-    "ace [<n>]":        Key("space:%(n)d"),
-    "tab [<n>]":        Key("Tab:%(n)d"),
-    "slap [<n>]":       Key("Return:%(n)d"),
-    "chuck [<n>]":      Key("Delete:%(n)d"),
-    "scratch [<n>]":    Key("BackSpace:%(n)d"),
-    "ack":              Key("Escape"),
+    "ace [<count>]":        Key("space:%(n)d"),
+    "tab [<count>]":        Key("Tab:%(n)d"),
+    "slap [<count>]":       Key("Return:%(n)d"),
+    "chuck [<count>]":      Key("Delete:%(n)d"),
+    "scratch [<count>]":    Key("BackSpace:%(n)d"),
+    "ack":                  Key("Escape"),
   }
-  extras = [DigitalInteger("n", 1, 5)]
-  defaults = {"n":1}
+  extras = [ruleDigitalInteger[5]]
+  defaults = {"count":1}
 ruleKeyInsertion = RuleRef(KeyInsertion(), name="KeyInsertion")
 
 class SymbolInsertion(MappingRule):
@@ -141,8 +142,8 @@ class PrimitiveInsertion(CompoundRule):
 rulePrimitiveInsertion = RuleRef(PrimitiveInsertion(), name="PrimitiveInsertion")
 
 class PrimitiveInsertionRepetition(CompoundRule):
-  spec = "<PrimitiveInsertion> [ parrot <repeat> ]"
-  extras = [rulePrimitiveInsertion, DigitalInteger("repeat", 1, 3)]
+  spec = "<PrimitiveInsertion> [ parrot <count> ]"
+  extras = [rulePrimitiveInsertion, ruleDigitalInteger[3]]
 
   def value(self, node):
     children = node.children[0].children[0].children

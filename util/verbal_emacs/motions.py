@@ -1,9 +1,8 @@
 from dragonfly import MappingRule, CompoundRule, Alternative, RuleRef
 from proxy_nicknames import Text, Key
-from aenea import DigitalInteger
 from raul import LETTERS
 
-from verbal_emacs.common import NumericDelegateRule
+from verbal_emacs.common import NumericDelegateRule, ruleDigitalInteger, ruleLetterMapping
 
 class PrimitiveMotion(MappingRule):
   mapping = {
@@ -65,14 +64,18 @@ class PrimitiveMotion(MappingRule):
       mapping["%s %s" % (spoken_modifier, spoken_object)] = Text(command_modifier + command_object)
 rulePrimitiveMotion = RuleRef(PrimitiveMotion(), name="PrimitiveMotion")
 
+class MotionParameterMotion(MappingRule):
+  mapping = {
+    "find char":"f",
+    "find char rev":"F",
+    "till char":"t",
+    "till char rev":"T",
+  }
+ruleMotionParameterMotion = RuleRef(MotionParameterMotion(), name="MotionParameterMotion")
+
 class ParameterizedMotion(CompoundRule):
-  spec = "<motion> <parameter>"
-  extras = [RuleRef(MappingRule(mapping=LETTERS, name="pra"), name="parameter"),
-            RuleRef(MappingRule(name="prb", mapping={
-                      "find char":"f",
-                      "find char rev":"F",
-                      "till char":"t",
-                      "till char rev":"T"}), name="motion")]
+  spec = "<MotionParameterMotion> <LetterMapping>"
+  extras = [ruleLetterMapping, ruleMotionParameterMotion]
 
   def value(self, node):
     children = node.children[0].children[0].children
@@ -81,7 +84,7 @@ ruleParameterizedMotion = RuleRef(ParameterizedMotion(), name="ParameterizedMoti
 
 class Motion(NumericDelegateRule):
   spec = "[<count>] <motion>"
-  extras = [DigitalInteger("count", 1, 4),
+  extras = [ruleDigitalInteger[4],
             Alternative([
                 rulePrimitiveMotion,
                 ruleParameterizedMotion], name="motion")]
