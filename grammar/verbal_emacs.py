@@ -174,7 +174,9 @@ class NestedInsertion(MappingRule):
   }
 
 class SpellingInsertion(MappingRule):
-  mapping = raul.ALPHANUMERIC
+  mapping = dict(("dig " + key, value) for (key, value) in raul.DIGITS.iteritems())
+  mapping.update(mapping)
+  
   def value(self, node):
     return Text(MappingRule.value(self, node))
 
@@ -304,7 +306,8 @@ class Motion(NumericDelegateRule):
 
 class OperatorApplication(CompoundRule):
   spec = "[<operator>] <motion>"
-  extras = [RuleRef(Operator(name="a"), name="operator"), RuleRef(Motion(name="b"), name="motion")]
+  extras = [RuleRef(Operator(name="a"), name="operator"),
+            RuleRef(Motion(name="b"), name="motion")]
 
   def value(self, node):
     children = node.children[0].children[0].children
@@ -361,6 +364,8 @@ class InsertModeEntry(MappingRule):
   mapping = {
     "inns":Key("i"),
     "syn":Key("a"),
+    "phyllo":Key("o"),
+    "phyhigh":Key("O"),
   }
 
 class Insertion(CompoundRule):
