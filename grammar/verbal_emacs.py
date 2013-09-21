@@ -296,13 +296,31 @@ class PythonInsertion(MappingRule):
     "compare lack":     Text("<= "),
   }
 
+class ParameterizedMotion(CompoundRule):
+  spec = "<motion> <parameter>"
+  extras = [RuleRef(MappingRule(mapping=raul.LETTERS, name="pra"), name="parameter"),
+            RuleRef(MappingRule(name="prb", mapping={
+                      "find char":"f",
+                      "find char rev":"F",
+                      "till char":"t",
+                      "till char rev":"T"}), name="motion")]
+
+  def value(self, node):
+    print "hi"
+    children = node.children[0].children[0].children
+    return Text(children[0].value() + children[1].value())
+
 class Operator(NumericDelegateRule):
   spec = "[<count>] <operator>"
-  extras = [DigitalInteger("count", 1, 4), RuleRef(PrimitiveOperator(), name="operator")]
+  extras = [DigitalInteger("count", 1, 4),
+            RuleRef(PrimitiveOperator(), name="operator")]
 
 class Motion(NumericDelegateRule):
   spec = "[<count>] <motion>"
-  extras = [DigitalInteger("count", 1, 4), RuleRef(PrimitiveMotion(), name="motion")]
+  extras = [DigitalInteger("count", 1, 4),
+            Alternative([
+                RuleRef(PrimitiveMotion()),
+                RuleRef(ParameterizedMotion())], name="motion")]
 
 class OperatorApplication(CompoundRule):
   spec = "[<operator>] <motion>"
@@ -405,7 +423,7 @@ def execute_insertion_buffer(insertion_buffer):
 
 class VimCommand(CompoundRule):
   spec = ("[<app>] [<literal>]")
-  extras = [Repetition(Alternative([RuleRef(Command()), RuleRef(Insertion())]), max=25, name="app"),
+  extras = [Repetition(Alternative([RuleRef(Command()), RuleRef(Insertion())]), max=20, name="app"),
             RuleRef(LiteralIdentifierInsertion(), name="literal")]
 
   def _process_recognition(self, node, extras):
