@@ -296,11 +296,11 @@ class PythonInsertion(MappingRule):
 
 class Operator(NumericDelegateRule):
   spec = "[<count>] <operator>"
-  extras = [DigitalInteger("count", 1, 5), RuleRef(PrimitiveOperator(), name="operator")]
+  extras = [DigitalInteger("count", 1, 4), RuleRef(PrimitiveOperator(), name="operator")]
 
 class Motion(NumericDelegateRule):
   spec = "[<count>] <motion>"
-  extras = [DigitalInteger("count", 1, 5), RuleRef(PrimitiveMotion(), name="motion")]
+  extras = [DigitalInteger("count", 1, 4), RuleRef(PrimitiveMotion(), name="motion")]
 
 class OperatorApplication(CompoundRule):
   spec = "[<operator>] <motion>"
@@ -308,10 +308,30 @@ class OperatorApplication(CompoundRule):
 
   def value(self, node):
     children = node.children[0].children[0].children
+    return_value = children[1].value()
     if children[0].value() is not None:
-      return "c", (children[0].value() + children[1].value())
-    else:
-      return "c", (children[1].value())
+      return_value = children[0].value() + return_value
+    return return_value
+
+class PrimitiveCommand(MappingRule):
+  mapping = {
+    "vim scratch":Key("X"),
+    "vim chuck":Key("x"),
+    "vim undo":Key("u"),
+    "plap":Key("P"),
+    "plop":Key("p"),
+    "megaditto":Text("."),
+  }
+
+class Command(NumericDelegateRule):
+  spec = "[<count>] <command>"
+  extras = [Alternative([RuleRef(OperatorApplication()),
+                         RuleRef(PrimitiveCommand()),
+                        ], name="command"),
+            DigitalInteger("count", 1, 4)]
+
+  def value(self, node):
+    return "c", NumericDelegateRule.value(self, node)
 
 class PrimitiveInsertion(CompoundRule):
   spec = "<insertion>"
@@ -380,7 +400,7 @@ def execute_insertion_buffer(insertion_buffer):
 
 class VimCommand(CompoundRule):
   spec = ("[<app>] [<literal>]")
-  extras = [Repetition(Alternative([RuleRef(OperatorApplication()), RuleRef(Insertion())]), max=25, name="app"),
+  extras = [Repetition(Alternative([RuleRef(Command()), RuleRef(Insertion())]), max=25, name="app"),
             RuleRef(LiteralIdentifierInsertion(), name="literal")]
 
   def _process_recognition(self, node, extras):
