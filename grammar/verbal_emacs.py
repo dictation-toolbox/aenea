@@ -64,7 +64,6 @@ class VimCommand(CompoundRule):
       commands.extend(extras["app"])
     if "literal" in extras:
       commands.append(extras["literal"])
-    print commands
     for command in commands:
       mode, command = command
       if mode == "i":

@@ -1,7 +1,7 @@
-from dragonfly import MappingRule, Alternative, RuleRef
+from dragonfly import MappingRule, Alternative, RuleRef, CompoundRule
 from proxy_nicknames import Text, Key
 
-from verbal_emacs.common import NumericDelegateRule, ruleDigitalInteger
+from verbal_emacs.common import NumericDelegateRule, ruleDigitalInteger, ruleLetterMapping
 from verbal_emacs.operators import ruleOperatorApplication
 
 class PrimitiveCommand(MappingRule):
@@ -15,14 +15,23 @@ class PrimitiveCommand(MappingRule):
   }
 rulePrimitiveCommand = RuleRef(PrimitiveCommand(), name="PrimitiveCommand")
 
-class Command(NumericDelegateRule):
-  spec = "[<count>] <command>"
+class Command(CompoundRule):
+  spec = "[<count>] [reg <LetterMapping>] <command>"
   extras = [Alternative([ruleOperatorApplication,
                          rulePrimitiveCommand,
                         ], name="command"),
-            ruleDigitalInteger[4]]
+            ruleDigitalInteger[4],
+            ruleLetterMapping]
 
   def value(self, node):
-    rval = "c", NumericDelegateRule.value(self, node)
-    return rval
+    delegates = node.children[0].children[0].children
+    value = delegates[-1].value()
+    prefix = ""
+    if delegates[0].value() is not None:
+      prefix += str(delegates[0].value())
+    if delegates[1].value() is not None:
+      prefix += '"' + delegates[1].value()[1]
+    if prefix:
+      value = Text(prefix) + value
+    return "c", value
 ruleCommand = RuleRef(Command(), name="Command")
