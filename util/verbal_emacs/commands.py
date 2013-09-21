@@ -37,5 +37,5 @@ class Command(CompoundRule):
     if "chaos" in zip(*node.results)[0]:
       return [("c", value), ("i", (NoAction(),) * 2)]
     else:
-      return ["c", value]
+      return [("c", value)]
 ruleCommand = RuleRef(Command(), name="Command")

@@ -21,7 +21,7 @@ import raul
 from dragonfly import *
 from proxy_nicknames import *
 
-from verbal_emacs import *
+import verbal_emacs
 
 LEADER_KEY = "comma"
 LINE_COMMAND_KEY = "colon"
@@ -54,8 +54,8 @@ def execute_insertion_buffer(insertion_buffer):
 
 class VimCommand(CompoundRule):
   spec = ("[<app>] [<literal>]")
-  extras = [Repetition(Alternative([RuleRef(Command()), RuleRef(Insertion())]), max=20, name="app"),
-            RuleRef(LiteralIdentifierInsertion(), name="literal")]
+  extras = [Repetition(Alternative([RuleRef(verbal_emacs.commands.Command()), RuleRef(verbal_emacs.insertions.Insertion())]), max=20, name="app"),
+            RuleRef(verbal_emacs.identifiers.LiteralIdentifierInsertion(), name="literal")]
 
   def _process_recognition(self, node, extras):
     insertion_buffer = []
