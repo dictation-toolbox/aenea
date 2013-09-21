@@ -2,7 +2,7 @@ from dragonfly import AppContext
 from proxy_contexts import AlwaysContext
 from dragonfly import *
 from proxy_nicknames import Text, Key
-import os
+import os, shutil
 
 global_context = AppContext(executable="notepad")
 
@@ -19,6 +19,7 @@ class DigitalInteger(Repetition):
 def Nested(command):
   return Text(command) + Key("Left:%i" % (len(command) / 2))
 
+# TODO: clean up and generalize
 def reload_aenea_configuration():
   for name in os.listdir("E:\\aenea\\grammar"):
     if name.endswith(".py"):
@@ -26,7 +27,15 @@ def reload_aenea_configuration():
         with open("C:\\NatLink\\NatLink\\MacroSystem\\_%s" % name, "w") as outfd:
           outfd.write(infd.read())
   for name in os.listdir("E:\\aenea\\util"):
+    full_src = "E:\\aenea\\util\\" + name
     if name.endswith(".py") or name.endswith(".txt"):
       with open("E:\\aenea\\util\\%s" % name) as infd:
         with open("C:\\NatLink\\NatLink\\MacroSystem\\%s" % name, "w") as outfd:
           outfd.write(infd.read())
+    if os.path.isdir(full_src) and os.path.exists("%s\\__init__.py" % full_src):
+      try:
+        assert name != ""
+        shutil.rmtree("C:\\NatLink\\NatLink\\MacroSystem\\%s" % name)
+      except Exception:
+        pass
+      shutil.copytree(full_src, "C:\\NatLink\\NatLink\\MacroSystem\\%s" % name)
