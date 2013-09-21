@@ -66,10 +66,10 @@ rulePrimitiveMotion = RuleRef(PrimitiveMotion(), name="PrimitiveMotion")
 
 class MotionParameterMotion(MappingRule):
   mapping = {
-    "find char":"f",
-    "find char rev":"F",
-    "till char":"t",
-    "till char rev":"T",
+    "phytic":"f",
+    "fitton":"F",
+    "pre phytic":"t",
+    "pre fitton":"T",
   }
 ruleMotionParameterMotion = RuleRef(MotionParameterMotion(), name="MotionParameterMotion")
 
