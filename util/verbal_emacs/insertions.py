@@ -16,7 +16,7 @@ class KeyInsertion(MappingRule):
   }
   extras = [DigitalInteger("n", 1, 5)]
   defaults = {"n":1}
-ruleKeyInsertion = KeyInsertion()
+ruleKeyInsertion = RuleRef(KeyInsertion(), name="KeyInsertion")
 
 class SymbolInsertion(MappingRule):
   mapping = {
@@ -46,7 +46,7 @@ class SymbolInsertion(MappingRule):
     "push":       Key("parenleft"),
     "pop":        Key("parenright"),
   }
-ruleSymbolInsertion = SymbolInsertion()
+ruleSymbolInsertion = RuleRef(SymbolInsertion(), name="SymbolInsertion")
 
 class NestedInsertion(MappingRule):
   mapping = {
@@ -58,7 +58,7 @@ class NestedInsertion(MappingRule):
     "nest quote":       Nested("\"\""),
     "nest smote":       Nested("''"),
   }
-ruleNestedInsertion = NestedInsertion()
+ruleNestedInsertion = RuleRef(NestedInsertion(), name="NestedInsertion")
 
 class SpellingInsertion(MappingRule):
   mapping = dict(("dig " + key, value) for (key, value) in DIGITS.iteritems())
@@ -66,7 +66,7 @@ class SpellingInsertion(MappingRule):
   
   def value(self, node):
     return Text(MappingRule.value(self, node))
-ruleSpellingInsertion = SpellingInsertion()
+ruleSpellingInsertion = RuleRef(SpellingInsertion(), name="SpellingInsertion")
 
 class PythonInsertion(MappingRule):
   mapping = {
@@ -122,38 +122,38 @@ class PythonInsertion(MappingRule):
     "compare geck":     Text(">= "),
     "compare lack":     Text("<= "),
   }
-rulePythonInsertion = PythonInsertion()
+rulePythonInsertion = RuleRef(PythonInsertion(), name="PythonInsertion")
 
 class PrimitiveInsertion(CompoundRule):
   spec = "<insertion>"
   extras = [Alternative([
-      RuleRef(ruleKeyInsertion),
-      RuleRef(ruleSymbolInsertion),
-      RuleRef(ruleIdentifierInsertion),
-      RuleRef(ruleNestedInsertion),
-      RuleRef(rulePythonInsertion),
-      RuleRef(ruleSpellingInsertion),
+      ruleKeyInsertion,
+      ruleSymbolInsertion,
+      ruleIdentifierInsertion,
+      ruleNestedInsertion,
+      rulePythonInsertion,
+      ruleSpellingInsertion,
     ], name="insertion")]
 
   def value(self, node):
     children = node.children[0].children[0].children
     return children[0].value()
-rulePrimitiveInsertion = PrimitiveInsertion()
+rulePrimitiveInsertion = RuleRef(PrimitiveInsertion(), name="PrimitiveInsertion")
 
 class PrimitiveInsertionRepetition(CompoundRule):
-  spec = "<insertion> [ parrot <repeat> ]"
-  extras = [RuleRef(rulePrimitiveInsertion, name="insertion"), DigitalInteger("repeat", 1, 3)]
+  spec = "<PrimitiveInsertion> [ parrot <repeat> ]"
+  extras = [rulePrimitiveInsertion, DigitalInteger("repeat", 1, 3)]
 
   def value(self, node):
     children = node.children[0].children[0].children
     value = children[0].value() * (children[1].value()[1] if children[1].value() else 1)
     return value
-rulePrimitiveInsertionRepetition = PrimitiveInsertionRepetition()
+rulePrimitiveInsertionRepetition = RuleRef(PrimitiveInsertionRepetition(), name="PrimitiveInsertionRepetition")
 
 class Insertion(CompoundRule):
-  spec = "[<mode_switch>] <insertions>"
-  extras = [Repetition(RuleRef(rulePrimitiveInsertionRepetition), max=None, name="insertions"),
-            RuleRef(ruleInsertModeEntry, name="mode_switch")]
+  spec = "[<InsertModeEntry>] <insertions>"
+  extras = [Repetition(rulePrimitiveInsertionRepetition, max=None, name="insertions"),
+            ruleInsertModeEntry]
 
   def value(self, node):
     children = node.children[0].children[0].children
@@ -161,4 +161,4 @@ class Insertion(CompoundRule):
     for child in children[1].value()[1:]:
       accumulate = accumulate + child
     return ("i", (children[0].value(), accumulate))
-ruleInsertion = Insertion()
+ruleInsertion = RuleRef(Insertion(), name="Insertion")

@@ -14,16 +14,16 @@ class PrimitiveCommand(MappingRule):
     "plop":Key("p"),
     "megaditto":Text("."),
   }
-rulePrimitiveCommand = PrimitiveCommand()
+rulePrimitiveCommand = RuleRef(PrimitiveCommand(), name="PrimitiveCommand")
 
 class Command(NumericDelegateRule):
   spec = "[<count>] <command>"
-  extras = [Alternative([RuleRef(ruleOperatorApplication),
-                         RuleRef(rulePrimitiveCommand),
+  extras = [Alternative([ruleOperatorApplication,
+                         rulePrimitiveCommand,
                         ], name="command"),
             DigitalInteger("count", 1, 4)]
 
   def value(self, node):
     rval = "c", NumericDelegateRule.value(self, node)
     return rval
-ruleCommand = Command()
+ruleCommand = RuleRef(Command(), name="Command")

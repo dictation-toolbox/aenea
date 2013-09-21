@@ -22,18 +22,17 @@ class PrimitiveOperator(MappingRule):
     "indent right":Text(">"),
     "define fold":Text("zf"),
   }
-rulePrimitiveOperator = PrimitiveOperator()
+rulePrimitiveOperator = RuleRef(PrimitiveOperator(), name="PrimitiveOperator")
 
 class Operator(NumericDelegateRule):
-  spec = "[<count>] <operator>"
+  spec = "[<count>] <PrimitiveOperator>"
   extras = [DigitalInteger("count", 1, 4),
-            RuleRef(rulePrimitiveOperator, name="operator")]
-ruleOperator = Operator()
+            rulePrimitiveOperator]
+ruleOperator = RuleRef(Operator(), name="Operator")
 
 class OperatorApplication(CompoundRule):
-  spec = "[<operator>] <motion>"
-  extras = [RuleRef(ruleOperator, name="operator"),
-            RuleRef(ruleMotion, name="motion")]
+  spec = "[<Operator>] <Motion>"
+  extras = [ruleOperator, ruleMotion]
 
   def value(self, node):
     children = node.children[0].children[0].children
@@ -41,4 +40,4 @@ class OperatorApplication(CompoundRule):
     if children[0].value() is not None:
       return_value = children[0].value() + return_value
     return return_value
-ruleOperatorApplication = OperatorApplication()
+ruleOperatorApplication = RuleRef(OperatorApplication(), name="OperatorApplication")
