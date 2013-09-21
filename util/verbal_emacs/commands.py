@@ -3,7 +3,7 @@ from aenea import DigitalInteger
 from proxy_nicknames import Text, Key
 
 from verbal_emacs.common import NumericDelegateRule
-from verbal_emacs.operators import OperatorApplication
+from verbal_emacs.operators import ruleOperatorApplication
 
 class PrimitiveCommand(MappingRule):
   mapping = {
@@ -14,14 +14,16 @@ class PrimitiveCommand(MappingRule):
     "plop":Key("p"),
     "megaditto":Text("."),
   }
+rulePrimitiveCommand = PrimitiveCommand()
 
 class Command(NumericDelegateRule):
   spec = "[<count>] <command>"
-  extras = [Alternative([RuleRef(OperatorApplication()),
-                         RuleRef(PrimitiveCommand()),
+  extras = [Alternative([RuleRef(ruleOperatorApplication),
+                         RuleRef(rulePrimitiveCommand),
                         ], name="command"),
             DigitalInteger("count", 1, 4)]
 
   def value(self, node):
     rval = "c", NumericDelegateRule.value(self, node)
     return rval
+ruleCommand = Command()

@@ -63,6 +63,7 @@ class PrimitiveMotion(MappingRule):
     for (spoken_modifier, command_modifier) in (("inner", "i"),
                                                 ("outer", "a")):
       mapping["%s %s" % (spoken_modifier, spoken_object)] = Text(command_modifier + command_object)
+rulePrimitiveMotion = PrimitiveMotion()
 
 class ParameterizedMotion(CompoundRule):
   spec = "<motion> <parameter>"
@@ -76,10 +77,12 @@ class ParameterizedMotion(CompoundRule):
   def value(self, node):
     children = node.children[0].children[0].children
     return Text(children[0].value() + children[1].value())
+ruleParameterizedMotion = ParameterizedMotion()
 
 class Motion(NumericDelegateRule):
   spec = "[<count>] <motion>"
   extras = [DigitalInteger("count", 1, 4),
             Alternative([
-                RuleRef(PrimitiveMotion()),
-                RuleRef(ParameterizedMotion())], name="motion")]
+                RuleRef(rulePrimitiveMotion),
+                RuleRef(ruleParameterizedMotion)], name="motion")]
+ruleMotion = Motion()

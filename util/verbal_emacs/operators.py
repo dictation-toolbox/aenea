@@ -1,8 +1,9 @@
 from dragonfly import MappingRule, RuleRef, CompoundRule
-from verbal_emacs.motions import Motion
 from aenea import DigitalInteger
-from verbal_emacs.common import NumericDelegateRule
 from proxy_nicknames import Text
+
+from verbal_emacs.common import NumericDelegateRule
+from verbal_emacs.motions import ruleMotion
 
 class PrimitiveOperator(MappingRule):
   mapping = {
@@ -21,16 +22,18 @@ class PrimitiveOperator(MappingRule):
     "indent right":Text(">"),
     "define fold":Text("zf"),
   }
+rulePrimitiveOperator = PrimitiveOperator()
 
 class Operator(NumericDelegateRule):
   spec = "[<count>] <operator>"
   extras = [DigitalInteger("count", 1, 4),
-            RuleRef(PrimitiveOperator(), name="operator")]
+            RuleRef(rulePrimitiveOperator, name="operator")]
+ruleOperator = Operator()
 
 class OperatorApplication(CompoundRule):
   spec = "[<operator>] <motion>"
-  extras = [RuleRef(Operator(name="a"), name="operator"),
-            RuleRef(Motion(name="b"), name="motion")]
+  extras = [RuleRef(ruleOperator, name="operator"),
+            RuleRef(ruleMotion, name="motion")]
 
   def value(self, node):
     children = node.children[0].children[0].children
@@ -38,4 +41,4 @@ class OperatorApplication(CompoundRule):
     if children[0].value() is not None:
       return_value = children[0].value() + return_value
     return return_value
-
+ruleOperatorApplication = OperatorApplication()

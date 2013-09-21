@@ -8,6 +8,7 @@ class InsertModeEntry(MappingRule):
     "phyllo":Key("o"),
     "phyhigh":Key("O"),
   }
+ruleInsertModeEntry = InsertModeEntry()
 
 def format_snakeword(text):
   return text[0][0].upper() + text[0][1:] + ("_" if len(text) > 1 else "") + format_score(text[1:])
@@ -69,12 +70,14 @@ class IdentifierInsertion(CompoundRule):
     formatted = function(words[1:])
 
     return Text(formatted)
+ruleIdentifierInsertion = IdentifierInsertion()
 
 class LiteralIdentifierInsertion(CompoundRule):
   spec = "[<mode_switch>] literal <insertion>"
-  extras = [RuleRef(IdentifierInsertion(name="iliteral"), name="insertion"),
-            RuleRef(InsertModeEntry(name="abcde"), name="mode_switch")]
+  extras = [RuleRef(ruleIdentifierInsertion, name="insertion"),
+            RuleRef(ruleInsertModeEntry, name="mode_switch")]
 
   def value(self, node):
     children = node.children[0].children[0].children
     return ("i", (children[0].value(), children[2].value()))
+ruleLiteralIdentifierInsertion = LiteralIdentifierInsertion()
