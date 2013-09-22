@@ -23,6 +23,8 @@ _OPERATORS = {
 
 class PrimitiveOperator(MappingRule):
   mapping = dict((key, Text(value)) for (key, value) in _OPERATORS.iteritems())
+  # tComment
+  mapping["comm nop"] = Text("gc")
 
 rulePrimitiveOperator = RuleRef(PrimitiveOperator(), name="PrimitiveOperator")
 
@@ -47,8 +49,26 @@ ruleOperatorApplicationMotion = RuleRef(OperatorApplicationMotion(), name="Opera
 class OperatorSelfApplication(MappingRule):
   mapping = dict(("%s [<count>] %s" % (key, key), Text("%s%%(count)d%s" % (value, value)))
                  for (key, value) in _OPERATORS.iteritems())
+  # tComment
+  mapping["comm nop [<count>] comm nop"] = "tcomment" # string not action intentional dirty hack.
   extras = [ruleDigitalInteger[3]]
   defaults = {"count":1}
+
+  def value(self, node):
+    value = MappingRule.value(self, node)
+    if value == "tcomment":
+      try:
+        # ugly hack to get around tComment's not allowing ranges with gcc.
+        value = node.children[0].children[0].children[0].children[1].value()
+        if value in (1, "1", None):
+          return Text("gcc")
+        else:
+          return Text("gc%dj" % (int(value) - 1))
+      except Exception, ex:
+        print ex
+    else:
+      return value
+
 ruleOperatorSelfApplication = RuleRef(OperatorSelfApplication(), name="OperatorSelfApplication")
 
 ruleOperatorApplication = Alternative([ruleOperatorApplicationMotion,
