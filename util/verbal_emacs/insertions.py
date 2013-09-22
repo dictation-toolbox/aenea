@@ -157,8 +157,5 @@ class Insertion(CompoundRule):
 
   def value(self, node):
     children = node.children[0].children[0].children
-    accumulate = children[1].value()[0]
-    for child in children[1].value()[1:]:
-      accumulate = accumulate + child
-    return [("i", (children[0].value(), accumulate))]
+    return [("i", (children[0].value(), children[1].value()))]
 ruleInsertion = RuleRef(Insertion(), name="Insertion")
