@@ -1,35 +1,38 @@
-from dragonfly import MappingRule, RuleRef, CompoundRule
+from dragonfly import MappingRule, RuleRef, CompoundRule, Alternative
 from proxy_nicknames import Text
 
 from verbal_emacs.common import NumericDelegateRule, ruleDigitalInteger
 from verbal_emacs.motions import ruleMotion
 
-class PrimitiveOperator(MappingRule):
-  mapping = {
-    "relo":Text(""),
-    "dell":Text("d"),
-    "chaos":Text("c"),
-    "yank":Text("y"),
-    "swap case":Text("g~"),
-    "uppercase":Text("gU"),
-    "lowercase":Text("gu"),
-    "external filter":Text("!"),
-    "external format":Text("="),
-    "format text":Text("gq"),
-    "rotate thirteen":Text("g?"),
-    "indent left":Text("<"),
-    "indent right":Text(">"),
-    "define fold":Text("zf"),
+_OPERATORS = {
+    "relo":"",
+    "dell":"d",
+    "chaos":"c",
+    "yank":"y",
+    "swap case":"g~",
+    "uppercase":"gU",
+    "lowercase":"gu",
+    "external filter":"!",
+    "external format":"=",
+    "format text":"gq",
+    "rotate thirteen":"g?",
+    "indent left":"<",
+    "indent right":">",
+    "define fold":"zf",
   }
+
+class PrimitiveOperator(MappingRule):
+  mapping = dict((key, Text(value)) for (key, value) in _OPERATORS.iteritems())
+
 rulePrimitiveOperator = RuleRef(PrimitiveOperator(), name="PrimitiveOperator")
 
 class Operator(NumericDelegateRule):
   spec = "[<count>] <PrimitiveOperator>"
-  extras = [ruleDigitalInteger[4],
+  extras = [ruleDigitalInteger[3],
             rulePrimitiveOperator]
 ruleOperator = RuleRef(Operator(), name="Operator")
 
-class OperatorApplication(CompoundRule):
+class OperatorApplicationMotion(CompoundRule):
   spec = "[<Operator>] <Motion>"
   extras = [ruleOperator, ruleMotion]
 
@@ -39,4 +42,15 @@ class OperatorApplication(CompoundRule):
     if children[0].value() is not None:
       return_value = children[0].value() + return_value
     return return_value
-ruleOperatorApplication = RuleRef(OperatorApplication(), name="OperatorApplication")
+ruleOperatorApplicationMotion = RuleRef(OperatorApplicationMotion(), name="OperatorApplicationMotion")
+
+class OperatorSelfApplication(MappingRule):
+  mapping = dict(("%s [<count>] %s" % (key, key), Text("%s%%(count)d%s" % (value, value)))
+                 for (key, value) in _OPERATORS.iteritems())
+  extras = [ruleDigitalInteger[3]]
+  defaults = {"count":1}
+ruleOperatorSelfApplication = RuleRef(OperatorSelfApplication(), name="OperatorSelfApplication")
+
+ruleOperatorApplication = Alternative([ruleOperatorApplicationMotion,
+                                       ruleOperatorSelfApplication],
+                                      name="OperatorApplication")

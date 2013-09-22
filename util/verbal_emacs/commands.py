@@ -20,7 +20,7 @@ class Command(CompoundRule):
   extras = [Alternative([ruleOperatorApplication,
                          rulePrimitiveCommand,
                         ], name="command"),
-            ruleDigitalInteger[4],
+            ruleDigitalInteger[3],
             ruleLetterMapping]
 
   def value(self, node):

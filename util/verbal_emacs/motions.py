@@ -85,7 +85,7 @@ ruleParameterizedMotion = RuleRef(ParameterizedMotion(), name="ParameterizedMoti
 
 class Motion(NumericDelegateRule):
   spec = "[<count>] <motion>"
-  extras = [ruleDigitalInteger[4],
+  extras = [ruleDigitalInteger[3],
             Alternative([
                 rulePrimitiveMotion,
                 ruleParameterizedMotion], name="motion")]

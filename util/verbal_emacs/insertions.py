@@ -15,7 +15,7 @@ class KeyInsertion(MappingRule):
     "scratch [<count>]":    Key("BackSpace:%(n)d"),
     "ack":                  Key("Escape"),
   }
-  extras = [ruleDigitalInteger[5]]
+  extras = [ruleDigitalInteger[3]]
   defaults = {"count":1}
 ruleKeyInsertion = RuleRef(KeyInsertion(), name="KeyInsertion")
 
@@ -152,9 +152,8 @@ class PrimitiveInsertionRepetition(CompoundRule):
 rulePrimitiveInsertionRepetition = RuleRef(PrimitiveInsertionRepetition(), name="PrimitiveInsertionRepetition")
 
 class Insertion(CompoundRule):
-  spec = "[<InsertModeEntry>] <insertions>"
-  extras = [Repetition(rulePrimitiveInsertionRepetition, max=None, name="insertions"),
-            ruleInsertModeEntry]
+  spec = "[<InsertModeEntry>] <PrimitiveInsertionRepetition>"
+  extras = [rulePrimitiveInsertionRepetition, ruleInsertModeEntry]
 
   def value(self, node):
     children = node.children[0].children[0].children
