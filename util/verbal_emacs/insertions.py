@@ -8,11 +8,11 @@ from verbal_emacs.common import ruleDigitalInteger
 
 class KeyInsertion(MappingRule):
   mapping = {
-    "ace [<count>]":        Key("space:%(n)d"),
-    "tab [<count>]":        Key("Tab:%(n)d"),
-    "slap [<count>]":       Key("Return:%(n)d"),
-    "chuck [<count>]":      Key("Delete:%(n)d"),
-    "scratch [<count>]":    Key("BackSpace:%(n)d"),
+    "ace [<count>]":        Key("space:%(count)d"),
+    "tab [<count>]":        Key("Tab:%(count)d"),
+    "slap [<count>]":       Key("Return:%(count)d"),
+    "chuck [<count>]":      Key("Delete:%(count)d"),
+    "scratch [<count>]":    Key("BackSpace:%(count)d"),
     "ack":                  Key("Escape"),
   }
   extras = [ruleDigitalInteger[3]]
