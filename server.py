@@ -136,6 +136,7 @@ class Handler(object):
     self.runCommand(' '.join(command))
 
   def callRaw(self, arguments):
+    print arguments
     return self.readCommand(' '.join(arguments))
 
   def callReloadConfiguration(self):

@@ -23,14 +23,6 @@ from proxy_nicknames import *
 
 import verbal_emacs
 
-LEADER_KEY = "comma"
-LINE_COMMAND_KEY = "colon"
-
-leader = Key(LEADER_KEY)
-line_command_key = Key(LINE_COMMAND_KEY)
-escape = Key("Escape")
-escape_leader = escape + Pause("30") + leader
-
 vim_context = AppRegexContext(name="(?i).*VIM.*") & ~AppRegexContext(name="(?i)^.*verbal_emacs.*$")
 
 command_t_context = AppRegexContext(name="^GoToFile.*$") & vim_context

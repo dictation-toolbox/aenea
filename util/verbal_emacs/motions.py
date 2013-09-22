@@ -3,6 +3,7 @@ from proxy_nicknames import Text, Key
 from raul import LETTERS
 
 from verbal_emacs.common import NumericDelegateRule, ruleDigitalInteger, ruleLetterMapping
+from verbal_emacs.config import LEADER
 
 class PrimitiveMotion(MappingRule):
   mapping = {
@@ -14,13 +15,13 @@ class PrimitiveMotion(MappingRule):
     "lope":Text("b"),
     "yope":Text("w"),
     "elope":Text("ge"),
-    "e yope":Text("e"),
+    "iyope":Text("e"),
 
     "lopert":Text("B"),
     "yopert":Text("W"),
     "elopert":Text("gE"),
     "eyopert":Text("E"),
-    
+
     "apla":Text("{"),
     "anla":Text("}"),
     "sapla":Text("("),
@@ -48,6 +49,17 @@ class PrimitiveMotion(MappingRule):
     "inner calalope":Text("i,b"),
     "inner calayope":Text("i,w"),
     "inner end calayope":Text("i,e"),
+
+    # EasyMotion
+    "easy lope":Key("%s:2, b" % LEADER),
+    "easy yope":Key("%s:2, w" % LEADER),
+    "easy elope":Key("%s:2, g, e" % LEADER),
+    "easy iyope":Key("%s:2, e" % LEADER),
+
+    "easy lopert":Key("%s:2, B" % LEADER),
+    "easy yopert":Key("%s:2, W" % LEADER),
+    "easy elopert":Key("%s:2, g, E" % LEADER),
+    "easy eyopert":Key("%s:2, E" % LEADER),
   }
 
 #    "phytic":Text("f"),
