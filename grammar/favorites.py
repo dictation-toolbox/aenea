@@ -16,7 +16,7 @@ class Favorites(CompoundRule):
   extras = [SelfChoice("key", FAVORITES)]
 
   def _process_recognition(self, node, extras):
-    value = favorites[str(extras["key"])]
+    value = FAVORITES[str(extras["key"])]
     with ComSat() as connection:
       connection.getRPCProxy().callText(value)
 
