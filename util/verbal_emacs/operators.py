@@ -8,7 +8,7 @@ _OPERATORS = {
     "relo":"",
     "dell":"d",
     "chaos":"c",
-    "yank":"y",
+    "nab":"y",
     "swap case":"g~",
     "uppercase":"gU",
     "lowercase":"gu",

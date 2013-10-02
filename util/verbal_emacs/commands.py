@@ -11,7 +11,7 @@ class PrimitiveCommand(MappingRule):
     "vim undo":Key("u"),
     "plap":Key("P"),
     "plop":Key("p"),
-    "megaditto":Text("."),
+    "ditto":Text("."),
   }
 rulePrimitiveCommand = RuleRef(PrimitiveCommand(), name="PrimitiveCommand")
 

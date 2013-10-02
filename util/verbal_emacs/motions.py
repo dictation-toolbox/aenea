@@ -62,20 +62,19 @@ class PrimitiveMotion(MappingRule):
     "easy eyopert":Key("%s:2, E" % LEADER),
   }
 
-#    "phytic":Text("f"),
-#    "fitton":Text("F"),
-
-#    "pre phytic":Text("t"),
-#    "pre fitton":Text("T"),
-#"tect":Text("%%"),
-#"matu":Text("M"),
-
   for (spoken_object, command_object) in (("(lope | yope)", "w"),
                                           ("(lopert | yopert)", "W")):
     for (spoken_modifier, command_modifier) in (("inner", "i"),
                                                 ("outer", "a")):
       mapping["%s %s" % (spoken_modifier, spoken_object)] = Text(command_modifier + command_object)
 rulePrimitiveMotion = RuleRef(PrimitiveMotion(), name="PrimitiveMotion")
+
+class UncountedMotion(MappingRule):
+  mapping = {
+    "tect":Text("%%"),
+    "matu":Text("M"),
+  }
+ruleUncountedMotion = RuleRef(UncountedMotion(), name="UncountedMotion")
 
 class MotionParameterMotion(MappingRule):
   mapping = {
@@ -95,10 +94,17 @@ class ParameterizedMotion(CompoundRule):
     return Text(children[0].value() + children[1].value())
 ruleParameterizedMotion = RuleRef(ParameterizedMotion(), name="ParameterizedMotion")
 
-class Motion(NumericDelegateRule):
+class CountedMotion(NumericDelegateRule):
   spec = "[<count>] <motion>"
   extras = [ruleDigitalInteger[3],
             Alternative([
                 rulePrimitiveMotion,
                 ruleParameterizedMotion], name="motion")]
+ruleCountedMotion = RuleRef(CountedMotion(), name="CountedMotion")
+
+class Motion(CompoundRule):
+  spec = "<motion>"
+  extras = [Alternative([ruleCountedMotion, ruleUncountedMotion], name="motion")]
+  def value(self, node):
+    return node.children[0].children[0].children[0].value()
 ruleMotion = RuleRef(Motion(), name="Motion")
