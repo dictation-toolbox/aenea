@@ -30,6 +30,7 @@ if PLATFORM == "proxy":
 else:
   vim_context = AppContext(title="VIM")
   disable_context = ~AppContext(title="")
+  global_context = AppContext(title="")
 
 #---------------------------------------------------------------------------
 # Set up this module's configuration.
@@ -97,11 +98,11 @@ command_table = {
   "hexy":(             Nested("{}"),               None),
   "nest quote":(       Nested("\"\""),             None),
   "nest smote":(       Nested("''"),               None),
- 
+
   # Spoken-form      normal command       VIM (can set to None if same as normal)
 
   #### Lines
-  "wipe [<n>]":(     Key("home, shift:down, down:%(n)d, up, end, del, shift:up, BackSpace"),
+  "wipe [<n>]":(     Key("home, shift:down, down:%(n)d, up, end, del, shift:up, backspace"),
                                           Key("escape, [ d%(n)ddi ]") ),
   "strip":(          Key("s-end, del"),
                                           Key("escape, l, d, dollar, a") ),
@@ -113,7 +114,7 @@ command_table = {
                                           Key("escape, dollar, [ %(n)dpi ]") ),
   "trance [<n>]":(   Key("home, shift:down, down:%(n)d, up, end, shift:up, c-c, end, enter, c-v"),
                                           Key("escape, [ y%(n)dy%(n)djkpi ]") ),
-  "lineup [<n>]":(   Key("home, shift:down, end, shift:up, c-x, del, up:%(n)d, home, enter, Up, c-v"),
+  "lineup [<n>]":(   Key("home, shift:down, end, shift:up, c-x, del, up:%(n)d, home, enter, up, c-v"),
                                           Key("escape, [ dd%(n)dk ], home, [ 1P ], i") ),
   "line down [<n>]":(Key("home, shift:down, end, shift:up, c-x, del, down:%(n)d, home, enter, up, c-v"),
                                           Key("escape, [ dd%(n)dj ], home, [ 1P ], i") ),
@@ -121,9 +122,9 @@ command_table = {
                                           Key("escape, [ %(n)dJi ]") ),
 
   #### Words
-  "bump [<n>]":(     Key("cs-Right:%(n)d, del"),
+  "bump [<n>]":(     Key("cs-right:%(n)d, del"),
                                           Key("escape, [ lwbd%(n)dwi ]")),
-  "whack [<n>]":(    Key("cs-Left:%(n)d, del"),
+  "whack [<n>]":(    Key("cs-left:%(n)d, del"),
                                           Key("escape, [ lw%(n)dbd%(n)dwi ]")),
   }
 
@@ -392,7 +393,7 @@ class RepeatRule(CompoundRule):
 #---------------------------------------------------------------------------
 # Create and load this module's grammar.
 
-grammar = Grammar("multi edit", context=aenea.global_context & ~disable_context)
+grammar = Grammar("multi edit", context=global_context & ~disable_context)
 grammar.add_rule(RepeatRule(extras=vim_extras + [format_rule, Alternative(finishes, name="finish")], name="b", context=vim_context))
 grammar.add_rule(RepeatRule(extras=extras + [format_rule, Alternative(finishes, name="finish")], name="a", context=(~vim_context)))
 grammar.add_rule(LiteralRule())
