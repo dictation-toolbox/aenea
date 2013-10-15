@@ -8,7 +8,7 @@
 # Licensed under the LGPL, see <http://www.gnu.org/licenses/>
 #
 
-import aenea, raul
+import raul
 
 try:
     import pkg_resources
@@ -17,78 +17,77 @@ try:
 except ImportError:
     pass
 
-from dragonfly import Config, Section, Item, MappingRule, CompoundRule, Grammar, IntegerRef, Dictation, RuleRef, Alternative, Repetition, Literal, Sequence
-from proxy_nicknames import *
+from dragonfly import Config, Section, Item, MappingRule, CompoundRule, Grammar, IntegerRef, Dictation, RuleRef, Alternative, Repetition, Literal, Sequence, Key, Text, AppContext
 
-vim_context = AppRegexContext(name="(?i).*VIM.*")
-disable_context = ~AppRegexContext(name="(?i)^.*(verbal_emacs|multiedit).*$") & vim_context
+PLATFORM = "proxy"
+#PLATFORM = "windows"
 
-#---------------------------------------------------------------------------
-# Here we globally defined the release action which releases all
-#  modifier-keys used within this grammar.  It is defined here
-#  because this functionality is used in many different places.
-#  Note that it is harmless to release ("...:up") a key multiple
-#  times or when that key is not held down at all.
-
-release = Key("Shift_L:up, Control_L:up")
+if PLATFORM == "proxy":
+  import aenea
+  from proxy_nicknames import *
+  vim_context = AppRegexContext(name="(?i).*VIM.*")
+  disable_context = ~AppRegexContext(name="(?i)^.*(verbal_emacs|multiedit).*$") & vim_context
+else:
+  vim_context = AppContext(title="VIM")
+  disable_context = ~AppContext(title="")
 
 #---------------------------------------------------------------------------
 # Set up this module's configuration.
 
 def Nested(command):
-  return Text(command) + Key("Left:%i" % (len(command) / 2))
+  return Text(command) + Key("left:%i" % (len(command) / 2))
 
 command_table = {
   # Spoken-form        normal command              VIM (can set to None if same as normal)
 
   #### Cursor manipulation
-  "up [<n>]":(         Key("Up:%(n)d"),            Key("Escape, [ %(n)dki ]")),
-  "down [<n>]":(       Key("Down:%(n)d"),          Key("Escape, [ %(n)dji ]")),
-  "left [<n>]":(       Key("Left:%(n)d"),          None),
-  "right [<n>]":(      Key("Right:%(n)d"),         None),
-  "gope [<n>]":(       Key("Prior:%(n)d"),         None),
-  "drop [<n>]":(       Key("Next:%(n)d"),          None),
-  "port [<n>]":(       Key("c-Left:%(n)d"),        Key("Escape, [ %(n)dbi ]") ),
-  "yope [<n>]":(       Key("c-Right:%(n)d"),       Key("Escape, [ %(n)dwwi ]") ),
-  "care":(             Key("Home"),                None),
-  "doll":(             Key("End"),                 None),
-  "file top":(         Key("c-Home"),              Key("Escape, 1, s-g, i") ),
-  "file toe":(         Key("c-End"),               Key("Escape, s-g, i") ),
+  "up [<n>]":(         Key("up:%(n)d"),            Key("escape, [ %(n)dki ]")),
+  "down [<n>]":(       Key("down:%(n)d"),          Key("escape, [ %(n)dji ]")),
+  "left [<n>]":(       Key("left:%(n)d"),          None),
+  "right [<n>]":(      Key("right:%(n)d"),         None),
+  "gope [<n>]":(       Key("pgup:%(n)d"),          None),
+  "drop [<n>]":(       Key("pgdown:%(n)d"),        None),
+  "lope [<n>]":(       Key("c-left:%(n)d"),        Key("escape, [ %(n)dbi ]") ),
+  "yope [<n>]":(       Key("c-right:%(n)d"),       Key("escape, [ %(n)dwwi ]") ),
+  "care":(             Key("home"),                None),
+  "doll":(             Key("end"),                 None),
+  "file top":(         Key("c-home"),              Key("escape, 1, s-g, i") ),
+  "file toe":(         Key("c-end"),               Key("escape, s-g, i") ),
 
   #### Various keys
   "ace [<n>]":(        Key("space:%(n)d"),         None),
-  "tab [<n>]":(        Key("Tab:%(n)d"),           None),
-  "slap [<n>]":(       Key("Return:%(n)d"),        None),
-  "chuck [<n>]":(      Key("Delete:%(n)d"),        None),
-  "scratch [<n>]":(    Key("BackSpace:%(n)d"),     None),
-  "act":(              Key("Escape"),              None),
+  "tab [<n>]":(        Key("tab:%(n)d"),           None),
+  "slap [<n>]":(       Key("enter:%(n)d"),         None),
+  "chuck [<n>]":(      Key("del:%(n)d"),           None),
+  "scratch [<n>]":(    Key("backspace:%(n)d"),     None),
+  "act":(              Key("escape"),              None),
 
   #### Symbols
   "amp [<n>]":(        Key("ampersand:%(n)d"),     None),
   "star [<n>]":(       Key("asterisk:%(n)d"),      None),
   "at sign [<n>]":(    Key("at:%(n)d"),            None),
   "back ash [<n>]":(   Key("backslash:%(n)d"),     None),
-  "backtick [<n>]":(   Key("grave:%(n)d"),         None),
+  "backtick [<n>]":(   Key("backtick:%(n)d"),      None),
   "bar [<n>]":(        Key("bar:%(n)d"),           None),
-  "hat [<n>]":(        Key("asciicircum:%(n)d"),   None),
+  "hat [<n>]":(        Key("caret:%(n)d"),         None),
   "yeah [<n>]":(       Key("colon:%(n)d"),         None),
   "drip [<n>]":(       Key("comma:%(n)d"),         None),
   "dollar [<n>]":(     Key("dollar:%(n)d"),        None),
-  "dot [<n>]":(        Key("period:%(n)d"),        None),
-  "quote [<n>]":(      Key("quotedbl:%(n)d"),      None),
+  "dot [<n>]":(        Key("dot:%(n)d"),           None),
+  "quote [<n>]":(      Key("dquote:%(n)d"),        None),
   "eek [<n>]":(        Key("equal:%(n)d"),         None),
-  "bang [<n>]":(       Key("exclam:%(n)d"),        None),
-  "pound [<n>]":(      Key("numbersign:%(n)d"),    None),
+  "bang [<n>]":(       Key("exclamation:%(n)d"),   None),
+  "pound [<n>]":(      Key("hash:%(n)d"),          None),
   "hyph [<n>]":(       Key("minus:%(n)d"),         None),
   "percent [<n>]":(    Key("percent:%(n)d"),       None),
   "cross [<n>]":(      Key("plus:%(n)d"),          None),
   "quest [<n>]":(      Key("question:%(n)d"),      None),
   "ash [<n>]":(        Key("slash:%(n)d"),         None),
-  "smote [<n>]":(      Key("apostrophe:%(n)d"),    None),
-  "tilde [<n>]":(      Key("asciitilde:%(n)d"),    None),
+  "smote [<n>]":(      Key("squote:%(n)d"),        None),
+  "tilde [<n>]":(      Key("tilde:%(n)d"),         None),
   "rail [<n>]":(       Key("underscore:%(n)d"),    None),
-  "push [<n>]":(       Key("parenleft:%(n)d"),     None),
-  "pop [<n>]":(        Key("parenright:%(n)d"),    None),
+  "push [<n>]":(       Key("lparen:%(n)d"),        None),
+  "pop [<n>]":(        Key("rparen:%(n)d"),        None),
 
   #### Nested
   "circle":(           Nested("()"),               None),
@@ -102,41 +101,41 @@ command_table = {
   # Spoken-form      normal command       VIM (can set to None if same as normal)
 
   #### Lines
-  "wipe [<n>]":(     Key("Home, Shift_L:down, Down:%(n)d, Up, End, Delete, Shift_L:up, BackSpace"),
-                                          Key("Escape, [ d%(n)ddi ]") ),
-  "strip":(          Key("s-End, Delete"),
-                                          Key("Escape, l, d, dollar, a") ),
-  "striss":(         Key("s-Home, Delete"),
-                                          Key("Escape, l, d, asciicircum, i") ),
-  "nab [<n>]":(      Key("Home, Shift_L:down, Down:%(n)d, Up, End, Shift_L:up, c-j, End"),
-                                          Key("Escape, [ y%(n)dyi ]") ),
-  "plop [<n>]":(     Key("c-v"),
-                                          Key("Escape, dollar, [ %(n)dpi ]") ),
-  "trance [<n>]":(   Key("Home, Shift_L:down, Down:%(n)d, Up:2, End, Shift_L:up, c-j, End, Return, c-k"),
-                                          Key("Escape, [ y%(n)dy%(n)djkpi ]") ),
-  "lineup [<n>]":(   Key("Home, Shift_L:down, End, Shift_L:up, c-q, Delete, Up:%(n)d, Home, Return, Up, c-k"),
-                                          Key("Escape, [ dd%(n)dk ], Home, [ 1P ], i") ),
-  "line down [<n>]":(Key("Home, Shift_L:down, End, Shift_L:up, c-q, Delete, Down:%(n)d, Home, Return, Up, c-k"),
-                                          Key("Escape, [ dd%(n)dj ], Home, [ 1P ], i") ),
-  "squishy [<n>]":(  Key("End, Delete, space"),
-                                          Key("Escape, [ %(n)dJi ]") ),
+  "wipe [<n>]":(     Key("home, shift:down, down:%(n)d, up, end, del, shift:up, BackSpace"),
+                                          Key("escape, [ d%(n)ddi ]") ),
+  "strip":(          Key("s-end, del"),
+                                          Key("escape, l, d, dollar, a") ),
+  "striss":(         Key("s-home, del"),
+                                          Key("escape, l, d, caret, i") ),
+  "nab [<n>]":(      Key("home, shift:down, down:%(n)d, up, end, shift:up, c-c, end"),
+                                          Key("escape, [ y%(n)dyi ]") ),
+  "plop [<n>]":(     Key("c-v:%(n)d"),
+                                          Key("escape, dollar, [ %(n)dpi ]") ),
+  "trance [<n>]":(   Key("home, shift:down, down:%(n)d, up, end, shift:up, c-c, end, enter, c-v"),
+                                          Key("escape, [ y%(n)dy%(n)djkpi ]") ),
+  "lineup [<n>]":(   Key("home, shift:down, end, shift:up, c-x, del, up:%(n)d, home, enter, Up, c-v"),
+                                          Key("escape, [ dd%(n)dk ], home, [ 1P ], i") ),
+  "line down [<n>]":(Key("home, shift:down, end, shift:up, c-x, del, down:%(n)d, home, enter, up, c-v"),
+                                          Key("escape, [ dd%(n)dj ], home, [ 1P ], i") ),
+  "squishy [<n>]":(  Key("end, del, space"),
+                                          Key("escape, [ %(n)dJi ]") ),
 
   #### Words
-  "bump [<n>]":(     Key("Right:2, c-Left, cs-Right:%(n)d, Delete:2"),
-                                          Key("Escape, [ lwbd%(n)dwi ]")),
-  "whack [<n>]":(    Key("Left, c-Right, cs-Left:%(n)d, Delete:2"),
-                                          Key("Escape, [ lw%(n)dbd%(n)dwi ]")),
+  "bump [<n>]":(     Key("cs-Right:%(n)d, del"),
+                                          Key("escape, [ lwbd%(n)dwi ]")),
+  "whack [<n>]":(    Key("cs-Left:%(n)d, del"),
+                                          Key("escape, [ lw%(n)dbd%(n)dwi ]")),
   }
 
 # VIM only commands
 vim_command_table = {
   # Spoken-form                VIM (can set to None if same as normal)
-  "squishy space [<n>]":       Key("Escape, [ %(n)dgJi ]"),
+  "squishy space [<n>]":       Key("escape, [ %(n)dgJi ]"),
 
-  "slowly up [<n>]":           Key("Up:%(n)d"),
-  "slowly down [<n>]":         Key("Down:%(n)d"),
-  "slowly left [<n>]":         Key("Left:%(n)d"),
-  "slowly right [<n>]":        Key("Right:%(n)d"),
+  "slowly up [<n>]":           Key("up:%(n)d"),
+  "slowly down [<n>]":         Key("down:%(n)d"),
+  "slowly left [<n>]":         Key("left:%(n)d"),
+  "slowly right [<n>]":        Key("right:%(n)d"),
   }
 
 # Python specific
@@ -384,7 +383,6 @@ class RepeatRule(CompoundRule):
     for i in range(count):
       for action in sequence:
         action.execute()
-        #release.execute()
       if "format_rule" in extras:
         extras["format_rule"].execute()
       if "finish" in extras:

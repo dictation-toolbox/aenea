@@ -29,7 +29,8 @@ WINDOWS_MAPPING = {"pgup":"Prior", "pgdown":"Next", "backspace":"BackSpace",
                    "lparen":"parenleft", "rparen":"parenright",
                    "lbrace":"braceleft", "rbrace":"braceright", "apps":"Menu",
                    "win":"Super_L", "npadd":"KP_Add", "npdec":"KP_Decimal",
-                   "npdiv":"KP_Divide", "npmul":"KP_Multiply"}
+                   "npdiv":"KP_Divide", "npmul":"KP_Multiply", "shift":"Shift_L",
+                   "enter":"Return"}
 for key in (["left", "right", "up", "down", "home", "end", "tab", "insert",
              "escape"] + ["f%i" % i for i in xrange(1, 13)]):
   WINDOWS_MAPPING[key] = key[0].upper() + key[1:]
