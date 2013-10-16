@@ -97,7 +97,7 @@ class Git(CompoundRule):
     if "m" in options:
       option_string += " -m \"\""
 
-    action = Text("git %s %s" % (command, option_string)).execute()
+    action = Text("git %s %s" % (command, option_string))
     if "m" in options:
       action += Key("left")
     action.execute()
