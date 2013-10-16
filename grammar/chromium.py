@@ -1,10 +1,13 @@
-from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, Context, Repetition, MappingRule, Dictation, IntegerRef)
-import dragonfly
+from dragonfly import (Grammar, Dictation, MappingRule, Dictation, IntegerRef)
 from proxy_nicknames import *
 
-import aenea
+import aenea, config
 
-chromium_context = AppRegexContext(window_class_name="(c|C)hromium", window_class="(c|C)hromium.*") & aenea.global_context
+if config.PLATFORM == "proxy":
+  from proxy_nicknames import Key
+  chromium_context = AppRegexContext(window_class_name="(c|C)hromium", window_class="(c|C)hromium.*") & aenea.global_context
+else:
+  chromium_context = (AppContext(name="Chrome") | AppContext(name="Chromium"))
 
 chromium_grammar = Grammar("chromium", context=chromium_context)
 

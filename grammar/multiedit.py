@@ -32,10 +32,9 @@ except ImportError:
 
 from dragonfly import Config, Section, Item, MappingRule, CompoundRule, Grammar, IntegerRef, Dictation, RuleRef, Alternative, Repetition, Literal, Sequence, Key, Text, AppContext
 
-PLATFORM = "proxy"
-#PLATFORM = "windows"
+import config
 
-if PLATFORM == "proxy":
+if config.PLATFORM == "proxy":
   import aenea
   from proxy_nicknames import *
   vim_context = AppRegexContext(name="(?i).*VIM.*")
