@@ -1,68 +1,32 @@
-from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, Context, Repetition)
-import natlink, os
-from comsat import ComSat
+from dragonfly import (Grammar, AppContext, CompoundRule, MappingRule, Repetition, RuleRef, Key)
 
-from raul import SelfChoice, ALPHANUMERIC_EXTENDED, ALPHANUMERIC
+import config, raul
 
-grammar_context = AppContext(executable="notepad")
-grammar = Grammar("nato", context=grammar_context)
+modifier_keys = {"control":"c", "altar":"a",
+                 "shift":"s", "super":"w"}
+if config.PLATFORM == "proxy":
+  from proxy_nicknames import Key
+  grammar_context = AppContext(executable="notepad")
+  grammar = Grammar("nato", context=grammar_context)
+  modifier_keys.update(hyper="h", meta="m")
+else:
+  grammar = Grammar("nato")
+  modifier_keys.update(windows="w", flag="w")
 
 class MetaKey(CompoundRule):
   spec = "<modifiers> <key>"
 
-  modifier_keys = {"control":"Control_L", "altar":"Alt_L",
-                   "shift":"Shift_L", "vorpal":"Hyper_L",
-                   "zach":"Super_R"}
-  modifier = SelfChoice("modifier", modifier_keys)
+  extras = [Repetition(RuleRef(MappingRule(mapping=modifier_keys, name="modmap"), name="modifier_atom"), 1, len(modifier_keys), name="modifiers"),
+            RuleRef(MappingRule(mapping=raul.ALPHANUMERIC_EXTENDED, name="keymap"), name="key")]
+  
+  def _process_recognition (self, node, extras):
+    delegates = node.children[0].children[0].children
+    modifiers = delegates[0].value()
+    key = delegates[1].value()
 
-  extras = [Repetition(modifier, name="modifiers", max=4),
-            SelfChoice("key", ALPHANUMERIC_EXTENDED)]
-            
-  def _process_recognition(self, note, extras):
-    modifiers = set(map(self.modifier_keys.get, map(str, extras["modifiers"])))
-    with ComSat() as connection:
-      actions = ([("keydown %s" % mod) for mod in modifiers] +
-                 ["key " + ALPHANUMERIC_EXTENDED[str(extras["key"])]] +
-                 [("keyup %s" % mod) for mod in modifiers])
-      connection.getRPCProxy().callRaw(actions)
+    Key("%s-%s" % (''.join(modifiers), key)).execute()
 
-class UpperKeypress(CompoundRule):
-  spec = "upper <key>"
-
-  letter = SelfChoice("key", ALPHANUMERIC)
-  extras = [letter]
-
-  def _process_recognition(self, node, extras):
-    key = ALPHANUMERIC_EXTENDED[str(extras["key"])]
-    with ComSat() as connection:
-      connection.getRPCProxy().callText(key.upper())
-
-class Keypress(CompoundRule):
-  spec = "<key>"
-
-  letter = SelfChoice("key", ALPHANUMERIC)
-  extras = [letter]
-
-  def _process_recognition(self, node, extras):
-    key = ALPHANUMERIC_EXTENDED[str(extras["key"])]
-    with ComSat() as connection:
-      connection.getRPCProxy().callText(key)
-
-class SpellingBee(CompoundRule):
-  spec = "letters <letters>"
-
-  letter = SelfChoice("letter", ALPHANUMERIC_EXTENDED)
-  extras = [Repetition(letter, name="letters", max=50)]
-
-  def _process_recognition(self, node, extras):
-    written = "".join(map(ALPHANUMERIC_EXTENDED.get, extras["letters"]))
-    with ComSat() as connection:
-      connection.getRPCProxy().callText(written)
-
-grammar.add_rule(SpellingBee())
 grammar.add_rule(MetaKey())
-grammar.add_rule(Keypress())
-grammar.add_rule(UpperKeypress())
 
 grammar.load()
 
