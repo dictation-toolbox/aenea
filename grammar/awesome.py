@@ -1,14 +1,11 @@
-from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, Context, Repetition, MappingRule)
-import natlink, os
-from comsat import ComSat
+from dragonfly import (Grammar, AppContext, MappingRule)
 
-from raul import SelfChoice, NUMBERS
 import aenea
 
 grammar_context = AppContext(executable="notepad")
 grammar = Grammar("awesome", context=grammar_context)
 
-from proxy_nicknames import Key, Text
+from proxy_nicknames import Key
 
 awesome = "w"
 
