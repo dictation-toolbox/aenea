@@ -38,7 +38,7 @@ if config.PLATFORM == "proxy":
   import aenea
   from proxy_nicknames import *
   vim_context = AppRegexContext(name="(?i).*VIM.*")
-  disable_context = ~AppContext(name="") & vim_context
+  disable_context = vim_context
   global_context = aenea.global_context
 else:
   vim_context = AppContext(title="VIM")
