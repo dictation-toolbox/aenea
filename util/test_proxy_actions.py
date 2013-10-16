@@ -43,7 +43,7 @@ class TestActions(unittest.TestCase):
     self.assertEqual(parse("c-Home:2"), ["keydown Control_L", "key Home", "key Home", "keyup Control_L"])
     self.assertEqual(parse("c-Home:2/5"), ["keydown Control_L", "key Home", "key Home", "keyup Control_L", "sleep 5"])
     self.assertEqual(parse("c-Home/1:2/5"), ["keydown Control_L", "key Home", "sleep 1", "key Home", "keyup Control_L", "sleep 5"])
-    self.assertEqual(parse("c-Home/1:2/5"), ["keydown control", "key home", "sleep 1", "key home", "keyup control", "sleep 5"])
+    self.assertEqual(parse("c-home/1:2/5"), ["keydown Control_L", "key Home", "sleep 1", "key Home", "keyup Control_L", "sleep 5"])
     self.assertEqual(parse("Home"), ["key Home"])
     self.assertEqual(parse("Home:2"), ["key Home"] * 2)
 

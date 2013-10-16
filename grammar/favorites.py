@@ -1,27 +1,21 @@
-from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, Context, Repetition)
-import natlink, os
-from comsat import ComSat
+from dragonfly import Grammar, AppContext, MappingRule, Text
 
-from raul import SelfChoice
+import config
 
-grammar_context = AppContext(executable="notepad")
-grammar = Grammar("favorites", context=grammar_context)
+if config.PLATFORM == "proxy":
+  grammar_context = AppContext(executable="notepad")
+  grammar = Grammar("favorites", context=grammar_context)
+  from proxy_nicknames import Text
+else:
+  grammar = Grammar("favorites")
 
-# {"spoken form":"written form"}
-from personal import FAVORITES
+import personal
 
-class Favorites(CompoundRule):
-  spec = "fave  <key>"
-
-  extras = [SelfChoice("key", FAVORITES)]
-
-  def _process_recognition(self, node, extras):
-    value = FAVORITES[str(extras["key"])]
-    with ComSat() as connection:
-      connection.getRPCProxy().callText(value)
+class Favorites(MappingRule):
+  mapping = dict(("fave " + key, Text(value))
+                 for (key, value) in personal.FAVORITES.iteritems())
 
 grammar.add_rule(Favorites())
-
 grammar.load()
 
 def unload():
