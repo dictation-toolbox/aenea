@@ -18,7 +18,8 @@
 #
 # Requires raul.py to be in the Natlink dir to work correctly. Future versions
 # may clean that up. No other aenea dependencies when operating in regular
-# Windows mode.
+# Windows mode. (Don't forget, it has to be called _multiedit, so if you're
+# not using the reloadconfig module you'll need to rename manually.)
 
 import raul
 
@@ -132,7 +133,7 @@ command_table = {
   "line down [<n>]":(Key("home, shift:down, end, shift:up, c-x, del, down:%(n)d, home, enter, up, c-v"),
                                           Key("escape") + Text("dd%(n)dj") + Key("home, 1, P, i") ),
   "squishy [<n>]":(  Key("end, del, space"),
-                                          Key("escape,") + Text("%(n)dJi") ),
+                                          Key("escape") + Text("%(n)dJi") ),
 
   #### Words
   "bump [<n>]":(     Key("cs-right:%(n)d, del"),
