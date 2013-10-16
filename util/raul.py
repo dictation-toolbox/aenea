@@ -1,8 +1,6 @@
 from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal)
 import natlink, os
 
-from comsat import ComSat
-
 def SelfChoice(name, ch):
   return Choice(name, dict(zip(ch, ch)))
 

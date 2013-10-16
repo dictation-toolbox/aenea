@@ -1,12 +1,24 @@
 # This file is a command-module for Dragonfly.
 #
 # (based on the multiedit module from dragonfly-modules project)
-# (heavily modified, you probably want the original)
+# (heavily modified)
 # (the original copyright notice is reproduced below)
 #
 # (c) Copyright 2008 by Christo Butcher
 # Licensed under the LGPL, see <http://www.gnu.org/licenses/>
 #
+# includes two sets of bindings: generic and vim. the latter is quite primitive
+# and revolves around to spending all your time in insert mode. See verbal_emacs
+# for my second (and in my opinion better and more faithful) attempt at vim
+# bindings.
+#
+# Can be used either with proxy_actions (eg, to ship actions to another computer
+# like most of aenea), or regularly in Windows like most Dragonfly modules --
+# just set PLATFORM to "windows" for that. (line ~35)
+#
+# Requires raul.py to be in the Natlink dir to work correctly. Future versions
+# may clean that up. No other aenea dependencies when operating in regular
+# Windows mode.
 
 import raul
 
@@ -26,7 +38,8 @@ if PLATFORM == "proxy":
   import aenea
   from proxy_nicknames import *
   vim_context = AppRegexContext(name="(?i).*VIM.*")
-  disable_context = ~AppRegexContext(name="(?i)^.*(verbal_emacs|multiedit).*$") & vim_context
+  disable_context = ~AppContext(name="") & vim_context
+  global_context = aenea.global_context
 else:
   vim_context = AppContext(title="VIM")
   disable_context = ~AppContext(title="")
@@ -42,14 +55,14 @@ command_table = {
   # Spoken-form        normal command              VIM (can set to None if same as normal)
 
   #### Cursor manipulation
-  "up [<n>]":(         Key("up:%(n)d"),            Key("escape, [ %(n)dki ]")),
-  "down [<n>]":(       Key("down:%(n)d"),          Key("escape, [ %(n)dji ]")),
+  "up [<n>]":(         Key("up:%(n)d"),            Key("escape") + Text("%(n)dki") ),
+  "down [<n>]":(       Key("down:%(n)d"),          Key("escape") + Text("%(n)dji") ),
   "left [<n>]":(       Key("left:%(n)d"),          None),
   "right [<n>]":(      Key("right:%(n)d"),         None),
   "gope [<n>]":(       Key("pgup:%(n)d"),          None),
   "drop [<n>]":(       Key("pgdown:%(n)d"),        None),
-  "lope [<n>]":(       Key("c-left:%(n)d"),        Key("escape, [ %(n)dbi ]") ),
-  "yope [<n>]":(       Key("c-right:%(n)d"),       Key("escape, [ %(n)dwwi ]") ),
+  "lope [<n>]":(       Key("c-left:%(n)d"),        Key("escape") + Text("%(n)dbi") ),
+  "yope [<n>]":(       Key("c-right:%(n)d"),       Key("escape") + Text("%(n)dwwi") ),
   "care":(             Key("home"),                None),
   "doll":(             Key("end"),                 None),
   "file top":(         Key("c-home"),              Key("escape, 1, s-g, i") ),
@@ -103,35 +116,35 @@ command_table = {
 
   #### Lines
   "wipe [<n>]":(     Key("home, shift:down, down:%(n)d, up, end, del, shift:up, backspace"),
-                                          Key("escape, [ d%(n)ddi ]") ),
+                                          Key("escape") + Text("d%(n)ddi") ),
   "strip":(          Key("s-end, del"),
                                           Key("escape, l, d, dollar, a") ),
   "striss":(         Key("s-home, del"),
                                           Key("escape, l, d, caret, i") ),
   "nab [<n>]":(      Key("home, shift:down, down:%(n)d, up, end, shift:up, c-c, end"),
-                                          Key("escape, [ y%(n)dyi ]") ),
+                                          Key("escape") + Text("y%(n)dyi") ),
   "plop [<n>]":(     Key("c-v:%(n)d"),
-                                          Key("escape, dollar, [ %(n)dpi ]") ),
+                                          Key("escape, dollar") + Text("%(n)dpi") ),
   "trance [<n>]":(   Key("home, shift:down, down:%(n)d, up, end, shift:up, c-c, end, enter, c-v"),
-                                          Key("escape, [ y%(n)dy%(n)djkpi ]") ),
+                                          Key("escape") + Text("y%(n)dy%(n)djkpi") ),
   "lineup [<n>]":(   Key("home, shift:down, end, shift:up, c-x, del, up:%(n)d, home, enter, up, c-v"),
-                                          Key("escape, [ dd%(n)dk ], home, [ 1P ], i") ),
+                                          Key("escape") + Text("dd%(n)dk") + Key("home, 1, P, i") ),
   "line down [<n>]":(Key("home, shift:down, end, shift:up, c-x, del, down:%(n)d, home, enter, up, c-v"),
-                                          Key("escape, [ dd%(n)dj ], home, [ 1P ], i") ),
+                                          Key("escape") + Text("dd%(n)dj") + Key("home, 1, P, i") ),
   "squishy [<n>]":(  Key("end, del, space"),
-                                          Key("escape, [ %(n)dJi ]") ),
+                                          Key("escape,") + Text("%(n)dJi") ),
 
   #### Words
   "bump [<n>]":(     Key("cs-right:%(n)d, del"),
-                                          Key("escape, [ lwbd%(n)dwi ]")),
+                                          Key("escape") + Text("d%(n)dwi")),
   "whack [<n>]":(    Key("cs-left:%(n)d, del"),
-                                          Key("escape, [ lw%(n)dbd%(n)dwi ]")),
+                                          Key("escape") + Text("d%(n)dbi")),
   }
 
 # VIM only commands
 vim_command_table = {
   # Spoken-form                VIM (can set to None if same as normal)
-  "squishy space [<n>]":       Key("escape, [ %(n)dgJi ]"),
+  "squishy space [<n>]":       Key("escape") + Text("%(n)dgJi"),
 
   "slowly up [<n>]":           Key("up:%(n)d"),
   "slowly down [<n>]":         Key("down:%(n)d"),

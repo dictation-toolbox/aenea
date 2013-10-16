@@ -23,7 +23,7 @@ from proxy_nicknames import *
 
 import verbal_emacs
 
-vim_context = AppRegexContext(name="(?i).*VIM.*") & ~AppRegexContext(name="(?i)^.*verbal_emacs.*$")
+vim_context = AppRegexContext(name="(?i).*VIM.*")
 
 command_t_context = AppRegexContext(name="^GoToFile.*$") & vim_context
 fugitive_index_context = AppRegexContext(name="^index.*\.git.*$") & vim_context
