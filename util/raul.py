@@ -54,7 +54,7 @@ ALPHANUMERIC.update(DIGITS)
 
 ALPHANUMERIC_EXTENDED = ALPHANUMERIC.copy()
 
-ALPHANUMERIC_EXTENDED["enter"] = "Return"
+ALPHANUMERIC_EXTENDED["enter"] = "enter"
 ALPHANUMERIC_EXTENDED["comma"] = ","
 
 # hackity hack hack

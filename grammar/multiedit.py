@@ -93,7 +93,7 @@ command_table = {
   "eek [<n>]":(        Key("equal:%(n)d"),         None),
   "bang [<n>]":(       Key("exclamation:%(n)d"),   None),
   "pound [<n>]":(      Key("hash:%(n)d"),          None),
-  "hyph [<n>]":(       Key("minus:%(n)d"),         None),
+  "hyph [<n>]":(       Key("hyphen:%(n)d"),        None),
   "percent [<n>]":(    Key("percent:%(n)d"),       None),
   "cross [<n>]":(      Key("plus:%(n)d"),          None),
   "quest [<n>]":(      Key("question:%(n)d"),      None),

@@ -20,16 +20,16 @@ class MailCommands(MappingRule):
       "mail":                  MousePhantomClick("(500 115), 1"),
       "body":                  MousePhantomClick("(283 650), 1"),
       "compose":               Key("c-m"),
-      "pane":                  Key("F6"),
-      "message pane":          Key("F8"),
+      "pane":                  Key("f6"),
+      "message pane":          Key("f8"),
       "reply":                 Key("cs-r"),
       "reply to sender":       Key("c-r"),
       "spam":                  Key("j"),
       "not spam":              Key("s-j"),
       "find":                  Key("c-f"),
       "search":                Key("cs-k"),
-      "expand thread":         Key("Right"),
-      "collapse thread":       Key("Left")
+      "expand thread":         Key("right"),
+      "collapse thread":       Key("left")
       }
 
 class ComposeCommands(MappingRule):
@@ -38,7 +38,7 @@ class ComposeCommands(MappingRule):
       "encrypt":               Key("cs-e"),
       "sign and encrypt":      Key("cs-s, cs-e"),
       "encrypt and sign":      Key("cs-s, cs-e"),
-      "send message":          Key("c-Return"),
+      "send message":          Key("c-enter"),
       }
 
 email_grammar.add_rule(MailCommands())

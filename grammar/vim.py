@@ -12,7 +12,7 @@ import aenea
 LEADER_KEY = "comma"
 
 leader = Key(LEADER_KEY)
-escape = Key("Escape")
+escape = Key("escape")
 escape_leader = escape + Pause("30") + leader
 
 vim_context = aenea.global_context & AppRegexContext(name="(?i)^.* vim$")
@@ -37,7 +37,7 @@ class EasyMotion(MappingRule):
 # i guess if you write a vim plugin you get to name it but i can't claim to understand these two...
 class LustyJuggler(MappingRule):
   mapping = {"jug | juggle":escape_leader + Text("lj"),
-             "(jug | juggle) <n>":escape_leader + Key("l, j, %(n)d") + Pause("20") + Key("Return") + Pause("20") + Key("i")}
+             "(jug | juggle) <n>":escape_leader + Key("l, j, %(n)d") + Pause("20") + Key("enter") + Pause("20") + Key("i")}
   extras = [IntegerRef("n", 0, 10)]
 
 class LustyExplorer(MappingRule):

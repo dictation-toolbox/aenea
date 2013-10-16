@@ -17,7 +17,7 @@ class DigitalInteger(Repetition):
     return int("".join(Repetition.value(self, node)))
 
 def Nested(command):
-  return Text(command) + Key("Left:%i" % (len(command) / 2))
+  return Text(command) + Key("left:%i" % (len(command) / 2))
 
 # TODO: clean up and generalize
 def reload_aenea_configuration():
