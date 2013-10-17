@@ -82,7 +82,7 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
     def handle_pause(pause_spec):
       if pause_spec:
         _, sleeptime = pause_spec
-        return ["sleep %i" % int(sleeptime)]
+        return [("sleep", "%i" % int(sleeptime))]
       else:
         return []
      
@@ -91,7 +91,7 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
       try:
         text_parse = self._text_clause.parseString(key.strip())
         if len(text_parse) == 3:
-          actions.append("type " + text_parse[1])
+          actions.append(("type", text_parse[1]))
           continue
       except pyparsing.ParseException:
         pass
@@ -111,23 +111,23 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
         repeat = int(repeat_part[1]) if repeat_part else 1
         if not repeat:
           continue
-        keypress = ["key " + key]
+        keypress = [("key", key)]
         current_actions = keypress + (handle_pause(pause_part) + keypress) * (repeat - 1)
       # manual keypress event
       else:
         (_, direction) = command_part
 
-        current_actions = ["key%s %s" % (direction, key)]
+        current_actions = [("key%s" % direction, key)]
 
-      actions += ([("keydown %s" % modifier) for modifier in modifiers] +
+      actions += ([("keydown", modifier) for modifier in modifiers] +
                   current_actions +
-                  [("keyup %s" % modifier) for modifier in reversed(modifiers)] +
+                  [("keyup", modifier) for modifier in reversed(modifiers)] +
                   handle_pause(outer_pause_part))
     return actions
 
   def _execute_events(self, events):
     with communications as proxy:
-      proxy.callEvents(events)
+      proxy.callExecute(events)
 
 
 ################################################################################
@@ -139,7 +139,7 @@ class ProxyText(ProxyBase, dragonfly.DynStrActionBase):
 
   def _execute_events(self, events):
     with communications as proxy:
-      proxy.callText(events)
+      proxy.callExecute([("type", events)])
 
 ################################################################################
 # Mouse
@@ -155,7 +155,7 @@ class ProxyMouse(ProxyBase, dragonfly.DynStrActionBase):
         command = {"[":"mousemove",
                    "<":"mousemove_relative",
                    "(":"mousemove_active"}[item[0]]
-        events.append("%s %f %f" % (command, x, y))
+        events.append((command, "%f %f" % (x, y)))
       else:
         pause = 0
         repeat = 1
@@ -177,18 +177,18 @@ class ProxyMouse(ProxyBase, dragonfly.DynStrActionBase):
         key = int(key)
 
         if drag:
-          events.append("mouse%s %i" % (drag, key))
+          events.append(("mouse%s" % drag, "%s" % key))
         else:
-          single = ["click %i" % key]
+          single = [("click", "%i" % key)]
           if pause:
-            single.append("sleep %f" % pause)
+            single.append(("sleep", "%f" % pause))
           events.extend(single * repeat)
 
     return events
 
   def _execute_events(self, events):
     with communications as proxy:
-      proxy.callEvents(events)
+      proxy.callExecute(events)
 
 ################################################################################
 # click without moving mouse
@@ -202,7 +202,7 @@ class ProxyMousePhantomClick(ProxyMouse):
        "1:down, [1 1], 1:up" # drag what is there to the upper left corner
      """
   def _parse_spec(self, spec):
-    return ProxyMouse._parse_spec(self, spec) + ["mousemove restore"]
+    return ProxyMouse._parse_spec(self, spec) + [("mousemove", "restore")]
 
 ################################################################################
 # do nothing
