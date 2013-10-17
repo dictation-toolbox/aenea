@@ -40,11 +40,17 @@ class Handler(object):
       fd.write(message)
 
   def callGetCurrentWindowProperties(self):
+    """return a dictionary of window properties for the currently active window.
+       it is fine to include platform specific information, but at least include
+       title, executable, and desktop."""
     window_id, window_title = self.callGetActiveWindow()
     if window_id is None:
       return {}
 
-    properties = {}
+    properties = {
+        "id":window_id,
+        "title":window_title,
+      }
     for line in self.readCommand("-id %s" % window_id, "xprop").split("\n"):
       split = line.split(" = ", 1)
       if len(split) == 2:
@@ -53,15 +59,11 @@ class Handler(object):
           properties[XPROP_PROPERTIES[rawkey]] = value[1:-1] if "(STRING)" in rawkey else value
         elif rawkey == "WM_CLASS(STRING)":
           window_class_name, window_class = value.split('", "')
-          properties["window_class_name"] = window_class_name[1:]
-          properties["window_class"] = window_class[:-1]
+          properties["class_name"] = window_class_name[1:]
+          properties["class"] = window_class[:-1]
 
+    properties["executable"] = os.readlink("/proc/%s/exe" % properties["pid"])
     return properties
-
-  def callText(self, message):
-    """Types a string as is."""
-    if message:
-      self.writeCommand(message)
 
   def callGetActiveWindow(self):
     """Returns the window id and title of the active window."""
