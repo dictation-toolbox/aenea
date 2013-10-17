@@ -6,8 +6,8 @@ from raul import SelfChoice, NUMBERS as numbers
 import config
 
 if config.PLATFORM == "proxy":
-  grammar_context = dragonfly.AppContext(executable="notepad")
-  grammar = Grammar("stopgap", context=grammar_context)
+  import aenea
+  grammar = Grammar("stopgap", context=aenea.global_context)
   from proxy_contexts import *
   from proxy_nicknames import *
 else:

@@ -1,12 +1,19 @@
-from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal, Context, Repetition, MappingRule)
-import dragonfly
-from proxy_nicknames import *
+from dragonfly import Grammar, AppContext, MappingRule, Mouse, Key
 
-import aenea
+import config
 
-thunderbird_context = AppContext(window_class="Icedove") & aenea.global_context
-mail_context = thunderbird_context & AppContext(window_class_name="Mail")
-compose_context = thunderbird_context  & AppContext(window_class_name="Msgcompose")
+if config.PLATFORM == "proxy":
+  from proxy_nicknames import *
+  import aenea
+  thunderbird_context = ((AppContext(window_class="Icedove") |
+                          AppContext(window_class="Thunderbird")) & aenea.global_context)
+  mail_context = thunderbird_context & AppContext(window_class_name="Mail")
+  compose_context = thunderbird_context  & AppContext(window_class_name="Msgcompose")
+else:
+  thunderbird_context = AppContext(name="Thunderbird")
+  mail_context = thunderbird_context & AppContext(name="Mail")
+  compose_context = thunderbird_context  & AppContext(name="Msgcompose")
+  MousePhantomClick = Mouse
 
 email_grammar = Grammar("email", context=mail_context)
 compose_grammar = Grammar("composed", context=compose_context)

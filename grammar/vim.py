@@ -3,8 +3,6 @@ import natlink, os, time
 
 from proxy_nicknames import Key, Text, AppRegexContext
 
-from comsat import ComSat
-
 from raul import SelfChoice, processDictation, NUMBERS as numbers
 
 import aenea
