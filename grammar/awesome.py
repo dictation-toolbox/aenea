@@ -17,6 +17,7 @@ ion = "(whim | notion | ion) "
 
 class Basics(MappingRule):
   mapping = {
+      "termie":Key("w-enter"),
       ion + "screen":Key(awesome + "c-k"),
       ion + "up":Key(awesome + "-k"),
       ion + "down":Key(awesome + "-j"),

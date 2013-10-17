@@ -1,34 +1,24 @@
-from dragonfly import (Grammar, Key, CompoundRule, Choice, Dictation, List, Optional, Literal, RuleRef)
+from dragonfly import Grammar, Key, CompoundRule, MappingRule
 import dragonfly
-import natlink, os
 
-from proxy_contexts import *
+from raul import SelfChoice, NUMBERS as numbers
 
-from proxy_actions import *
+import config
 
-from proxy_nicknames import *
+if config.PLATFORM == "proxy":
+  grammar_context = dragonfly.AppContext(executable="notepad")
+  grammar = Grammar("stopgap", context=grammar_context)
+  from proxy_contexts import *
+  from proxy_nicknames import *
+else:
+  grammar = Grammar("stopgap")
 
-from comsat import ComSat
-
-from raul import SelfChoice, processDictation, NUMBERS as numbers
-
-#---------------------------------------------------------------------------
-# Create this module's grammar and the context under which it'll be active.
-
-grammar_context = dragonfly.AppContext(executable="notepad") & (~AppRegexContext(".*VirtualBox.*"))
-grammar = Grammar("notepad_example", context=grammar_context)
-
-class MouseClick(CompoundRule):
-  spec = "click [<cmd>]"
-  cmd = ["one", "two", "to", "too", "three"]
-  extras = [SelfChoice("cmd", cmd)]
-
-  def _process_recognition(self, node, extras):
-    button = str(extras.get("cmd", 1))
-    button = int(numbers.get(button, button))
-    with ComSat() as cs:
-      rpc = cs.getRPCProxy()
-      rpc.callClick(button)
+class MouseClick(MappingRule):
+  mapping = {
+      "click [left]":Mouse("left"),
+      "click middle":Mouse("middle"),
+      "click right":Mouse("right"),
+    }
 
 class QuadCommand(CompoundRule):
   spec = "zip <xcoord> <ycoord>"
@@ -42,38 +32,18 @@ class QuadCommand(CompoundRule):
     y = numbers.get(y, y)
     x = 1280 * int(x) / 10
     y = 800 * int(y) / 10
-    with ComSat() as cs:
-      rpc = cs.getRPCProxy()
-      rpc.callMouse(x, y)
-      if "zap" in extras:
-        rpc.callClick(1)
+    Mouse("[%s, %s]" % (x, y)).execute()
 
-class TranslateSpecial(CompoundRule):
-  spec = "<cmd>"
-  # say: law raw slaw sraw claw craw
-  cmd = {"syn":"a", "inns":"i", "vim replace":"R", "termie":"Super_L Return", "chrome browsing":"Hyper_L f",
-        "chrome login":"Hyper_L a", "chrome social":"Hyper_L s", "chrome google":"Hyper_L g",
-        "chrome secure":"Hyper_L"}
-  extras = [Choice("cmd", cmd)]
+class LaunchBrowser(MappingRule):
+  mapping = {
+      "chrome browsing":Key("h-f"),
+      "chrome login":Key("h-a"),
+      "chrome social":Key("h-s"),
+      "chrome google":Key("h-g"),
+      "chrome secure":Key("h-b"),
+    }
 
-  def _process_recognition(self, node, extras):
-    with ComSat() as cs:
-      cs.getRPCProxy().callKeyStack(str(extras["cmd"]).split())
-
-class Translate(CompoundRule):
-  spec = "<cmd>"
- 
-  cmd = {"hash bang shell":"#!/bin/sh",
-         "hash bang bash":"#!/bin/sh", "hash bang python":"#!/usr/bin/python"}
-
-  extras = [SelfChoice("cmd", cmd)]
- 
-  def _process_recognition(self, node, extras):
-    with ComSat() as cs:
-      cs.getRPCProxy().callText(self.cmd[str(extras["cmd"])])
-
-grammar.add_rule(Translate())
-grammar.add_rule(TranslateSpecial())
+grammar.add_rule(LaunchBrowser())
 grammar.add_rule(QuadCommand())
 grammar.add_rule(MouseClick())
 
