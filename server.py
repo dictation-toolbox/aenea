@@ -38,7 +38,6 @@ class Handler(object):
   def writeCommand(message, executable="xdotool"):
     with os.popen("%s type --file -" % executable, "w") as fd:
       fd.write(message)
-    sys.stderr.write("echo \"%s\" | %s type --file -\n" % (message.replace("\n", "\\n"), executable))
 
   def callGetCurrentWindowProperties(self):
     window_id, window_title = self.callGetActiveWindow()

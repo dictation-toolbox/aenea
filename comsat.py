@@ -1,11 +1,11 @@
-import struct, cPickle as pickle, socket, sys, time, config
+import struct, json, socket, sys, time, config
 
 class Pocket:
   def __init__(self, sock):
     self.sock = sock
 
   def send(self, data):
-    data = pickle.dumps(data)
+    data = json.dumps(data)
     self.sock.send(struct.pack("<i", len(data)) + data)
 
   def recv(self):
@@ -13,7 +13,7 @@ class Pocket:
     if len(l) != 4:
       raise socket.error()
     l = struct.unpack("<i", l)[0]
-    return pickle.loads(self.sock.recv(l))
+    return json.loads(self.sock.recv(l))
 
 class RPCProxy(object):
   def __init__(self, comsat):
