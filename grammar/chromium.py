@@ -5,7 +5,7 @@ import aenea, config
 
 if config.PLATFORM == "proxy":
   from proxy_nicknames import Key
-  chromium_context = AppRegexContext(window_class_name="(c|C)hromium", window_class="(c|C)hromium.*") & aenea.global_context
+  chromium_context = AppRegexContext(cls_name="(c|C)hromium", cls="(c|C)hromium.*") & aenea.global_context
 else:
   chromium_context = (AppContext(name="Chrome") | AppContext(name="Chromium"))
 

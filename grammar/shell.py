@@ -16,8 +16,8 @@ if config.PLATFORM == "proxy":
   import aenea
   # Add your terminal here. Use xprop to determine its window class.
   # you can also add exclusions reprograms you don't want (eg, vim, ipython, etc)
-  grammar_context = (AppRegexContext(window_class="(Xfce4-terminal)|(XTerm)|(URxvt)") &
-                     AppRegexContext(window_class_name="(xfce4-terminal)|(xterm)|(urxvt)") &
+  grammar_context = (AppRegexContext(cls="(Xfce4-terminal)|(XTerm)|(URxvt)") &
+                     AppRegexContext(cls_name="(xfce4-terminal)|(xterm)|(urxvt)") &
                      ~AppRegexContext(name=".*VIM.*") &
                      ~AppRegexContext(name=".*/usr/bin/ipython.*") &
                      aenea.global_context)

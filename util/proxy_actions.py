@@ -1,57 +1,37 @@
 """performs black magic on the dragonfly actions objects to force them to
    forward their actions to a remote server."""
 
-import comsat
 import types
 import pyparsing
+import jsonrpclib
+
+import communications
+import config
+
+communication = communications.Proxy(config.HOST, config.PORT)
 
 try:
   import dragonfly
 except ImportError:
   import dragonfly_mock as dragonfly
 
-import proxy
-communications = proxy.communications
-
 class ProxyBase(object):
   pass
-
-################################################################################
-# Key
-
-# mapping from windows key names to the equivalent linux symbols (where different). 
-WINDOWS_MAPPING = {"pgup":"Prior", "pgdown":"Next", "backspace":"BackSpace",
-                   "del":"Delete", "backtick":"grave", "caret":"asciicircum",
-                   "dot":"period", "dquote":"quotedbl", "exclamation":"exclam",
-                   "hash":"numbersign", "hyphen":"minus", "squote":"apostrophe",
-                   "tilde":"asciitilde", "langle":"less", "rangle":"greater",
-                   "lbracket":"bracketleft", "rbracket":"bracketright",
-                   "lparen":"parenleft", "rparen":"parenright",
-                   "lbrace":"braceleft", "rbrace":"braceright", "apps":"Menu",
-                   "win":"Super_L", "npadd":"KP_Add", "npdec":"KP_Decimal",
-                   "npdiv":"KP_Divide", "npmul":"KP_Multiply", "shift":"Shift_L",
-                   "enter":"Return"}
-for key in (["left", "right", "up", "down", "home", "end", "tab", "insert",
-             "escape"] + ["f%i" % i for i in xrange(1, 13)]):
-  WINDOWS_MAPPING[key] = key[0].upper() + key[1:]
-for index in xrange(10):
-  WINDOWS_MAPPING["np%i" % index] = "KP_%i" % index
-
 def _get_key_symbols():
   try:
     with open("keys.txt") as keyfile:
-      return [line.strip() for line in keyfile] + list(WINDOWS_MAPPING)
+      return [line.strip() for line in keyfile]
   except Exception:
     with open("C:\\NatLink\\NatLink\\MacroSystem\\keys.txt") as keyfile:
-      return [line.strip() for line in keyfile] + list(WINDOWS_MAPPING)
+      return [line.strip() for line in keyfile]
 
 _modifier_keys = {
-        "a": "Alt_L",
-        "c": "Control_L",
-        "s": "Shift_L",
-        "w": "Super_L",
-        "h": "Hyper_L",
-        "m": "Meta_L"
+        "a": "alt",
+        "c": "control",
+        "s": "shift",
+        "w": "super",
+        "h": "hyper",
+        "m": "meta"
         }
 
 def _make_key_parser():
@@ -75,34 +55,16 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
      indicates hyper."""
      
   _parser = _make_key_parser()
-  _text_clause = (pyparsing.Literal("[") + pyparsing.Word(pyparsing.alphanums) +
-                  pyparsing.Literal("]"))
 
   def _parse_spec(self, spec):
-    def handle_pause(pause_spec):
-      if pause_spec:
-        _, sleeptime = pause_spec
-        return [("sleep", "%i" % int(sleeptime))]
-      else:
-        return []
-     
-    actions = []
+    proxy = communications.BatchProxy()
     for key in spec.split(","):
-      try:
-        text_parse = self._text_clause.parseString(key.strip())
-        if len(text_parse) == 3:
-          actions.append(("type", text_parse[1]))
-          continue
-      except pyparsing.ParseException:
-        pass
-
       modifier_part, key_part, command_part, outer_pause_part = \
           self._parser.parseString(key.strip())
 
       modifiers = ([_modifier_keys[c] for c in modifier_part[0]]
                    if modifier_part else [])
-      key = WINDOWS_MAPPING.get(key_part[0], key_part[0])
-      outer_pause = handle_pause(outer_pause_part)
+      key = key_part[0]
 
       # regular keypress event
       if len(command_part) == 1:
@@ -111,24 +73,19 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
         repeat = int(repeat_part[1]) if repeat_part else 1
         if not repeat:
           continue
-        keypress = [("key", key)]
-        current_actions = keypress + (handle_pause(pause_part) + keypress) * (repeat - 1)
+        proxy.key_press(key, modifiers=modifiers, count=repeat)
       # manual keypress event
       else:
         (_, direction) = command_part
+        proxy.key_press(key, modifiers=modifiers, direction=direction)
 
-        current_actions = [("key%s" % direction, key)]
+      if outer_pause_part:
+        proxy.pause(outer_pause_part[0])
 
-      actions += ([("keydown", modifier) for modifier in modifiers] +
-                  current_actions +
-                  [("keyup", modifier) for modifier in reversed(modifiers)] +
-                  handle_pause(outer_pause_part))
-    return actions
+    return proxy._commands
 
-  def _execute_events(self, events):
-    with communications as proxy:
-      proxy.callExecute(events)
-
+  def _execute_events(self, commands):
+    communication.execute_batch(commands)
 
 ################################################################################
 # Text
@@ -138,24 +95,23 @@ class ProxyText(ProxyBase, dragonfly.DynStrActionBase):
     return spec
 
   def _execute_events(self, events):
-    with communications as proxy:
-      proxy.callExecute([("type", events)])
+    communication.server.write_text(events)
 
 ################################################################################
 # Mouse
 
 class ProxyMouse(ProxyBase, dragonfly.DynStrActionBase):
   def _parse_spec(self, spec):
-    events = []
+    proxy = communications.BatchProxy()
     for item in spec.split(","):
       item = item.strip()
       if item[0] in "[(<":
         # it is a movement
         item, x, y = ([item[0]] + [float(x.strip()) for x in item[1:-1].split() if x.strip()])
-        command = {"[":"mousemove",
-                   "<":"mousemove_relative",
-                   "(":"mousemove_active"}[item[0]]
-        events.append((command, "%f %f" % (x, y)))
+        reference = {"[":"absolute",
+                     "<":"relative",
+                     "(":"relative_active"}[item[0]]
+        proxy.move_mouse(x, y, reference=reference, proportional=("." in item[1:-1]))
       else:
         pause = 0
         repeat = 1
@@ -173,22 +129,15 @@ class ProxyMouse(ProxyBase, dragonfly.DynStrActionBase):
           else:
             repeat = int(item)
 
-        key = {"left":1, "middle":2, "right":3, "wheelup":4, "wheeldown":5}.get(key, key)
-        key = int(key)
-
         if drag:
-          events.append(("mouse%s" % drag, "%s" % key))
+          proxy.click_mouse(key, direction=drag)
         else:
-          single = [("click", "%i" % key)]
-          if pause:
-            single.append(("sleep", "%f" % pause))
-          events.extend(single * repeat)
+          proxy.click_mouse(key, count=repeat, count_delay=pause)
 
-    return events
+    return proxy._commands
 
-  def _execute_events(self, events):
-    with communications as proxy:
-      proxy.callExecute(events)
+  def _execute_events(self, commands):
+    communication.execute_batch(commands)
 
 ################################################################################
 # click without moving mouse
@@ -201,8 +150,14 @@ class ProxyMousePhantomClick(ProxyMouse):
        "<9 222>, 1:2/10"     # left double-click at those coordinates
        "1:down, [1 1], 1:up" # drag what is there to the upper left corner
      """
+
   def _parse_spec(self, spec):
-    return ProxyMouse._parse_spec(self, spec) + [("mousemove", "restore")]
+    commands = ProxyMouse._parse_spec(self, spec)
+    move, click = commands
+    move[2]["phantom"] = click[1][0]
+    print "bees", click[1][0]
+    print move
+    return [move]
 
 ################################################################################
 # do nothing
@@ -217,7 +172,7 @@ class NoAction(dragonfly.ActionBase):
 
 class ProxyContextAction(dragonfly.ActionBase):
   def __init__(self, default=None, actions=[]):
-    self.actions = action
+    self.actions = actions
     self.default = default
 
   def add_context(self, context, action):

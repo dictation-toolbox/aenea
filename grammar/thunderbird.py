@@ -5,10 +5,10 @@ import config
 if config.PLATFORM == "proxy":
   from proxy_nicknames import *
   import aenea
-  thunderbird_context = ((AppContext(window_class="Icedove") |
-                          AppContext(window_class="Thunderbird")) & aenea.global_context)
-  mail_context = thunderbird_context & AppContext(window_class_name="Mail")
-  compose_context = thunderbird_context  & AppContext(window_class_name="Msgcompose")
+  thunderbird_context = ((AppContext(cls="Icedove") |
+                          AppContext(cls="Thunderbird")) & aenea.global_context)
+  mail_context = thunderbird_context & AppContext(cls_name="Mail")
+  compose_context = thunderbird_context  & AppContext(cls_name="Msgcompose")
 else:
   thunderbird_context = AppContext(name="Thunderbird")
   mail_context = thunderbird_context & AppContext(name="Mail")
@@ -20,12 +20,12 @@ compose_grammar = Grammar("composed", context=compose_context)
 
 class MailCommands(MappingRule):
   mapping = {
-      "inbox":                 MousePhantomClick("(78 114), 1"),
-      "lists":                 MousePhantomClick("(88 225), 1"),
-      "limbo":                 MousePhantomClick("(88 205), 1"),
-      "twenty thirteen":       MousePhantomClick("(88 365), 1"),
-      "mail":                  MousePhantomClick("(500 115), 1"),
-      "body":                  MousePhantomClick("(283 650), 1"),
+      "inbox":                 MousePhantomClick("(78 114), left"),
+      "lists":                 MousePhantomClick("(88 225), left"),
+      "limbo":                 MousePhantomClick("(88 205), left"),
+      "twenty thirteen":       MousePhantomClick("(88 365), left"),
+      "mail":                  MousePhantomClick("(500 115), left"),
+      "body":                  MousePhantomClick("(283 650), left"),
       "compose":               Key("c-m"),
       "pane":                  Key("f6"),
       "message pane":          Key("f8"),

@@ -38,15 +38,15 @@ class TestActions(unittest.TestCase):
     self.assertEqual(parse("H"), [("key", "H")])
     self.assertEqual(parse("H, e"), [("key", "H"), ("key", "e")])
 
-    self.assertEqual(parse("c-Home"), [("keydown", "Control_L"), ("key", "Home"), ("keyup", "Control_L")])
-    self.assertEqual(parse("c-Home:2"), [("keydown", "Control_L"), ("key", "Home"), ("key", "Home"), ("keyup", "Control_L")])
-    self.assertEqual(parse("c-Home:2/5"), [("keydown", "Control_L"), ("key", "Home"), ("key", "Home"), ("keyup", "Control_L"), ("sleep", "5")])
-    self.assertEqual(parse("c-Home/1:2/5"), [("keydown", "Control_L"), ("key", "Home"), ("sleep", "1"), ("key", "Home"), ("keyup", "Control_L"), ("sleep", "5")])
-    self.assertEqual(parse("c-home/1:2/5"), [("keydown", "Control_L"), ("key", "Home"), ("sleep", "1"), ("key", "Home"), ("keyup", "Control_L"), ("sleep", "5")])
-    self.assertEqual(parse("Home"), [("key", "Home")])
-    self.assertEqual(parse("Home:2"), [("key", "Home")] * 2)
+    self.assertEqual(parse("c-home"), [("keydown", "Control_L"), ("key", "home"), ("keyup", "Control_L")])
+    self.assertEqual(parse("c-home:2"), [("keydown", "Control_L"), ("key", "home"), ("key", "home"), ("keyup", "Control_L")])
+    self.assertEqual(parse("c-home:2/5"), [("keydown", "Control_L"), ("key", "home"), ("key", "home"), ("keyup", "Control_L"), ("sleep", "5")])
+    self.assertEqual(parse("c-home/1:2/5"), [("keydown", "Control_L"), ("key", "home"), ("sleep", "1"), ("key", "home"), ("keyup", "Control_L"), ("sleep", "5")])
+    self.assertEqual(parse("c-home/1:2/5"), [("keydown", "Control_L"), ("key", "home"), ("sleep", "1"), ("key", "home"), ("keyup", "Control_L"), ("sleep", "5")])
+    self.assertEqual(parse("home"), [("key", "home")])
+    self.assertEqual(parse("home:2"), [("key", "home")] * 2)
 
-    self.assertEqual(parse("Home:0"), [])
+    self.assertEqual(parse("home:0"), [])
   
   def test_key_multiple_modifiers(self):
     parse = partial(self.get_events, ProxyKey)
@@ -62,12 +62,6 @@ class TestActions(unittest.TestCase):
   def test_key_manual(self):
     parse = partial(self.get_events, ProxyKey)
     self.assertEqual(parse("a:up"), [("keyup", "a")])
-
-  def test_key_windows(self):
-    parse = partial(self.get_events, ProxyKey)
-    sequence = [("keydown", "Super_L"), ("key", "Delete"), ("keyup", "Super_L"), ("key", "greater"), ("key", "Left"),
-                ("key", "F9"), ("key", "KP_7")]
-    self.assertEqual(parse("w-del, rangle, left, f9, np7"), sequence)
 
   def test_text(self):
     parse = partial(self.get_events, ProxyText)
