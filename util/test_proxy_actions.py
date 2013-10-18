@@ -58,13 +58,13 @@ class TestActions(unittest.TestCase):
 
   @mock.patch("proxy_actions.communication")
   def test_mouse_move(self, comm):
-    ProxyMouse("[3 5]").execute()
+    ProxyMouse("[3, 5]").execute()
     comm.execute_batch.assert_called_with([('move_mouse', (3.0, 5.0), {'proportional': False, 'reference': 'absolute'})])
 
     ProxyMouse("<7 9>").execute()
     comm.execute_batch.assert_called_with([('move_mouse', (7.0, 9.0), {'proportional': False, 'reference': 'relative'})])
 
-    ProxyMouse("(3 5)").execute()
+    ProxyMouse("(3, 5)").execute()
     comm.execute_batch.assert_called_with([('move_mouse', (3.0, 5.0), {'proportional': False, 'reference': 'relative_active'})])
 
     ProxyMouse(",".join(["[3 5]"] * 3)).execute()

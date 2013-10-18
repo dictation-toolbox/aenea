@@ -27,18 +27,18 @@ VALUE_DONT_CARE = object()
 # and the get_context() call is actually rather expensive. Ideally we
 # could propagate state through Dragonfly contexts, but that would involve
 # deep surgery or re-implementation.
-last_context = None
-last_context_time = 0
+_last_context = None
+_last_context_time = 0
 _STALE_CONTEXT_DELTA = 0.01
 
 def get_context():
-  global last_context
-  global last_context_time
-  if (last_context_time is None or
-      last_context_time + _STALE_CONTEXT_DELTA < time.time()):
-    last_context = communication.server.get_context()
-    last_context_time = time.time()
-  return last_context
+  global _last_context
+  global _last_context_time
+  if (_last_context_time is None or
+      _last_context_time + _STALE_CONTEXT_DELTA < time.time()):
+    _last_context = communication.server.get_context()
+    _last_context_time = time.time()
+  return _last_context
 
 class AlwaysContext(dragonfly.Context):
   def matches(self, windows_executable, windows_title, windows_handle):
@@ -66,7 +66,7 @@ class ProxyCustomAppContext(dragonfly.Context):
 
     assert match in ("exact", "substring", "regex")
     if logic not in ("and", "or"):
-      assert int(logic) > 0 and int(logic) <= len(query)
+      assert int(logic) >= 0 and int(logic) <= len(query)
 
   def _check_properties(self):
     properties = get_context()
@@ -104,7 +104,7 @@ class ProxyCustomAppContext(dragonfly.Context):
     elif self.logic == "or":
       return any(matches.itervalues())
     else:
-      return len(matches) >= int(self.logic)
+      return len(filter(None, matches.itervalues())) >= int(self.logic)
 
   def matches(self, windows_executable, windows_title, windows_handle):
     return self._reduce_matches(self._check_properties())
@@ -135,4 +135,4 @@ def ProxyAppContext(
 
   return ProxyCustomAppContext(match=match, logic=logic, query=query)
 
-__all__ = ["ProxyAppContext", "ProxyCustomAppContext", "AlwaysContext", "NeverContext"]
+__all__ = ["ProxyAppContext", "ProxyCustomAppContext", "AlwaysContext", "NeverContext", "VALUE_NOT_SET", "VALUE_SET", "VALUE_DONT_CARE"]
