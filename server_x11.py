@@ -22,28 +22,55 @@ class Handler(object):
   def __init__(self):
     self.state = {}
 
-  @staticmethod
-  def runCommand(command, executable="xdotool"):
+  @classmethod
+  def runCommand(cls, command, executable="xdotool"):
     command_string = "%s %s" % (executable, command)
     sys.stderr.write(command_string + "\n")
     os.system(command_string)
   
-  @staticmethod
-  def readCommand(command, executable="xdotool"):
+  @classmethod
+  def readCommand(cls, command, executable="xdotool"):
     with os.popen("%s %s" % (executable, command), "r") as fd:
       rval = fd.read()
     return rval
   
-  @staticmethod
-  def writeCommand(message, executable="xdotool"):
+  @classmethod
+  def writeCommand(cls, message, executable="xdotool"):
     with os.popen("%s type --file -" % executable, "w") as fd:
       fd.write(message)
 
-  def callGetCurrentWindowProperties(self):
+  @classmethod
+  def getActiveWindow(cls):
+    """Returns the window id and title of the active window."""
+    window_id = cls.readCommand("getactivewindow")
+    if window_id:
+      window_id = int(window_id)
+      window_title = cls.readCommand("getwindowname %i" % window_id).strip()
+      return window_id, window_title
+    else:
+      return None, None
+
+  @classmethod
+  def getGeometry(cls, window_id=None):
+    if window_id is None:
+      window_id, _ = cls.getActiveWindow()
+    geo = dict([val.lower() for val in line.split("=")]
+               for line in cls.readCommand(("getwindowgeometry --shell %i"
+                                             % window_id)).strip().split("\n"))
+    geo = dict((key, int(value)) for (key, value) in geo.iteritems())
+    return dict((key, geo[key]) for key in ("x", "y", "width", "height", "screen"))
+
+  @classmethod
+  def _transform_relative_mouse_event(cls, event):
+    geo = cls.getGeometry()
+    dx, dy = map(int, map(float, event.split()))
+    return [("mousemove", "%i %i" % (geo["x"] + dx, geo["y"] + dy))]
+
+  def callGetCurrentWindow(self):
     """return a dictionary of window properties for the currently active window.
        it is fine to include platform specific information, but at least include
-       title, executable, and desktop."""
-    window_id, window_title = self.callGetActiveWindow()
+       title and executable."""
+    window_id, window_title = self.getActiveWindow()
     if window_id is None:
       return {}
 
@@ -59,57 +86,26 @@ class Handler(object):
           properties[XPROP_PROPERTIES[rawkey]] = value[1:-1] if "(STRING)" in rawkey else value
         elif rawkey == "WM_CLASS(STRING)":
           window_class_name, window_class = value.split('", "')
-          properties["class_name"] = window_class_name[1:]
-          properties["class"] = window_class[:-1]
+          properties["cls_name"] = window_class_name[1:]
+          properties["cls"] = window_class[:-1]
 
-    properties["executable"] = os.readlink("/proc/%s/exe" % properties["pid"])
+    # Sigh...
+    properties["executable"] = None
+    try:
+      properties["executable"] = os.readlink("/proc/%s/exe" % properties["pid"])
+    except OSError:
+      ps = self.readCommand("%s" % properties["pid"], executable="ps").split("\n")[1:]
+      if ps:
+        try:
+          properties["executable"] = ps[0].split()[4]
+        except Exception:
+          raise
+          pass
+
     return properties
-
-  def callGetActiveWindow(self):
-    """Returns the window id and title of the active window."""
-    window_id = self.readCommand("getactivewindow")
-    if window_id:
-      window_id = int(window_id)
-      window_title = self.readCommand("getwindowname %i" % window_id).strip()
-      return window_id, window_title
-    else:
-      return None, None
 
   def callReloadConfiguration(self):
     pass
-
-  def callGetState(self):
-    state = self.state.copy()
-    active_id, active_title = self.callGetActiveWindow()
-
-    state["active_id"] = active_id
-    state["active_title"] = active_title
-
-    if active_id:
-      try:
-        active_pid = int(self.readCommand("getwindowpid %i" % active_id))
-      except Exception:
-        active_pid = -1
-      psocks = self.readCommand("aux | grep %i" % active_pid, executable="ps")
-      state["in_terminal"] = ("urxvt" in psocks or "xfce4-terminal" in psocks)
-    else:
-      state["in_terminal"] = False
-
-    return state
-
-  def callGetGeometry(self, window_id=None):
-    if window_id is None:
-      window_id, _ = self.callGetActiveWindow()
-    geo = dict([val.lower() for val in line.split("=")]
-               for line in self.readCommand(("getwindowgeometry --shell %i"
-                                             % window_id)).strip().split("\n"))
-    geo = dict((key, int(value)) for (key, value) in geo.iteritems())
-    return geo["x"], geo["y"], geo["width"], geo["height"], geo["screen"]
-
-  def _transform_relative_mouse_event(self, event):
-    x, y, width, height, screen = self.callGetGeometry()
-    dx, dy = map(int, map(float, event.split()))
-    return [("mousemove", "%i %i" % (x + dx, y + dy))]
 
   def callExecute(self, events):
     """Execute a sequence of xdotool-style events using xdotool."""
@@ -128,9 +124,6 @@ class Handler(object):
         self.writeCommand(events[0][1])
       else:
         self.readCommand(' '.join("%s %s" % event for event in events))
-
-  def callReadRawCommand(self, event, command="xdotool"):
-    return self.readCommand(event, command)
 
 cs = comsat.ComSat()
 cs.handlers.append(Handler())
