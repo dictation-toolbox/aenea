@@ -108,7 +108,6 @@ update_key_translation(_KEY_TRANSLATION)
 
 def run_command(command, executable="xdotool"):
   command_string = "%s %s" % (executable, command)
-  sys.stderr.write(command_string + "\n")
   os.system(command_string)
 
 def read_command(command, executable="xdotool"):
@@ -196,7 +195,7 @@ def key_press(key, modifiers=(), direction="press", count=1, count_delay=1.2, _x
 
   event = ["key%s %s" % (_KEY_PRESSES[direction], key)]
   if count > 1:
-    event += ["sleep %i" % count_delay]
+    event += ["sleep %i" % (count_delay / 100)]
     event *= count
 
   keys = (["keydown " + key for key in modifiers] +
@@ -234,7 +233,6 @@ def move_mouse(x, y, reference="absolute", proportional=False, phantom=None, _xd
      "absolute", "relative", or "relative_active". if phantom is not None,
      it is a button as click_mouse. If possible, click that location without
      moving the mouse. If not, the server will move the mouse there and click."""
-  print "ohai"
   geo = get_geometry()
   if proportional:
     x = geo["width"] * x
@@ -285,7 +283,6 @@ def multiple_actions(actions):
      "method", "params", and "optional" keys. See also JSON-RPC multicall.
      Guaranteed to execute in specified order."""
   xdotool = []
-  print actions, "hi"
   for (method, parameters, optional) in actions:
     if method in _RPC_COMMANDS:
       _RPC_COMMANDS[method](*parameters, _xdotool=xdotool, **optional)

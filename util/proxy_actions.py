@@ -71,16 +71,20 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
         ((pause_part, repeat_part),) = command_part
 
         repeat = int(repeat_part[1]) if repeat_part else 1
+        pause = int(pause_part[1]) / 100. if pause_part else None
         if not repeat:
           continue
-        proxy.key_press(key, modifiers=modifiers, count=repeat)
+        if pause is not None:
+          proxy.key_press(key, modifiers=modifiers, count=repeat, count_delay=pause)
+        else:
+          proxy.key_press(key, modifiers=modifiers, count=repeat)
       # manual keypress event
       else:
         (_, direction) = command_part
         proxy.key_press(key, modifiers=modifiers, direction=direction)
 
       if outer_pause_part:
-        proxy.pause(outer_pause_part[0])
+        proxy.pause(int(outer_pause_part[1]) / 100.)
 
     return proxy._commands
 
@@ -119,7 +123,7 @@ class ProxyMouse(ProxyBase, dragonfly.DynStrActionBase):
 
         if "/" in item:
           item, pause = item.split("/")
-          pause = int(pause) * 0.1
+          pause = int(pause) * 0.01
 
         key = item
         if ":" in item:
