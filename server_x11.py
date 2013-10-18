@@ -184,12 +184,14 @@ def get_context(_xdotool=None):
 
   return properties
 
-def key_press(key, modifiers=(), direction="press", count=1, count_delay=1.2, _xdotool=None):
+def key_press(key, modifiers=(), direction="press", count=1, count_delay=None, _xdotool=None):
   """press a key possibly modified by modifiers. direction may be "press",
     "down", or "up". modifiers may contain "alt", "shift", "control", "super".
     this X11 server also supports "hyper", "meta", and "flag"
     (same as super). count is number of times to press it. count_delay delay
     in ms between presses."""
+  if count_delay is None:
+    count_delay = 1.2
   modifiers = [_MOD_TRANSLATION.get(mod, mod) for mod in modifiers]
   key = _KEY_TRANSLATION.get(key, key)
 
@@ -211,10 +213,12 @@ def write_text(text, _xdotool=None):
   flush_xdotool(_xdotool)
   write_command(text)
 
-def click_mouse(button, direction="click", count=1, count_delay=1.2, _xdotool=None):
+def click_mouse(button, direction="click", count=1, count_delay=None, _xdotool=None):
   """click the mouse button specified. button maybe one of "right", "left",
     "middle", "wheeldown", "wheelup". This X11 server will also accept a
     number."""
+  if count_delay is None:
+    count_delay = 1.2
   try:
     button = _MOUSE_BUTTONS[button]
   except KeyError:

@@ -21,9 +21,9 @@ import verbal_emacs
 
 if config.PLATFORM == "proxy":
   from proxy_nicknames import *
-  vim_context = AppRegexContext(name="(?i).*VIM.*")
-  command_t_context = AppRegexContext(name="^GoToFile.*$") & vim_context
-  fugitive_index_context = AppRegexContext(name="^index.*\.git.*$") & vim_context
+  vim_context = AppContext(match="regex", title="(?i).*VIM.*")
+  command_t_context = AppContext(match="regex", title="^GoToFile.*$") & vim_context
+  fugitive_index_context = AppContext(match="regex", title="^index.*\.git.*$") & vim_context
   import aenea
   grammar = Grammar("verbal_emacs", context=vim_context & aenea.global_context)
 else:

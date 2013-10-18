@@ -1,7 +1,7 @@
 from dragonfly import (Grammar, CompoundRule, Choice, Dictation, List, Optional, Literal, Context, MappingRule, IntegerRef, Pause)
 import natlink, os, time
 
-from proxy_nicknames import Key, Text, AppRegexContext
+from proxy_nicknames import Key, Text, AppContext
 
 from raul import SelfChoice, processDictation, NUMBERS as numbers
 
@@ -13,10 +13,10 @@ leader = Key(LEADER_KEY)
 escape = Key("escape")
 escape_leader = escape + Pause("30") + leader
 
-vim_context = aenea.global_context & AppRegexContext(name="(?i)^.* vim$")
+vim_context = aenea.global_context & AppContext(title="(?i)^.* vim$")
 
-command_t_context = AppRegexContext(name="^GoToFile.*$") & vim_context
-fugitive_index_context = AppRegexContext(name="^index.*\.git.*$") & vim_context
+command_t_context = AppContext(title="^GoToFile.*$") & vim_context
+fugitive_index_context = AppContext(title="^index.*\.git.*$") & vim_context
 
 grammar = Grammar("vim", context=vim_context)
 

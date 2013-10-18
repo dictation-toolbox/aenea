@@ -49,6 +49,28 @@ def _make_key_parser():
           Group(key_hold_clause | keypress_clause) + Group(pause_clause) +
           StringEnd())
 
+def _make_mouse_parser():
+  from pyparsing import Optional, Literal, Word, Group, Keyword, StringStart, StringEnd, And, Or, ZeroOrMore, Regex, Suppress
+  double = Regex(r"\d+(\.\d*)?([eE]\d+)?")
+  coords = double + Suppress(Optional(Literal(","))) + double
+  integer = Word("0123456789")
+  move = (
+      (Literal("(") + coords + Suppress(Literal(")"))) |
+      (Literal("[") + coords + Suppress(Literal("]"))) |
+      (Literal("<") + coords + Suppress(Literal(">")))
+    )
+  key  = (Or([Keyword(sym) for sym in ("left", "middle", "right", "wheelup", "wheeldown")]) |
+          integer)
+
+  # Work around bug in pyparsing by parsing in two stages.
+#  press = key + Optional(Literal(":") + integer) + Optional(Literal("/") + integer)
+#  drag = key + Literal(":") + (Literal("down") | Literal("up")) + Optional(Literal("/") + integer)
+
+  list_element = Group(move | (key + Optional(Literal(":") + (integer | (Literal("up") | Literal("down")))) + Optional(Literal("/") + integer)))
+  list_parser = list_element + ZeroOrMore(Suppress(",") + list_element)
+
+  return list_parser
+
 class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
   """As Dragonfly's Key except the valid modifiers are a, c, s for alt,
      control and shift respectively, w indicates super and h
@@ -107,36 +129,37 @@ class ProxyText(ProxyBase, dragonfly.DynStrActionBase):
 class ProxyMouse(ProxyBase, dragonfly.DynStrActionBase):
   def _parse_spec(self, spec):
     proxy = communications.BatchProxy()
-    for item in spec.split(","):
-      item = item.strip()
-      if item[0] in "[(<":
-        # it is a movement
-        item, x, y = ([item[0]] + [float(x.strip()) for x in item[1:-1].split() if x.strip()])
+    list_parser = _make_mouse_parser()
+    for item in list_parser.parseString(spec):
+      if item[0] in "[<(":
+        reference, x, y = item
         reference = {"[":"absolute",
                      "<":"relative",
-                     "(":"relative_active"}[item[0]]
-        proxy.move_mouse(x, y, reference=reference, proportional=("." in item[1:-1]))
+                     "(":"relative_active"}[reference]
+        proxy.move_mouse(float(x), float(y), reference=reference, proportional=("." in (x + y)))
       else:
-        pause = 0
+        pause = None
         repeat = 1
-        drag = None
-
-        if "/" in item:
-          item, pause = item.split("/")
-          pause = int(pause) * 0.01
-
-        key = item
-        if ":" in item:
-          key, item = item.split(":")
-          if item in ("up", "down"):
-            drag = item
-          else:
-            repeat = int(item)
-
-        if drag:
-          proxy.click_mouse(key, direction=drag)
+        direction = "click"
+        key = item[0]
+        if len(item) >= 3 and item[2] in ("down", "up"):
+          assert len(item) in (3, 5)
+          direction = item[2]
+          if len(item) == 5:
+            pause = int(item[-1]) / 100.
         else:
-          proxy.click_mouse(key, count=repeat, count_delay=pause)
+          if len(item) == 3:
+            assert item[1] in ":/"
+            if item[1] == ":":
+              repeat = int(item[2])
+            elif item[1] == "/":
+              pause = int(item[2]) / 100.
+          elif len(item) == 5:
+            assert item[1] == ":" and item[3] == "/"
+            repeat = int(item[2])
+            pause = int(item[4]) / 100.
+
+        proxy.click_mouse(key, direction=direction, count=repeat, count_delay=pause)
 
     return proxy._commands
 

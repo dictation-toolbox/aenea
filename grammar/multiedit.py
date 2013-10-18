@@ -37,7 +37,7 @@ import config
 if config.PLATFORM == "proxy":
   import aenea
   from proxy_nicknames import *
-  vim_context = AppRegexContext(name="(?i).*VIM.*")
+  vim_context = AppContext(match="regex", title=".*VIM.*")
   disable_context = vim_context
   global_context = aenea.global_context
 else:
@@ -406,7 +406,7 @@ class RepeatRule(CompoundRule):
 #---------------------------------------------------------------------------
 # Create and load this module's grammar.
 
-grammar = Grammar("multi edit", context=global_context & ~disable_context)
+grammar = Grammar("multiedit", context=global_context & ~disable_context)
 grammar.add_rule(RepeatRule(extras=vim_extras + [format_rule, Alternative(finishes, name="finish")], name="b", context=vim_context))
 grammar.add_rule(RepeatRule(extras=extras + [format_rule, Alternative(finishes, name="finish")], name="a", context=(~vim_context)))
 grammar.add_rule(LiteralRule())

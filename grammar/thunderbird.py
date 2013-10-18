@@ -5,8 +5,8 @@ import config
 if config.PLATFORM == "proxy":
   from proxy_nicknames import *
   import aenea
-  thunderbird_context = ((AppContext(cls="Icedove") |
-                          AppContext(cls="Thunderbird")) & aenea.global_context)
+  thunderbird_context = ((AppContext(title="Icedove") |
+                          AppContext(title="Thunderbird")) & aenea.global_context)
   mail_context = thunderbird_context & AppContext(cls_name="Mail")
   compose_context = thunderbird_context  & AppContext(cls_name="Msgcompose")
 else:

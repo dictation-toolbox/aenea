@@ -73,21 +73,21 @@ class TestActions(unittest.TestCase):
   @mock.patch("proxy_actions.communication")
   def test_mouse_click(self, comm):
     ProxyMouse("left").execute()
-    comm.execute_batch.assert_called_with([('click_mouse', ('left',), {'count': 1, 'count_delay': 0})])
+    comm.execute_batch.assert_called_with([('click_mouse', ('left',), {'count': 1, 'count_delay': None, 'direction': 'click'})])
 
     ProxyMouse("right").execute()
-    comm.execute_batch.assert_called_with([('click_mouse', ('right',), {'count': 1, 'count_delay': 0})])
+    comm.execute_batch.assert_called_with([('click_mouse', ('right',), {'count': 1, 'count_delay': None, 'direction': 'click'})])
 
     ProxyMouse("wheelup:5").execute()
-    comm.execute_batch.assert_called_with([('click_mouse', ('wheelup',), {'count': 5, 'count_delay': 0})])
+    comm.execute_batch.assert_called_with([('click_mouse', ('wheelup',), {'count': 5, 'count_delay': None, 'direction': 'click'})])
 
     ProxyMouse("wheeldown:5/9").execute()
-    comm.execute_batch.assert_called_with([('click_mouse', ('wheeldown',), {'count': 5, 'count_delay': 0.09})])
+    comm.execute_batch.assert_called_with([('click_mouse', ('wheeldown',), {'count': 5, 'direction': 'click', 'count_delay': 0.09})])
 
   @mock.patch("proxy_actions.communication")
   def test_drag(self, comm):
     ProxyMouse("middle:up/5").execute()
-    comm.execute_batch.assert_called_with([('click_mouse', ('middle',), {'direction': 'up'})])
+    comm.execute_batch.assert_called_with([('click_mouse', ('middle',), {'direction': 'up', 'count_delay': 0.05, 'count': 1})])
 
 if __name__ == '__main__':
   unittest.main()

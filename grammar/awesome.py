@@ -2,8 +2,7 @@ from dragonfly import (Grammar, AppContext, MappingRule)
 
 import aenea
 
-grammar_context = AppContext(executable="notepad")
-grammar = Grammar("awesome", context=grammar_context)
+grammar = Grammar("awesome", context=aenea.global_context)
 
 from proxy_nicknames import Key
 

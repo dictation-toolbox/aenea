@@ -2,8 +2,7 @@ from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, Lis
 import natlink, os, aenea
 from comsat import ComSat
 
-grammar_context = AppContext(executable="notepad")
-grammar = Grammar("reload_configuration", context=grammar_context)
+grammar = Grammar("reload_configuration", context=aenea.global_context)
 
 class ReloadConfiguration(CompoundRule):
   spec = "reload aenea configuration"
