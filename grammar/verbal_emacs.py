@@ -8,27 +8,29 @@
 # extremely inconvenient, particularly when you consider the higher error rate.
 
 try:
-    import pkg_resources
+  import pkg_resources
 
-    pkg_resources.require("dragonfly >= 0.6.5beta1.dev-r99")
+  pkg_resources.require("dragonfly >= 0.6.5beta1.dev-r99")
 except ImportError:
-    pass
+  pass
 
-import aenea
-from aenea import *
-import raul
+from dragonfly import Grammar, AppContext, Key, CompoundRule, Repetition, RuleRef, Alternative
 
-from dragonfly import *
-from proxy_nicknames import *
-
+import config
 import verbal_emacs
 
-vim_context = AppRegexContext(name="(?i).*VIM.*")
-
-command_t_context = AppRegexContext(name="^GoToFile.*$") & vim_context
-fugitive_index_context = AppRegexContext(name="^index.*\.git.*$") & vim_context
-
-grammar = Grammar("verbal_emacs", context=vim_context)
+if config.PLATFORM == "proxy":
+  from proxy_nicknames import *
+  vim_context = AppRegexContext(name="(?i).*VIM.*")
+  command_t_context = AppRegexContext(name="^GoToFile.*$") & vim_context
+  fugitive_index_context = AppRegexContext(name="^index.*\.git.*$") & vim_context
+  import aenea
+  grammar = Grammar("verbal_emacs", context=vim_context & aenea.global_context)
+else:
+  vim_context = AppContext(title="VIM")
+  command_t_context = AppContext(title="GoToFile") & vim_context
+  fugitive_index_context = AppContext(title="index") & AppContext(".git") & vim_context
+  grammar = Grammar("verbal_emacs", context=vim_context)
 
 def execute_insertion_buffer(insertion_buffer):
   if not insertion_buffer:

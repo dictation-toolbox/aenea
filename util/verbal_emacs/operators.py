@@ -57,15 +57,12 @@ class OperatorSelfApplication(MappingRule):
   def value(self, node):
     value = MappingRule.value(self, node)
     if value == "tcomment":
-      try:
-        # ugly hack to get around tComment's not allowing ranges with gcc.
-        value = node.children[0].children[0].children[0].children[1].value()
-        if value in (1, "1", None):
-          return Text("gcc")
-        else:
-          return Text("gc%dj" % (int(value) - 1))
-      except Exception, ex:
-        print ex
+      # ugly hack to get around tComment's not allowing ranges with gcc.
+      value = node.children[0].children[0].children[0].children[1].value()
+      if value in (1, "1", None):
+        return Text("gcc")
+      else:
+        return Text("gc%dj" % (int(value) - 1))
     else:
       return value
 
