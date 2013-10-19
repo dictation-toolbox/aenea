@@ -306,4 +306,13 @@ def main():
   server.serve_forever()
 
 if __name__ == "__main__":
-  main()
+  if len(sys.argv) == 2 and sys.argv[-1] == "getcontext":
+    ctx = get_context()
+    try:
+      import pprint
+      pprint.pprint(ctx)
+    except ImportError:
+      print ctx
+  else:
+    main()
+
