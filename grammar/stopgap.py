@@ -1,7 +1,7 @@
 from dragonfly import Grammar, Key, CompoundRule, MappingRule
 import dragonfly
 
-from raul import SelfChoice, NUMBERS as numbers
+from raul import SelfChoice
 
 import config
 

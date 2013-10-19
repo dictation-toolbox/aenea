@@ -96,6 +96,7 @@ command_table = {
   "percent [<n>]":(    Key("percent:%(n)d"),       None),
   "cross [<n>]":(      Key("plus:%(n)d"),          None),
   "quest [<n>]":(      Key("question:%(n)d"),      None),
+  "semi [<n>]":(       Key("semicolon:%(n)d"),     None),
   "ash [<n>]":(        Key("slash:%(n)d"),         None),
   "smote [<n>]":(      Key("squote:%(n)d"),        None),
   "tilde [<n>]":(      Key("tilde:%(n)d"),         None),

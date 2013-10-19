@@ -3,7 +3,7 @@ import natlink, os, time
 
 from proxy_nicknames import Key, Text, AppContext
 
-from raul import SelfChoice, processDictation, NUMBERS as numbers
+from raul import SelfChoice
 
 import aenea
 

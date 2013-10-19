@@ -46,6 +46,7 @@ class SymbolInsertion(MappingRule):
     "rail":       Key("underscore"),
     "push":       Key("lparen"),
     "pop":        Key("rparen"),
+    "semi":       Key("semicolon:%(n)d"),
   }
 ruleSymbolInsertion = RuleRef(SymbolInsertion(), name="SymbolInsertion")
 

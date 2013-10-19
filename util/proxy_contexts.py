@@ -2,7 +2,6 @@
 
 import re
 import time
-import types
 
 import communications
 import config
@@ -133,6 +132,15 @@ def ProxyAppContext(
     del query["cls"]
     del query["cls_name"]
 
-  return ProxyCustomAppContext(match=match, logic=logic, query=query)
+  return ProxyCustomAppContext(match=match, logic=logic, query=query,
+                               case_sensitive=case_sensitive)
 
-__all__ = ["ProxyAppContext", "ProxyCustomAppContext", "AlwaysContext", "NeverContext", "VALUE_NOT_SET", "VALUE_SET", "VALUE_DONT_CARE"]
+__all__ = [
+    "ProxyAppContext",
+    "ProxyCustomAppContext",
+    "AlwaysContext",
+    "NeverContext",
+    "VALUE_NOT_SET",
+    "VALUE_SET",
+    "VALUE_DONT_CARE"
+  ]

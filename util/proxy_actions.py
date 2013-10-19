@@ -1,9 +1,7 @@
 """performs black magic on the dragonfly actions objects to force them to
    forward their actions to a remote server."""
 
-import types
 import pyparsing
-import jsonrpclib
 
 import communications
 import config
@@ -35,7 +33,8 @@ _modifier_keys = {
         }
 
 def _make_key_parser():
-  from pyparsing import Optional, Literal, Word, Group, Keyword, StringStart, StringEnd, And, Or
+  from pyparsing import (Optional, Literal, Word, Group, Keyword, StringStart,
+                         StringEnd, Or)
   digits = "0123456789"
   modifier_keywords = Word("".join(_modifier_keys))
   key_symbols = Or([Keyword(symbol) for symbol in _get_key_symbols()])
@@ -50,7 +49,8 @@ def _make_key_parser():
           StringEnd())
 
 def _make_mouse_parser():
-  from pyparsing import Optional, Literal, Word, Group, Keyword, StringStart, StringEnd, And, Or, ZeroOrMore, Regex, Suppress
+  from pyparsing import (Optional, Literal, Word, Group, Keyword,
+                         Or, ZeroOrMore, Regex, Suppress)
   double = Regex(r"\d+(\.\d*)?([eE]\d+)?")
   coords = double + Suppress(Optional(Literal(","))) + double
   integer = Word("0123456789")
@@ -59,14 +59,16 @@ def _make_mouse_parser():
       (Literal("[") + coords + Suppress(Literal("]"))) |
       (Literal("<") + coords + Suppress(Literal(">")))
     )
-  key  = (Or([Keyword(sym) for sym in ("left", "middle", "right", "wheelup", "wheeldown")]) |
-          integer)
+  buttons = ("left", "middle", "right", "wheelup", "wheeldown")
+  key  = (Or([Keyword(sym) for sym in buttons]) | integer)
 
-  # Work around bug in pyparsing by parsing in two stages.
-#  press = key + Optional(Literal(":") + integer) + Optional(Literal("/") + integer)
-#  drag = key + Literal(":") + (Literal("down") | Literal("up")) + Optional(Literal("/") + integer)
+  press = (
+      key +
+      Optional(Literal(":") + (integer | (Literal("up") | Literal("down"))))
+      + Optional(Literal("/") + integer)
+    )
 
-  list_element = Group(move | (key + Optional(Literal(":") + (integer | (Literal("up") | Literal("down")))) + Optional(Literal("/") + integer)))
+  list_element = Group(move | press)
   list_parser = list_element + ZeroOrMore(Suppress(",") + list_element)
 
   return list_parser
@@ -97,7 +99,8 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
         if not repeat:
           continue
         if pause is not None:
-          proxy.key_press(key, modifiers=modifiers, count=repeat, count_delay=pause)
+          proxy.key_press(key, modifiers=modifiers, count=repeat,
+                          count_delay=pause)
         else:
           proxy.key_press(key, modifiers=modifiers, count=repeat)
       # manual keypress event
@@ -136,7 +139,8 @@ class ProxyMouse(ProxyBase, dragonfly.DynStrActionBase):
         reference = {"[":"absolute",
                      "<":"relative",
                      "(":"relative_active"}[reference]
-        proxy.move_mouse(float(x), float(y), reference=reference, proportional=("." in (x + y)))
+        proxy.move_mouse(float(x), float(y),
+                        reference=reference, proportional=("." in (x + y)))
       else:
         pause = None
         repeat = 1
@@ -159,7 +163,8 @@ class ProxyMouse(ProxyBase, dragonfly.DynStrActionBase):
             repeat = int(item[2])
             pause = int(item[4]) / 100.
 
-        proxy.click_mouse(key, direction=direction, count=repeat, count_delay=pause)
+        proxy.click_mouse(key, direction=direction, count=repeat,
+                          count_delay=pause)
 
     return proxy._commands
 
@@ -210,4 +215,11 @@ class ProxyContextAction(dragonfly.ActionBase):
     else:
       return self.default.execute()
 
-__all__ = ["ProxyKey", "ProxyText", "ProxyMouse", "NoAction", "ProxyMousePhantomClick", "ProxyContextAction"]
+__all__ = [
+    "ProxyKey",
+    "ProxyText",
+    "ProxyMouse",
+    "NoAction",
+    "ProxyMousePhantomClick",
+    "ProxyContextAction"
+  ]

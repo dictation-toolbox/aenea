@@ -78,7 +78,7 @@ Getting Started
 
 4) Now when you start Dragon, a second small window with the title "Messages from NatLink" should pop up. If you have issues with this, take a look at the various forums that discuss using NatLink/Dragonfly on Windows.
 
-5) I prefer to keep the primary version of my modules on the host, and use the reloadconfig module to transfer them over. In order for this to work, I set up a shared folder with the virtual machine bound to the E Drive, and put a symbolic link to aenea's folder under it, so E:\aenea contains the code. With this setup, you should be able to run the script reload-aenea-configuration.py on Windows to copy over the modules in aenea/grammar. If you do not wish to use this functionality, you will need to copy over the modules from aenea/grammar that you wish to use yourself, renaming them so that they each start with an underscore. You will also need to copy over all the files in aenea/util. On my install, NatLink modules go in C:\NatLink\NatLink\MacroSystem.
+5) I prefer to keep the primary version of my modules on the host, and use the reloadconfig module to transfer them over. In order for this to work, I set up a shared folder with the virtual machine bound to the E Drive, and put a symbolic link to aenea's folder under it, so E:\aenea contains the code. Copy aenea/util/config.py to C:\NatLinx\NatLinx\MacroSystem, and then run reload-aenea-configuration.py on the Windows machine. You should see a bunch of files appear in the MacroSystem folder. With this setup, you should be able to run the script reload-aenea-configuration.py on Windows to copy over the modules in aenea/grammar whenever you update them. If you do not wish to use this functionality, you will need to copy over the modules from aenea/grammar that you wish to use yourself, renaming them so that they each start with an underscore. You will also need to copy over all the files in aenea/util. On my install, NatLink modules go in C:\NatLink\NatLink\MacroSystem.
 
 6) On the Linux host, install python-jsonrpclib and xdotool. If necessary, adjust the networking settings in aenea/config.py (server) and aenea/util/config.py (client).
 
@@ -160,6 +160,8 @@ It is straightforward to write a module which will work both with Aenea and with
             from proxy_nicknames import *
       except ImportError:
             pass
+
+My modules respect the PLATFORM variable in aenea/util/config.py rather than relying on the above.
 
 Writing Your Own Server
 ---------------------------
