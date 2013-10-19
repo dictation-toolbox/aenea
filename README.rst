@@ -68,6 +68,19 @@ Aenea provides Proxy versions of Dragonfly actions such as Key, Text, and Mouse 
 Getting Started
 ---------------
 
+Windows VM Software (versions given are ones I used, others likely work too):
+
+- Windows 7 Ultimate 32 bit
+- Dragon NaturallySpeaking Premium 12
+- NatLink 4.1echo
+- Python 2.7.5
+- pywin32-2.1.8
+- dragonfly-0.6.5
+- python-jsonrpclib-0.1.3
+- pyparsing-2.0.1
+
+Setup instructions:
+
 0) Install VirtualBox.
 
 1) Install Windows. I gave it 4 GB of RAM, two processors, and a 35 GB dynamically sized hard disk, of which it is using about 10 GB currently. While it's installing, I suggest you skim the Dragonfly documentation at https://code.google.com/p/dragonfly/
