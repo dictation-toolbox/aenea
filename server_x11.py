@@ -314,5 +314,23 @@ if __name__ == "__main__":
     except ImportError:
       print ctx
   else:
+    if "-d" in sys.argv or "--daemon" in sys.argv:
+      if os.fork() == 0:
+        os.setsid()
+        if os.fork() == 0:
+          os.chdir("/")
+          os.umask(0)
+          # Safe upper bound on number of fds we could possibly have opened.
+          for fd in range(64):
+            try:
+              os.close(fd)
+            except OSError:
+              pass
+          os.open(os.devnull, os.O_RDWR)
+          os.dup2(0, 1)
+          os.dup2(0, 2)
+        else:
+          os._exit(0)
+      else:
+        os._exit(0)
     main()
-
