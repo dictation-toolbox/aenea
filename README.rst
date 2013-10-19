@@ -161,6 +161,8 @@ It is straightforward to write a module which will work both with Aenea and with
       except ImportError:
             pass
 
+(This of course assumes from-style import was used to import Key, Text, etc in the original module.)
+
 My modules respect the PLATFORM variable in aenea/util/config.py rather than relying on the above.
 
 Writing Your Own Server
