@@ -190,23 +190,17 @@ def key_press(key, modifiers=(), direction="press", count=1, count_delay=None, _
     this X11 server also supports "hyper", "meta", and "flag"
     (same as super). count is number of times to press it. count_delay delay
     in ms between presses."""
-  if count_delay is None:
-    count_delay = 1.2
+  delay = "" if (count_delay is None or count < 2) else "--delay %i " % count_delay
   modifiers = [_MOD_TRANSLATION.get(mod, mod) for mod in modifiers]
   key = _KEY_TRANSLATION.get(key, key)
 
-  event = ["key%s %s" % (_KEY_PRESSES[direction], key)]
-  if count > 1:
-    event += ["sleep %i" % (count_delay / 100)]
-    event *= count
-
   keys = (["keydown " + key for key in modifiers] +
-          event +
+          (["key%s %s" % (_KEY_PRESSES[direction], key)] * count) +
           ["keyup " + key for key in reversed(modifiers)])
-  if _xdotool is not None:
+  if _xdotool is not None and count_delay is None:
     _xdotool.extend(keys)
   else:
-    run_command(" ".join(keys))
+    run_command(delay + " ".join(keys))
 
 def write_text(text, _xdotool=None):
   """send text formatted exactly as written to active window."""
@@ -217,15 +211,15 @@ def click_mouse(button, direction="click", count=1, count_delay=None, _xdotool=N
   """click the mouse button specified. button maybe one of "right", "left",
     "middle", "wheeldown", "wheelup". This X11 server will also accept a
     number."""
-  if count_delay is None:
-    count_delay = 1.2
+  delay = "" if (count_delay is None or count < 2) else "--delay %i" % count_delay
+  repeat = "" if count == 1 else "--repeat %i" % count
   try:
     button = _MOUSE_BUTTONS[button]
   except KeyError:
     button = int(button)
 
-  command = ("%s --delay %i --repeat %i %s" %
-             (_MOUSE_CLICKS[direction], 10 * count_delay, count, button))
+  command = ("%s %s %s %s" %
+             (_MOUSE_CLICKS[direction], delay, repeat, button))
 
   if _xdotool is not None:
     _xdotool.append(command)
@@ -243,9 +237,7 @@ def move_mouse(x, y, reference="absolute", proportional=False, phantom=None, _xd
     y = geo["height"] * y
   command = _MOUSE_MOVE_COMMANDS[reference]
   if command == "mousemove_active":
-    x += geo["x"]
-    y += geo["y"]
-    command = "mousemove"
+    command = "mousemove --window %i" % get_active_window()[0]
   commands = ["%s %f %f" % (command, x, y)]
   if phantom is not None:
     commands.append("click %s" % _MOUSE_BUTTONS[phantom])
@@ -256,17 +248,23 @@ def move_mouse(x, y, reference="absolute", proportional=False, phantom=None, _xd
     run_command(" ".join(commands))
 
 def pause(amount, _xdotool=None):
-  """pause amount / 100 seconds."""
+  """pause amount in ms."""
   if _xdotool is not None:
-    _xdotool.append("sleep %i" % (100 * amount))
+    _xdotool.append("sleep %f" % (amount / 1000.))
   else:
-    time.sleep(amount * 100)
+    time.sleep(amount / 1000.)
 
 def server_info(_xdotool=None):
   flush_xdotool(_xdotool)
   return _SERVER_INFO
 
-_RPC_COMMANDS = {
+def flush_xdotool(actions):
+  if actions:
+    run_command(" ".join(actions))
+    del actions[:]
+
+def list_rpc_commands():
+  _RPC_COMMANDS = {
     "get_context":get_context,
     "key_press":key_press,
     "write_text":write_text,
@@ -275,11 +273,7 @@ _RPC_COMMANDS = {
     "server_info":server_info,
     "pause":pause,
   }
-
-def flush_xdotool(actions):
-  if actions:
-    run_command(" ".join(actions))
-    del actions[:]
+  return _RPC_COMMANDS
 
 def multiple_actions(actions):
   """execute multiple rpc commands, aborting on any error.
@@ -288,22 +282,21 @@ def multiple_actions(actions):
      Guaranteed to execute in specified order."""
   xdotool = []
   for (method, parameters, optional) in actions:
-    if method in _RPC_COMMANDS:
-      _RPC_COMMANDS[method](*parameters, _xdotool=xdotool, **optional)
+    commands = list_rpc_commands()
+    if method in commands:
+      commands[method](*parameters, _xdotool=xdotool, **optional)
     else:
       break
   flush_xdotool(xdotool)
 
-def main():
-  server = jsonrpclib.SimpleJSONRPCServer.SimpleJSONRPCServer(
-      (config.HOST, config.PORT)
-    )
+def setup_server(host, port):
+  server = jsonrpclib.SimpleJSONRPCServer.SimpleJSONRPCServer((host, port))
 
-  for command in _RPC_COMMANDS:
+  for command in list_rpc_commands():
     server.register_function(globals()[command])
   server.register_function(multiple_actions)
 
-  server.serve_forever()
+  return server
 
 if __name__ == "__main__":
   if len(sys.argv) == 2 and sys.argv[-1] == "getcontext":
@@ -333,4 +326,5 @@ if __name__ == "__main__":
           os._exit(0)
       else:
         os._exit(0)
-    main()
+  server = setup_server(config.HOST, config.PORT)
+  server.serve_forever()

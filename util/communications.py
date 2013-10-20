@@ -1,7 +1,5 @@
 import jsonrpclib
 
-import config
-
 class Proxy(object):
   def __init__(self, host, port):
     self.server = jsonrpclib.Server("http://%s:%i" % (host, port))
