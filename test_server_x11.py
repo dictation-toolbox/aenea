@@ -42,7 +42,7 @@ class test_server_x11_actions(unittest.TestCase):
     test_thread.join()
 
   def key_press(self, comm):
-    comm.key_press("a")
+    comm.key_press(key="a")
     comm.key_press(key="a", modifiers=["shift"])
     comm.key_press(key="shift", direction="down")
     comm.key_press(key="b", count_delay=100, count=3)
@@ -63,7 +63,7 @@ class test_server_x11_actions(unittest.TestCase):
       ])
 
   def write_text(self, comm):
-    comm.write_text("Hello world!")
+    comm.write_text(text="Hello world!")
 
   @mock.patch("server_x11.write_command")
   def test_write_text(self, write_command):
@@ -74,7 +74,7 @@ class test_server_x11_actions(unittest.TestCase):
   def click_mouse(self, comm):
     comm.click_mouse(button="left", count=2)
     comm.click_mouse(button="wheelup", count=2)
-    comm.click_mouse("right")
+    comm.click_mouse(button="right")
     comm.click_mouse(button="right", count=5, count_delay=70)
     comm.click_mouse(button="middle", count_delay=7)
 
@@ -92,16 +92,16 @@ class test_server_x11_actions(unittest.TestCase):
     self.assertEqual(commands, run_command.mock_calls)
 
   def move_mouse(self, comm):
-    comm.move_mouse(0, 0)
-    comm.pause(100)
+    comm.move_mouse(x=0, y=0)
+    comm.pause(amount=100)
     comm.move_mouse(x=0.5, y=0.5, proportional=True)
-    comm.pause(100)
+    comm.pause(amount=100)
     comm.move_mouse(x=75, y=45, reference="relative_active")
-    comm.pause(100)
+    comm.pause(amount=100)
     comm.move_mouse(x=0, y=0, phantom="left")
-    comm.pause(100)
+    comm.pause(amount=100)
     comm.move_mouse(x=0, y=50, reference="relative")
-    comm.pause(100)
+    comm.pause(amount=100)
 
   @mock.patch("server_x11.get_active_window")
   @mock.patch("time.sleep")
@@ -145,7 +145,7 @@ class test_server_x11_actions(unittest.TestCase):
     self.assertEqual(commands, run_command.mock_calls)
 
   def pause(self, comm):
-    comm.pause(500)
+    comm.pause(amount=500)
 
   def single_request_client(self, test_suite):
     def worker():
@@ -217,8 +217,3 @@ class test_server_x11_actions(unittest.TestCase):
       ]
 
     self.assertEqual(calls, [step1, step2, step1 + step2])
-    # comm.key_press("a")
-    # comm.key_press(key="a", modifiers=["shift"])
-    # comm.key_press(key="shift", direction="down")
-    # comm.key_press(key="b", count_delay=100, count=3)
-    # comm.key_press(key="shift", direction="up")

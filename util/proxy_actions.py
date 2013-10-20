@@ -99,17 +99,17 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
         if not repeat:
           continue
         if pause is not None:
-          proxy.key_press(key, modifiers=modifiers, count=repeat,
+          proxy.key_press(key=key, modifiers=modifiers, count=repeat,
                           count_delay=pause)
         else:
-          proxy.key_press(key, modifiers=modifiers, count=repeat)
+          proxy.key_press(key=key, modifiers=modifiers, count=repeat)
       # manual keypress event
       else:
         (_, direction) = command_part
-        proxy.key_press(key, modifiers=modifiers, direction=direction)
+        proxy.key_press(key=key, modifiers=modifiers, direction=direction)
 
       if outer_pause_part:
-        proxy.pause(int(outer_pause_part[1]) / 100.)
+        proxy.pause(amount=int(outer_pause_part[1]) / 100.)
 
     return proxy._commands
 
@@ -124,7 +124,7 @@ class ProxyText(ProxyBase, dragonfly.DynStrActionBase):
     return spec
 
   def _execute_events(self, events):
-    communication.server.write_text(events)
+    communication.server.write_text(text=events)
 
 ################################################################################
 # Mouse
@@ -139,7 +139,7 @@ class ProxyMouse(ProxyBase, dragonfly.DynStrActionBase):
         reference = {"[":"absolute",
                      "<":"relative",
                      "(":"relative_active"}[reference]
-        proxy.move_mouse(float(x), float(y),
+        proxy.move_mouse(x=float(x), y=float(y),
                         reference=reference, proportional=("." in (x + y)))
       else:
         pause = None
@@ -163,7 +163,7 @@ class ProxyMouse(ProxyBase, dragonfly.DynStrActionBase):
             repeat = int(item[2])
             pause = int(item[4]) / 100.
 
-        proxy.click_mouse(key, direction=direction, count=repeat,
+        proxy.click_mouse(button=key, direction=direction, count=repeat,
                           count_delay=pause)
 
     return proxy._commands
