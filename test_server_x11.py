@@ -161,6 +161,10 @@ class test_server_x11_actions(unittest.TestCase):
     self.write_text(batch)
     self.click_mouse(batch)
     self.pause(batch)
+    self.write_text(batch)
+    self.key_press(batch)
+    self.click_mouse(batch)
+    self.pause(batch)
     util.communications.Proxy(HOST, self.port).execute_batch(batch._commands)
     self.server.shutdown()
 
@@ -184,22 +188,23 @@ class test_server_x11_actions(unittest.TestCase):
     test_thread.join()
 
     # No easy way to test interleaving, so we rely on shape of flushes
-    # to check proper happens-before. Other option would be an entirely
-    # new layer of abstraction.
-    write_command.assert_called_with("Hello world!")
+    # to check proper happens-before.
+    self.assertEqual(write_command.mock_calls, [mock.call("Hello world!")] * 2)
 
-    self.assertEqual(calls, [
-        [
-            'key a',
-            'keydown Shift_L',
-            'key Shift_L',
-            'keyup Shift_L',
-            'keydown Shift_L',
-            'keyup Shift_L'
-        ], [
-            'click  --repeat 2 1',
-            'click  --repeat 2 4',
-            'click   3',
-            'sleep 0.500000'
-        ]
-      ])
+    step1 = [
+        'key a',
+        'keydown Shift_L',
+        'key Shift_L',
+        'keyup Shift_L',
+        'keydown Shift_L',
+        'keyup Shift_L'
+      ]
+
+    step2 = [
+        'click  --repeat 2 1',
+        'click  --repeat 2 4',
+        'click   3',
+        'sleep 0.500000'
+      ]
+
+    self.assertEqual(calls, [step1, step2, step1 + step2])
