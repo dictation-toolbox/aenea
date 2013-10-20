@@ -192,12 +192,12 @@ def key_press(key, modifiers=(), direction="press", count=1, count_delay=None, _
     in ms between presses."""
   delay = "" if (count_delay is None or count < 2) else "--delay %i " % count_delay
   modifiers = [_MOD_TRANSLATION.get(mod, mod) for mod in modifiers]
-  key = _KEY_TRANSLATION.get(key, key)
+  key_to_press = _KEY_TRANSLATION.get(key, key)
 
   keys = (["keydown " + key for key in modifiers] +
-          (["key%s %s" % (_KEY_PRESSES[direction], key)] * count) +
+          (["key%s %s" % (_KEY_PRESSES[direction], key_to_press)] * count) +
           ["keyup " + key for key in reversed(modifiers)])
-  if _xdotool is not None and count_delay is None:
+  if _xdotool is not None:
     _xdotool.extend(keys)
   else:
     run_command(delay + " ".join(keys))

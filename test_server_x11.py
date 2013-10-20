@@ -56,7 +56,7 @@ class test_server_x11_actions(unittest.TestCase):
     self.run_request_thread(self.single_request_client(self.key_press))
     self.assertEqual(commands, [
         'key a',
-        'keydown Shift_L key Shift_L keyup Shift_L', 
+        'keydown Shift_L key a keyup Shift_L', 
         'keydown Shift_L', 
         '--delay 100 key b key b key b', 
         'keyup Shift_L'
@@ -75,6 +75,8 @@ class test_server_x11_actions(unittest.TestCase):
     comm.click_mouse(button="left", count=2)
     comm.click_mouse(button="wheelup", count=2)
     comm.click_mouse("right")
+    comm.click_mouse(button="right", count=5, count_delay=70)
+    comm.click_mouse(button="middle", count_delay=7)
 
   @mock.patch("server_x11.run_command")
   def test_click_mouse(self, run_command):
@@ -82,7 +84,9 @@ class test_server_x11_actions(unittest.TestCase):
     commands = [
         mock.call('click  --repeat 2 1'),
         mock.call('click  --repeat 2 4'),
-        mock.call('click   3')
+        mock.call('click   3'),
+        mock.call('click --delay 70 --repeat 5 3'),
+        mock.call('click   2')
       ]
     self.run_request_thread(self.single_request_client(self.click_mouse))
     self.assertEqual(commands, run_command.mock_calls)
@@ -194,9 +198,12 @@ class test_server_x11_actions(unittest.TestCase):
     step1 = [
         'key a',
         'keydown Shift_L',
-        'key Shift_L',
+        'key a',
         'keyup Shift_L',
         'keydown Shift_L',
+        'key b',
+        'key b',
+        'key b',
         'keyup Shift_L'
       ]
 
@@ -204,7 +211,14 @@ class test_server_x11_actions(unittest.TestCase):
         'click  --repeat 2 1',
         'click  --repeat 2 4',
         'click   3',
+        'click --delay 70 --repeat 5 3',
+        'click   2',
         'sleep 0.500000'
       ]
 
     self.assertEqual(calls, [step1, step2, step1 + step2])
+    # comm.key_press("a")
+    # comm.key_press(key="a", modifiers=["shift"])
+    # comm.key_press(key="shift", direction="down")
+    # comm.key_press(key="b", count_delay=100, count=3)
+    # comm.key_press(key="shift", direction="up")
