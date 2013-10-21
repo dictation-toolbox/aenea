@@ -6,6 +6,9 @@ PORT = 8240
 PLATFORM = "proxy"
 #PLATFORM = "windows"
 
+# Whether to use the server's multiple_actions RPC method.
+USE_MULTIPLE_ACTIONS = False
+
 import os
 import shutil
 

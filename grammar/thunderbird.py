@@ -20,12 +20,12 @@ compose_grammar = Grammar("composed", context=compose_context)
 
 class MailCommands(MappingRule):
   mapping = {
-      "inbox":                 MousePhantomClick("(78 114), left"),
-      "lists":                 MousePhantomClick("(88 225), left"),
-      "limbo":                 MousePhantomClick("(88 205), left"),
-      "twenty thirteen":       MousePhantomClick("(88 365), left"),
-      "mail":                  MousePhantomClick("(500 115), left"),
-      "body":                  MousePhantomClick("(283 650), left"),
+      "inbox":                 MousePhantomClick("(78, 114), left"),
+      "lists":                 MousePhantomClick("(88, 225), left"),
+      "limbo":                 MousePhantomClick("(88, 205), left"),
+      "twenty thirteen":       MousePhantomClick("(88, 365), left"),
+      "mail":                  MousePhantomClick("(500, 115), left"),
+      "body":                  MousePhantomClick("(283, 650), left"),
       "compose":               Key("c-m"),
       "pane":                  Key("f6"),
       "message pane":          Key("f8"),
