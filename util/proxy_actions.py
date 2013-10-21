@@ -186,7 +186,7 @@ class ProxyMousePhantomClick(ProxyMouse):
   def _parse_spec(self, spec):
     commands = ProxyMouse._parse_spec(self, spec)
     move, click = commands
-    move[2]["phantom"] = click[1][0]
+    move[2]["phantom"] = click[2]['button']
     return [move]
 
 ################################################################################

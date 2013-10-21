@@ -91,5 +91,10 @@ class TestActions(unittest.TestCase):
     ProxyMouse("middle:up/5").execute()
     comm.execute_batch.assert_called_with([('click_mouse', (), {'button': 'middle', 'direction': 'up', 'count_delay': 0.05, 'count': 1})])
 
+  @mock.patch("util.proxy_actions.communication")
+  def test_phantom_click(self, comm):
+    ProxyMousePhantomClick("(78, 114), left").execute()
+    comm.execute_batch.assert_called_with([('move_mouse', (), {'y': 114.0, 'x': 78.0, 'phantom': 'left', 'reference': 'relative_active', 'proportional': False})])
+
 if __name__ == '__main__':
   unittest.main()
