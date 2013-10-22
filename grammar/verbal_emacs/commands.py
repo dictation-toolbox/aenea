@@ -12,6 +12,7 @@ class PrimitiveCommand(MappingRule):
     "plap":Key("P"),
     "plop":Key("p"),
     "ditto":Text("."),
+    "ripple":"macro",
   }
 rulePrimitiveCommand = RuleRef(PrimitiveCommand(), name="PrimitiveCommand")
 
@@ -30,9 +31,18 @@ class Command(CompoundRule):
     if delegates[0].value() is not None:
       prefix += str(delegates[0].value())
     if delegates[1].value() is not None:
-      prefix += '"' + delegates[1].value()[1]
+      # Hack for macros
+      reg = delegates[1].value()[1]
+      if value == "macro":
+        prefix += "@" + reg
+        value = None
+      else:
+        prefix += '"' + reg
     if prefix:
-      value = Text(prefix) + value
+      if value is not None:
+        value = Text(prefix) + value
+      else:
+        value = Text(prefix)
     # TODO: ugly hack; should fix the grammar or generalize.
     if "chaos" in zip(*node.results)[0]:
       return [("c", value), ("i", (NoAction(),) * 2)]

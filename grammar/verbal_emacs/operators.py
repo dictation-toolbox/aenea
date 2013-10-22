@@ -25,7 +25,6 @@ class PrimitiveOperator(MappingRule):
   mapping = dict((key, Text(value)) for (key, value) in _OPERATORS.iteritems())
   # tComment
   mapping["comm nop"] = Text("gc")
-
 rulePrimitiveOperator = RuleRef(PrimitiveOperator(), name="PrimitiveOperator")
 
 class Operator(NumericDelegateRule):

@@ -48,7 +48,7 @@ def execute_insertion_buffer(insertion_buffer):
 
 class VimCommand(CompoundRule):
   spec = ("[<app>] [<literal>]")
-  extras = [Repetition(Alternative([RuleRef(verbal_emacs.commands.Command()), RuleRef(verbal_emacs.insertions.Insertion())]), max=13, name="app"),
+  extras = [Repetition(Alternative([verbal_emacs.commands.ruleCommand, RuleRef(verbal_emacs.insertions.Insertion())]), max=10, name="app"),
             RuleRef(verbal_emacs.identifiers.LiteralIdentifierInsertion(), name="literal")]
 
   def _process_recognition(self, node, extras):
