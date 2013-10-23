@@ -1,4 +1,4 @@
-from dragonfly import CompoundRule, Dictation, Mapping, RuleRuleRef
+from dragonfly import CompoundRule, Dictation, MappingRule, RuleRef
 from proxy_nicknames import Text, Key
 
 from verbal_emacs.common import ruleDigitalInteger
@@ -48,8 +48,11 @@ def format_natword(text):
 def format_broodingnarrative(text):
   return ""
 
+def format_sentence(text):
+  return " ".join([text[0].capitalize()] + text[1:])
+
 class IdentifierInsertion(CompoundRule):
-  spec = ("[upper | natural] ( proper | camel | rel-path | abs-path | score | "
+  spec = ("[upper | natural] ( proper | camel | rel-path | abs-path | score | sentence |"
           "scope-resolve | jumble | dotword | dashword | natword | snakeword | brooding-narrative) [<dictation>]")
   extras = [Dictation(name="dictation")]
   

@@ -62,9 +62,8 @@ class NestedInsertion(MappingRule):
   mapping = {
     "circle":           Nested("()"),
     "square":           Nested("[]"),
-    "box":              Nested("[]"),
+    "box":              Nested("{}"),
     "diamond":          Nested("<>"),
-    "hexy":             Nested("{}"),
     "nest quote":       Nested("\"\""),
     "nest smote":       Nested("''"),
   }
@@ -73,7 +72,7 @@ ruleNestedInsertion = RuleRef(NestedInsertion(), name="NestedInsertion")
 class SpellingInsertion(MappingRule):
   mapping = dict(("dig " + key, value) for (key, value) in DIGITS.iteritems())
   mapping.update(LETTERS)
-  
+
   def value(self, node):
     return Text(MappingRule.value(self, node))
 ruleSpellingInsertion = RuleRef(SpellingInsertion(), name="SpellingInsertion")
