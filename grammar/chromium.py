@@ -1,7 +1,8 @@
-from dragonfly import (Grammar, Dictation, MappingRule, Dictation, IntegerRef)
+from dragonfly import Grammar, Dictation, IntegerRef, MappingRule
 from proxy_nicknames import *
 
-import aenea, config
+import aenea
+import config
 
 if config.PLATFORM == "proxy":
   from proxy_nicknames import Key

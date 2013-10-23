@@ -1,7 +1,13 @@
-from dragonfly import MappingRule, Alternative, RuleRef, CompoundRule
+from dragonfly import Alternative, CompoundRule, MappingRule, RuleRef
+
 from proxy_nicknames import Text, Key, NoAction
 
-from verbal_emacs.common import NumericDelegateRule, ruleDigitalInteger, ruleLetterMapping
+from verbal_emacs.common import (
+    NumericDelegateRule,
+    ruleDigitalInteger,
+    ruleLetterMapping
+  )
+
 from verbal_emacs.operators import ruleOperatorApplication
 
 class PrimitiveCommand(MappingRule):

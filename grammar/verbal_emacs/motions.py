@@ -1,8 +1,12 @@
-from dragonfly import MappingRule, CompoundRule, Alternative, RuleRef
+from dragonfly import Alternative, CompoundRule, MappingRule, RuleRef
 from proxy_nicknames import Text, Key
 from raul import LETTERS
 
-from verbal_emacs.common import NumericDelegateRule, ruleDigitalInteger, ruleLetterMapping
+from verbal_emacs.common import (
+    NumericDelegateRule,
+    ruleDigitalInteger,
+    ruleLetterMapping
+  )
 from verbal_emacs.config import LEADER
 
 class PrimitiveMotion(MappingRule):

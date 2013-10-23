@@ -1,16 +1,10 @@
 from dragonfly import (
     AppContext,
-    Choice,
-    CompoundRule,
-    Context,
     Dictation,
     Grammar,
     IntegerRef,
     Key,
-    List,
-    Literal,
     MappingRule,
-    Optional,
     Pause,
     RuleRef,
     Text,
@@ -18,9 +12,7 @@ from dragonfly import (
 
 import config
 
-import natlink, os, time
-
-from raul import SelfChoice, LETTERS
+from raul import LETTERS
 
 import aenea
 

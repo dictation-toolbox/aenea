@@ -1,4 +1,14 @@
-from dragonfly import (Grammar, CompoundRule, Choice, Literal, Repetition, Text, Key, MappingRule, Alternative)
+from dragonfly import (
+    Alternative,
+    Choice,
+    CompoundRule,
+    Grammar,
+    Key,
+    Literal,
+    MappingRule,
+    Repetition,
+    Text,
+  )
 
 from raul import SelfChoice
 

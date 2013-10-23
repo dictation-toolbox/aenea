@@ -1,6 +1,14 @@
-from dragonfly import MappingRule, CompoundRule, Dictation, RuleRef, Repetition, Alternative
+from dragonfly import (
+    MappingRule,
+    CompoundRule,
+    Dictation,
+    RuleRef,
+    Repetition,
+    Alternative
+  )
+
 from aenea import Nested
-from proxy_nicknames import Text, Key
+from proxy_nicknames import Key, Text
 from raul import DIGITS, LETTERS
 
 from verbal_emacs.identifiers import ruleIdentifierInsertion, ruleInsertModeEntry

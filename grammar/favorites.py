@@ -1,6 +1,7 @@
 from dragonfly import Grammar, AppContext, MappingRule, Text
 
 import config
+import personal
 
 if config.PLATFORM == "proxy":
   grammar_context = AppContext(executable="notepad")
@@ -8,8 +9,6 @@ if config.PLATFORM == "proxy":
   from proxy_nicknames import Text
 else:
   grammar = Grammar("favorites")
-
-import personal
 
 class Favorites(MappingRule):
   mapping = dict(("fave " + key, Text(value))

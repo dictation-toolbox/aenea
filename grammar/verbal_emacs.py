@@ -14,7 +14,15 @@ try:
 except ImportError:
   pass
 
-from dragonfly import Grammar, AppContext, Key, CompoundRule, Repetition, RuleRef, Alternative
+from dragonfly import (
+    Alternative,
+    AppContext,
+    CompoundRule,
+    Grammar,
+    Key,
+    Repetition,
+    RuleRef,
+  )
 
 import config
 import verbal_emacs

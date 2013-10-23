@@ -1,4 +1,4 @@
-from dragonfly import Grammar, AppContext, MappingRule, Mouse, Key
+from dragonfly import AppContext, Grammar, Key, MappingRule, Mouse
 
 import config
 

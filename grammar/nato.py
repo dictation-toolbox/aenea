@@ -1,6 +1,15 @@
-from dragonfly import (Grammar, AppContext, CompoundRule, MappingRule, Repetition, RuleRef, Key)
+from dragonfly import (
+    AppContext,
+    CompoundRule,
+    Grammar,
+    Key,
+    MappingRule,
+    Repetition,
+    RuleRef,
+  )
 
-import config, raul
+import config
+import raul
 
 modifier_keys = {"control":"c", "altar":"a",
                  "shift":"s", "super":"w"}
@@ -16,9 +25,20 @@ else:
 class MetaKey(CompoundRule):
   spec = "<modifiers> <key>"
 
-  extras = [Repetition(RuleRef(MappingRule(mapping=modifier_keys, name="modmap"), name="modifier_atom"), 1, len(modifier_keys), name="modifiers"),
-            RuleRef(MappingRule(mapping=raul.ALPHANUMERIC_EXTENDED, name="keymap"), name="key")]
-  
+  extras = [
+      Repetition(RuleRef(
+          MappingRule(mapping=modifier_keys, name="modmap"),
+          name="modifier_atom"),
+          1,
+          len(modifier_keys),
+          name="modifiers"
+        ),
+        RuleRef(
+            MappingRule(mapping=raul.ALPHANUMERIC_EXTENDED, name="keymap"),
+            name="key"
+        )
+    ]
+
   def _process_recognition (self, node, extras):
     delegates = node.children[0].children[0].children
     modifiers = delegates[0].value()

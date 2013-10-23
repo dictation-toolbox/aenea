@@ -1,5 +1,6 @@
-from dragonfly import (Grammar, AppContext, CompoundRule, Choice, Dictation, List, Optional, Literal)
-import natlink, os, aenea
+from dragonfly import CompoundRule, Grammar
+
+import aenea
 
 grammar = Grammar("reload_configuration", context=aenea.global_context)
 

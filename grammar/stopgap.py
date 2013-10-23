@@ -1,5 +1,4 @@
-from dragonfly import Grammar, Key, CompoundRule, MappingRule
-import dragonfly
+from dragonfly import CompoundRule, Grammar, Key, MappingRule
 
 from raul import SelfChoice
 

@@ -1,4 +1,4 @@
-from dragonfly import MappingRule, RuleRef, CompoundRule, Alternative
+from dragonfly import Alternative, CompoundRule, MappingRule, RuleRef
 from proxy_nicknames import Text
 
 from verbal_emacs.common import NumericDelegateRule, ruleDigitalInteger
