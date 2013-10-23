@@ -21,6 +21,7 @@
 # Windows mode. (Don't forget, it has to be called _multiedit, so if you're
 # not using the reloadconfig module you'll need to rename manually.)
 
+ENABLE_ECLIPSE_COMMANDS = True
 ENABLE_VIM_COMMANDS = True
 ENABLE_PYTHON_COMMANDS = True
 
@@ -232,6 +233,53 @@ python_command_table = {
   "compare lack":(     Text("<= "),                None),
   }
 
+# Eclipse only commands
+eclipse_command_table = {
+  # Spoken-form        normal command              VIM (can set to None if same as normal)
+  "save file":(        Key("c-s"),                 None),
+  "save all":(         Key("a-s"),                 None),
+  "popup":(            Key("apps"),                None),
+  "close tab":(        Key("c-w"),                 None),
+  "close all tabs":(   Key("cs-w"),                None),
+  "move tab left [<n>]":(Key("c-pgup:%(n)d"),      None),
+  "move tab right [<n>]":(Key("c-pgdown:%(n)d"),   None),
+  "cut that":(         Key("c-x"),                 None),
+  "copy that":(        Key("c-c"),                 None),
+  "who calls":(        Key("ca-h"),                None),
+  "link":(             Key("f3"),                  None),
+  "refresh":(          Key("f5"),                  None),
+  "hierarchy":(        Key("c-t"),                 None),
+  "open type":(        Key("cs-t"),                None),
+  "open resource":(    Key("ca-r"),                None),
+  "rename":(           Key("cs-r"),                None),
+  "correct":(          Key("c-1"),                 None),
+  "organize imports":( Key("cs-o"),                None),
+  "new java docs":(    Key("sa-j"),                None),
+  "find":(             Key("c-f"),                 None),
+  "go home":(          Key("home:2"),              None),
+  "go end":(           Key("end:2"),               None),
+  "pair":(             Key("cs-p"),                None),
+  "chirp":(            Key("c-q"),                 None),
+  "choices":(          Key("c-space"),             None),
+  "complete [<n>]":(   Key("a-slash:%(n)d"),       None),
+  "undo [<n>]":(       Key("c-z:%(n)d"),           None),
+  "redo [<n>]":(       Key("c-y:%(n)d"),           None),
+  "spike [<n>]":(      Key("sc-up:%(n)d"),         None),
+  "mud [<n>]":(        Key("sc-down:%(n)d"),       None),
+  "block [<n>]":(      Key("sa-w:%(n)d"),          None),
+  "shrink [<n>]":(     Key("sa-s:%(n)d"),          None),
+  "squirt [<n>]":(     Key("sa-a:%(n)d"),          None),
+  "glide [<n>]":(      Key("a-d:%(n)d"),           None),
+  "slip [<n>]":(       Key("a-a:%(n)d"),           None),
+  "slug [<n>]":(       Key("c-dot:%(n)d"),         None),
+  "snail [<n>]":(      Key("c-comma:%(n)d"),       None),
+  "stint [<n>]":(      Key("f5:%(n)d"),            None),
+  "stover [<n>]":(     Key("f6:%(n)d"),            None),
+  "stout [<n>]":(      Key("f7:%(n)d"),            None),
+  "step continue":(    Key("f8"),                  None),
+  "perspective [<n>]":(Key("ctrl:down, f8:%(n)d, ctrl:up"), None),
+  "view [<n>]":(       Key("ctrl:down, f7:%(n)d, ctrl:up"), None),
+  }
 def format_snakeword(text):
   return text[0][0].upper() + text[0][1:] + ("_" if len(text) > 1 else "") + format_score(text[1:])
 
@@ -296,8 +344,10 @@ class FormatRule(CompoundRule):
 
     return Text(formatted)
 
-# Set up optional rules (VIM, etc).
+# Set up optional rules (VIM, Eclipse, etc).
 tables = []
+if ENABLE_ECLIPSE_COMMANDS:
+  tables.append(eclipse_command_table)
 if ENABLE_PYTHON_COMMANDS:
   tables.append(python_command_table)
 tables.append(command_table)
