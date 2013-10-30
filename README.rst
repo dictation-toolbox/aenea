@@ -104,7 +104,7 @@ Security
 
 Virtual machines have a nasty tendency to not be up-to-date and at any rate they increase the attack surface. Therefore I recommend that you select "Host-only adapter" in virtual box so that the virtual machine can only connect to your computer and not to the Internet, thus limiting its potential to get compromised.
 
-Please remember that the server simply accepts any connection made to it and will execute the commands given, and that command streams are not encrypted. I hope to address this in the future, but for now I strongly suggest only running the system on a network you trust (i.e., VirtualBox's subnet). Be careful at other virtual machines you may run on the same system cannot access it, if you are concerned about security.
+Please remember that the server simply accepts any connection made to it and will execute the commands given, and that command streams are not encrypted. I hope to address this in the future, but for now I strongly suggest only running the system on a network you trust (i.e., VirtualBox's subnet). Be careful that other virtual machines you may run on the same system cannot access it, if you are concerned about security.
 
 Performance
 ---------------
@@ -160,7 +160,7 @@ Dragonfly classes with Proxies available (usage is identical to Dragonfly classe
 Aenea classes that work differently from Dragonfly or are not present. See their python doc strings for usage details (in aenea/util/proxy_actions.py and aenea/util/proxy_contexts.py):
 
 - AppContext: control when a rule or grammar is active. Eg, AppContext(title="Kate") would specify to only be active when a window title containing Kate is selected. You may also specify cls, cls_name, and executable to be more precise. You can use the program xprop to find the window class and window class name of the active window.
-- AppCustomcontext: allows extreme flexibility in specifying precisely when a rule should be active based on the context. Supports case sensitivity, regular expressions, and querying on many more fields. Run "python server_x11.py getcontext" to show all keys available for querying defined by the active window (eg, "sleep 1s && python server_x11.py" to wait one second so you can select the window of interest).
+- AppCustomContext: allows extreme flexibility in specifying precisely when a rule should be active based on the context. Supports case sensitivity, regular expressions, and querying on many more fields. Run "python server_x11.py getcontext" to show all keys available for querying defined by the active window (eg, "sleep 1s && python server_x11.py" to wait one second so you can select the window of interest).
 - AlwaysContext: Always matches (useful for a starting point when using | and & on contexts).
 - NeverContext: Never matches.
 - NoAction: Do nothing.
