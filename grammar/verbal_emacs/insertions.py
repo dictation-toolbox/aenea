@@ -77,6 +77,69 @@ class SpellingInsertion(MappingRule):
     return Text(MappingRule.value(self, node))
 ruleSpellingInsertion = RuleRef(SpellingInsertion(), name="SpellingInsertion")
 
+class CCppInsertion(MappingRule):
+  mapping = {
+    "if endif guard":     Text("once") + Key("tab"),
+
+    "include local":      Key("A, E, i, n, c, tab"),
+    "include system":     Key("A, E, I, n, c"),
+    "define main":        Key("m, a, i, n, tab"),
+    "for loop":           Key("A, E, f, o, r, tab"),
+    "for int loop":       Key("A, E, f, o, r, i, tab"),
+    "while loop":         Key("w, h, tab"),
+    "do loop":            Key("d, o, tab"),
+    "if test":            Key("i, f, tab"),
+    "else clause":        Key("e, l, tab"),
+    "if else":            Key("i, f, e, tab"),
+    "structure":          Key("A, E, s, t, tab"),
+    "function":           Key("A, E, f, u, n, tab"),
+    "prototype":          Key("A, E, f, u, n, d, tab"),
+  }
+ruleCCppInsertion = RuleRef(CCppInsertion(), name="CCppInsertion")
+
+class CppInsertion(MappingRule):
+  mapping = {
+    "class":              Key("A, E, c, l, tab"),
+    "namespace":          Key("A, E, n, s, tab"),
+
+    "hash map":           Key("m, a, p, tab"),
+    "tree map"  :         Key("r, b, t, m, tab"),
+    "hash set":           Key("s, e, t, tab"),
+    "tree set":           Key("r, b, t, s, tab"),
+    "vector":             Key("v, c, tab"),
+    "deque":              Key("d, q, tab"),
+    "string":             Key("s, r, tab"),
+    "cons":               Key("p, r, tab"),
+    "tuple":              Key("t, p, tab"),
+
+    "weak pointer":       Key("w, p, tab"),
+    "shared pointer":     Key("s, p, tab"),
+    "unique pointer":     Key("u, p, tab"),
+
+    "stid":               Key("s, d, tab"),
+    "end line":           Key("e, l, tab"),
+    "c error":            Key("c, e, tab"),
+    "c out":              Key("c, o, tab"),
+    "c error line":       Key("c, e, e, tab"),
+    "c out line":         Key("c, o, e, tab"),
+
+    "unique pointer ref": Key("c, u, p, r, tab"),
+
+    "alpha omega":        Key("a, o, tab"),
+    "back insertor":      Key("b, i, n, s, tab"),
+    "inserter":           Key("s, i, n, s, tab"),
+
+    "boost":              Key("b, s, tab"),
+    "meth":               Key("m, e, t, h, tab"),
+
+    "null pointer":       Text("nullptr"),
+
+    "range for":          Key("f, o, r, r, tab"),
+    "for auto":           Key("f, o, r, a, tab"),
+    "forcato":            Key("f, o, r, o, tab"),
+  }
+ruleCppInsertion = RuleRef(CppInsertion(), name="CppInsertion")
+
 class PythonInsertion(MappingRule):
   mapping = {
     "private":          Nested("____"),
@@ -96,18 +159,6 @@ class PythonInsertion(MappingRule):
     "log not":          Text("not "),
     "not":              Text("not "),
     "for loop":         Text("for "),
-    "bit ore":          Text("| "),
-    "bit and":          Text("& "),
-    "bit ex or":        Text("^ "),
-    "times":            Text("* "),
-    "divided":          Text("/ "),
-    "plus":             Text("+ "),
-    "minus":            Text("- "),
-    "plus equal":       Text("+= "),
-    "minus equal":      Text("-= "),
-    "times equal":      Text("*= "),
-    "divided equal":    Text("/= "),
-    "mod equal":        Text("%%= "),
     "as name":          Text("as "),
     "in":               Text("in "),
     "is":               Text("is "),
@@ -123,6 +174,11 @@ class PythonInsertion(MappingRule):
     "lambda":           Text("lambda "),
     "assert":           Text("assert "),
     "delete":           Text("del "),
+  }
+rulePythonInsertion = RuleRef(PythonInsertion(), name="PythonInsertion")
+
+class ArithmeticInsertion(MappingRule):
+  mapping = {
     "assign":           Text("= "),
     "compare eek":      Text("== "),
     "compare not eek":  Text("!= "),
@@ -130,8 +186,20 @@ class PythonInsertion(MappingRule):
     "compare less":     Text("< "),
     "compare geck":     Text(">= "),
     "compare lack":     Text("<= "),
+    "bit ore":          Text("| "),
+    "bit and":          Text("& "),
+    "bit ex or":        Text("^ "),
+    "times":            Text("* "),
+    "divided":          Text("/ "),
+    "plus":             Text("+ "),
+    "minus":            Text("- "),
+    "plus equal":       Text("+= "),
+    "minus equal":      Text("-= "),
+    "times equal":      Text("*= "),
+    "divided equal":    Text("/= "),
+    "mod equal":        Text("%%= "),
   }
-rulePythonInsertion = RuleRef(PythonInsertion(), name="PythonInsertion")
+ruleArithmeticInsertion = RuleRef(ArithmeticInsertion(), name="ArithmeticInsertion")
 
 class PrimitiveInsertion(CompoundRule):
   spec = "<insertion>"
@@ -141,6 +209,9 @@ class PrimitiveInsertion(CompoundRule):
       ruleIdentifierInsertion,
       ruleNestedInsertion,
       rulePythonInsertion,
+      ruleArithmeticInsertion,
+      ruleCppInsertion,
+      ruleCCppInsertion,
       ruleSpellingInsertion,
     ], name="insertion")]
 

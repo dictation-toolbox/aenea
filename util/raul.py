@@ -7,7 +7,7 @@ def SelfChoice(name, ch):
 LETTERS = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel",
            "indigo", "juliet", "kilo", "lima", "mike", "november", "oscar",
            "poppa", "quiche", "romeo", "sierra", "tango", "uniform",
-           "vector", "whiskey", "x-ray", "yankee", "zulu"]
+           "victor", "whiskey", "x-ray", "yankee", "zulu"]
 LETTERS = dict(zip(LETTERS, (chr(ord("a") + i) for i in range(26))))
 temp = {}
 for (spoken, written) in LETTERS.iteritems():
