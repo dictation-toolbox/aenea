@@ -83,5 +83,5 @@ class LiteralIdentifierInsertion(CompoundRule):
 
   def value(self, node):
     children = node.children[0].children[0].children
-    return ("i", (children[0].value(), children[2].value()))
+    return [("i", (children[0].value(), children[2].value()))]
 ruleLiteralIdentifierInsertion = RuleRef(LiteralIdentifierInsertion(), name="LiteralIdentifierInsertion")
