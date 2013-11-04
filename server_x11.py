@@ -204,8 +204,10 @@ def key_press(key, modifiers=(), direction="press", count=1, count_delay=None, _
 
 def write_text(text, _xdotool=None):
   """send text formatted exactly as written to active window."""
-  flush_xdotool(_xdotool)
-  write_command(text)
+  # Workaround for https://github.com/jordansissel/xdotool/pull/29
+  if text:
+    flush_xdotool(_xdotool)
+    write_command(text)
 
 def click_mouse(button, direction="click", count=1, count_delay=None, _xdotool=None):
   """click the mouse button specified. button maybe one of "right", "left",
