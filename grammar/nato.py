@@ -34,7 +34,12 @@ class MetaKey(CompoundRule):
           name="modifiers"
         ),
         RuleRef(
-            MappingRule(mapping=raul.ALPHANUMERIC_EXTENDED, name="keymap"),
+            MappingRule(
+                mapping=dict(
+                    (k, Key(v)) for (k, v) in raul.ALPHANUMERIC_EXTENDED.items()
+                  ),
+                name="keymap"
+              ),
             name="key"
         )
     ]
@@ -52,5 +57,6 @@ grammar.load()
 
 def unload():
   global grammar
-  if grammar: grammar.unload()
+  if grammar:
+    grammar.unload()
   grammar = None
