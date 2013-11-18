@@ -34,14 +34,9 @@ class MetaKey(CompoundRule):
           name="modifiers"
         ),
         RuleRef(
-            MappingRule(
-                mapping=dict(
-                    (k, Key(v)) for (k, v) in raul.ALPHANUMERIC_EXTENDED.items()
-                  ),
-                name="keymap"
-              ),
+            MappingRule(mapping=raul.ALPHANUMERIC_EXTENDED, name="keymap"),
             name="key"
-        )
+          ),
     ]
 
   def _process_recognition (self, node, extras):
