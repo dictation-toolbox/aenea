@@ -14,31 +14,19 @@ import Control.Applicative
 #include "winuser.h"
 #include "winable.h"
 
-key :: Int -> IO ()
+key :: DWORD -> IO ()
 key code = let c = fromIntegral code
            in c_keybd_event c 0 2 0 >>
               c_keybd_event c 0 0 0
 
-{-
-key2 code = key2Internal code True >> key2Internal code False
+key2 :: Int -> IO ()
+key2 code = key2Internal code True >> key2Internal code False >> return ()
 
 key2Internal :: Int -> Bool -> IO Int
 key2Internal code isDown = let c = fromIntegral code
                                direction = if isDown then 0 else 2
             in fromIntegral <$> (withArrayLen [Input (#const INPUT_KEYBOARD) (Key (KeybdInput c 0 direction 0 nullPtr))] $ \len array ->
                c_SendInput (fromIntegral len) array (fromIntegral (sizeOf (undefined :: Input))))
--}
--- main = print $ show ((#const WINVER) :: CInt)
-
-f = (#size MSLLHOOKSTRUCT)
-g = (#size INPUT)
-
---test
-winver :: CInt
-winver = #const WINVER
-
-win32Winnt :: UINT
-win32Winnt = #const _WIN32_WINNT
 
 foreign import stdcall unsafe "winuser.h keybd_event"
         c_keybd_event :: BYTE
@@ -47,10 +35,6 @@ foreign import stdcall unsafe "winuser.h keybd_event"
                       -> DWORD
                       -> IO ()
                  
--- sendKey :: BYTE -> IO()
--- sendKey key = c_keybd_event key 0 0 0
---               >> c_keybd_event key 0 2 0
-
 data Input = Input { input_type :: DWORD
                    , input_union :: InputUnion}
 
