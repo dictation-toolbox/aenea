@@ -33,22 +33,22 @@ main = simpleHTTP (nullConf {port = 8240}) $ do
 getBody :: Request -> IO B.ByteString
 getBody r = unBody <$> (readMVar $ rqBody r)
 
-methods = toJsonFunctions [getContext, keyPress, writeText, pause]
+methods = toJsonFunctions [getContext, keyPressMethod, writeText, pause]
 
-keyPress = toJsonFunction "key_press" (\k ms d c d' -> liftR (keyPressF k ms d c d'))
+keyPressMethod = toJsonFunction "key_press" (\k ms d c d' -> liftR (keyPressF k ms d c d'))
            (Param "key" Nothing,
             (Param "modifiers" (Just []),
              (Param "direction" (Just "press"),
               (Param "count" (Just 1),
                (Param "delay" (Just (-1)), ())))))
               where keyPressF :: String -> [String] -> String -> Int -> Int -> IO ()
-                    keyPressF key' modifiers direction count delay = key 0x41
+                    keyPressF key' modifiers direction count delay = (keyPress tab >> keyPress a)
 
 getContext = toJsonFunction "get_context" (liftR $ return $ defaultContext) ()
     where defaultContext = object ["id" .= emptyStr, "title" .= emptyStr]
           emptyStr = "" :: String
 
-writeText = toJsonFunction "write_text" (\t -> liftR (putStrLn t >> key 0x42 >> key 0x43))
+writeText = toJsonFunction "write_text" (\t -> liftR (putStrLn t >> keyPress k_0 >> keyPress k_0))
             (Param "text" Nothing, ())
 
 pause = toJsonFunction "pause" (\millis -> liftR $ threadDelay (1000 * millis))

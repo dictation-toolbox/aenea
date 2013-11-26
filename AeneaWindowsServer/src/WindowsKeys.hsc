@@ -1,23 +1,55 @@
-{-# LANGUAGE ForeignFunctionInterface, CPP, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ForeignFunctionInterface
+, CPP
+, GeneralizedNewtypeDeriving
+, OverloadedStrings #-}
 
-module WindowsKeys where
+module WindowsKeys (Key, keyPress, alt, ctrl, control, shift, k_0, a, tab) where
 
 import System.Win32.Types
-import Foreign
+import Graphics.Win32.Key
+import Foreign hiding (shift)
 import Foreign.C.Types
 import Foreign.Storable
 import Foreign.Marshal.Array
+import Data.Text (Text)
 import Control.Applicative
-
 
 #include "Windows.h"
 #include "winuser.h"
 #include "winable.h"
 
-key :: DWORD -> IO ()
-key code = let c = fromIntegral code
-           in c_keybd_event c 0 2 0 >>
-              c_keybd_event c 0 0 0
+data Key = Key { keyCode :: VKey
+               , keyName :: Text
+               , keyCharacter :: Maybe Char
+               , keyRequiresShift :: Bool
+               , keyIsModifier :: Bool }
+
+alt = Key (#const VK_MENU) "alt" Nothing False True
+ctrl = Key (#const VK_CONTROL) "ctrl" Nothing False True
+control = Key (#const VK_CONTROL) "control" Nothing False True
+shift = Key (#const VK_SHIFT) "shift" Nothing False True
+k_0 = Key 0x30 "0" (Just '0') False False
+a = Key 0x41 "a" (Just 'a') False False
+tab = Key (#const VK_TAB) "tab" Nothing False False
+
+keyPress :: Key -> IO ()
+keyPress k = keyDown k >> keyUp k
+
+keyUp :: Key -> IO ()
+keyUp k = key k True
+
+keyDown :: Key -> IO ()
+keyDown k = key k False
+
+key :: Key -> Bool -> IO ()
+key k isDown = let code = fromIntegral $ keyCode k
+                   direction = if isDown then 2 else 0
+               in c_keybd_event code 0 direction 0
+
+-- key :: DWORD -> Bool -> IO ()
+-- key code = let c = fromIntegral code
+--            in c_keybd_event c 0 2 0 >>
+--               c_keybd_event c 0 0 0
 
 key2 :: Int -> IO ()
 key2 code = key2Internal code True >> key2Internal code False >> return ()
@@ -25,7 +57,7 @@ key2 code = key2Internal code True >> key2Internal code False >> return ()
 key2Internal :: Int -> Bool -> IO Int
 key2Internal code isDown = let c = fromIntegral code
                                direction = if isDown then 0 else 2
-            in fromIntegral <$> (withArrayLen [Input (#const INPUT_KEYBOARD) (Key (KeybdInput c 0 direction 0 nullPtr))] $ \len array ->
+            in fromIntegral <$> (withArrayLen [Input (#const INPUT_KEYBOARD) (Key' (KeybdInput c 0 direction 0 nullPtr))] $ \len array ->
                c_SendInput (fromIntegral len) array (fromIntegral (sizeOf (undefined :: Input))))
 
 foreign import stdcall unsafe "winuser.h keybd_event"
@@ -43,11 +75,11 @@ instance Storable Input where
     alignment _ = 5
 
 data InputUnion = Mouse MouseInput
-                | Key KeybdInput
+                | Key' KeybdInput
                 | Hardware HardwareInput
 
 instance Storable InputUnion where
-    sizeOf (Key k) = sizeOf k
+    sizeOf (Key' k) = sizeOf k
     sizeOf (Mouse m) = sizeOf m
     sizeOf (Hardware h) = sizeOf h
     alignment _ = maximum [ alignment (undefined :: MouseInput)
