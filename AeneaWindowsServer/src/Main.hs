@@ -40,13 +40,13 @@ keyPressMethod = toJsonFunction "key_press" (\k ms d c d' -> liftR (keyPressF k 
               (Param "count" (Just 1),
                (Param "delay" (Just (-1)), ())))))
               where keyPressF :: String -> [String] -> String -> Int -> Int -> IO ()
-                    keyPressF key' modifiers direction count delay = (keyPress tab >> keyPress a)
+                    keyPressF key' modifiers direction count delay = withKeyPress key_ALT $ keyPress key_RIGHT
 
 getContext = toJsonFunction "get_context" (liftR $ return $ defaultContext) ()
     where defaultContext = object ["id" .= emptyStr, "title" .= emptyStr]
           emptyStr = "" :: String
 
-writeText = toJsonFunction "write_text" (\t -> liftR (putStrLn t >> keyPress k_0 >> keyPress k_0))
+writeText = toJsonFunction "write_text" (\t -> liftR (putStrLn t >> keyPress key_0 >> keyPress key_0))
             (Param "text" Nothing, ())
 
 pause = toJsonFunction "pause" (\millis -> liftR $ threadDelay (1000 * millis))
