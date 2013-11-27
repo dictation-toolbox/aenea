@@ -21,13 +21,11 @@ import Data.Aeson
 main :: IO ()
 main = simpleHTTP (nullConf {port = 8240}) $ do
          r <- askRq
-         liftIO $ print r
-         b <- liftIO $ getBody r
-         liftIO $ print b
-         let Just json = J.decode b
-         r2 <- lift $ call methods json
-         let r3 = encode r2
-         liftIO $ print r3
+--         liftIO $ print r
+         body <- liftIO $ getBody r
+--         liftIO $ print b
+         r2 <- lift $ call methods body
+         let r3 = maybe "" id r2
          return $ toResponse $ r3
 
 getBody :: Request -> IO B.ByteString
