@@ -4,7 +4,17 @@
 , OverloadedStrings
 , TupleSections #-}
 
-module WindowsKeys where
+module WindowsKeys ( Key
+                   , Direction (..)
+                   , nameToKey
+                   , keyEvent
+                   , keyPress
+                   , keyUp
+                   , keyDown
+                   , withKeyPress
+                   , keyNames
+                   , keyRequiresShift
+                   , key_SHIFT) where
 
 import System.Win32.Types
 import Graphics.Win32.Key

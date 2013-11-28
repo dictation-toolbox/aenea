@@ -63,7 +63,7 @@ getContext = toJsonFunction "get_context" (liftR $ return $ defaultContext) ()
     where defaultContext = object ["id" .= emptyStr, "title" .= emptyStr]
           emptyStr = "" :: String
 
-writeText = toJsonFunction "write_text" (\t -> liftR (putStrLn t >> keyPress key_0 >> keyPress key_0))
+writeText = toJsonFunction "write_text" (\t -> liftR (putStrLn t))
             (Param "text" Nothing, ())
 
 pause = toJsonFunction "pause" (\millis -> liftR $ threadDelay (1000 * millis))
