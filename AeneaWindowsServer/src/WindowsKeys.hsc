@@ -1,7 +1,8 @@
 {-# LANGUAGE ForeignFunctionInterface
 , CPP
 , GeneralizedNewtypeDeriving
-, OverloadedStrings #-}
+, OverloadedStrings
+, TupleSections #-}
 
 module WindowsKeys where
 
@@ -24,6 +25,145 @@ data Key = Key { keyCode :: VKey
                , keyCharacter :: Maybe Char
                , keyRequiresShift :: Bool
                , keyIsModifier :: Bool }
+         deriving (Eq)
+
+keys = [ key_ALT
+       , key_CONTROL
+       , key_SHIFT
+       , key_0
+       , key_1
+       , key_2
+       , key_3
+       , key_4
+       , key_5
+       , key_6
+       , key_7
+       , key_8
+       , key_9
+       , key_A
+       , key_B
+       , key_C
+       , key_D
+       , key_E
+       , key_F
+       , key_G
+       , key_H
+       , key_I
+       , key_J
+       , key_K
+       , key_L
+       , key_M
+       , key_N
+       , key_O
+       , key_P
+       , key_Q
+       , key_R
+       , key_S
+       , key_T
+       , key_U
+       , key_V
+       , key_W
+       , key_X
+       , key_Y
+       , key_Z
+       , key_a
+       , key_b
+       , key_c
+       , key_d
+       , key_e
+       , key_f
+       , key_g
+       , key_h
+       , key_i
+       , key_j
+       , key_k
+       , key_l
+       , key_m
+       , key_n
+       , key_o
+       , key_p
+       , key_q
+       , key_r
+       , key_s
+       , key_t
+       , key_u
+       , key_v
+       , key_w
+       , key_x
+       , key_y
+       , key_z
+       , key_LEFT
+       , key_RIGHT
+       , key_UP
+       , key_DOWN
+       , key_PGUP
+       , key_PGDOWN
+       , key_HOME
+       , key_END
+       , key_SPACE
+       , key_TAB
+       , key_ENTER
+       , key_BACKSPACE
+       , key_INSERT
+       , key_DELETE
+       , key_DEL
+       , key_LWIN
+       , key_APPS
+       , key_PAUSE
+       , key_ESCAPE
+       , key_MULTIPLY
+       , key_ADD
+       , key_SEPARATOR
+       , key_SUBTRACT
+       , key_DECIMAL
+       , key_DIVIDE
+       , key_NUMPAD0
+       , key_NUMPAD1
+       , key_NUMPAD2
+       , key_NUMPAD3
+       , key_NUMPAD4
+       , key_NUMPAD5
+       , key_NUMPAD6
+       , key_NUMPAD7
+       , key_NUMPAD8
+       , key_NUMPAD9
+       , key_F1
+       , key_F2
+       , key_F3
+       , key_F4
+       , key_F5
+       , key_F6
+       , key_F7
+       , key_F8
+       , key_F9
+       , key_F10
+       , key_F11
+       , key_F12
+       , key_F13
+       , key_F14
+       , key_F15
+       , key_F16
+       , key_F17
+       , key_F18
+       , key_F19
+       , key_F20
+       , key_F21
+       , key_F22
+       , key_F23
+       , key_F24
+       , key_EXCLAMATION
+       , key_AT
+       , key_HASH
+       , key_DOLLAR
+       , key_PERCENT
+       , key_CARET
+       , key_AMPERSAND
+       , key_ASTERISK
+       , key_LEFT_PAREN
+       , key_RIGHT_PAREN ]
+
+nameToKey key = lookup key keyMap
+                where keyMap = concatMap (\k -> map ( , k) (keyNames k)) keys
 
 key_ALT = Key vK_MENU ["alt"] Nothing False True
 key_CONTROL = Key vK_CONTROL ["ctrl", "control"] Nothing False True
@@ -159,14 +299,11 @@ key_AMPERSAND = Key (keyCode key_7) ["ampersand", "and"] (Just '&') True False
 key_ASTERISK = Key (keyCode key_8) ["asterisk", "star"] (Just '*') True False
 key_LEFT_PAREN = Key (keyCode key_9) ["leftparen", "lparen"] (Just '(') True False
 key_RIGHT_PAREN = Key (keyCode key_0) ["rightparen", "rparen"] (Just ')') True False
-
-
--- key_MINUS = Key vK_MINUS ["minus"] (Just '-') False False
+-- key_MINUS = Key (#const VK_OEM_MINUS) ["minus"] (Just '-') False False
 -- key_HYPEN = Key vK_MINUS ["hyphen"] (Just '-') False False
 -- key_UNDERSCORE = Key vK_MINUS ["underscore"] (Just '_') True False
--- key_PLUS = Key vK_EQUALS ["plus"] (Just '+') True False
--- key_EQUAL = Key vK_EQUALS ["equal"] (Just '=') False False
--- key_EQUALS = Key vK_EQUALS ["equals"] (Just '=') False False
+-- key_PLUS = Key (#const VK_OEM_PLUS) ["plus"] (Just '+') True False
+-- key_EQUAL = Key (#const VK_OEM_PLUS) ["equal", "equals"] (Just '=') False False
 -- key_BACKTICK = Key vK_BACK_QUOTE ["backtick"] (Just '`') False False
 -- key_TILDE = Key vK_BACK_QUOTE ["tilde"] (Just '~') True False
 -- key_LEFT_BRACKET = Key vK_OPEN_BRACKET ["leftbracket"] (Just '[') False False
@@ -197,6 +334,14 @@ key_RIGHT_PAREN = Key (keyCode key_0) ["rightparen", "rparen"] (Just ')') True F
 -- key_RIGHT_ANGLE = Key vK_PERIOD ["rightangle"] (Just '>') True False
 -- key_RANGLE = Key vK_PERIOD ["rangle"] (Just '>') True False
 -- key_QUESTION = Key vK_SLASH ["question"] (Just '?') True False
+
+data Direction = Press | Down | Up
+
+keyEvent :: Direction -> Key -> IO ()
+keyEvent d k = case d of
+                 Press -> keyPress k
+                 Down -> keyDown k
+                 Up -> keyUp k
 
 keyPress :: Key -> IO ()
 keyPress k = keyDown k >> keyUp k

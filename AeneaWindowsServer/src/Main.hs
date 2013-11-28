@@ -4,6 +4,9 @@ module Main (main) where
 
 import WindowsKeys
 import JsonRpcServer
+import Data.Maybe
+import Data.Text hiding (map)
+import Data.List (nub)
 import Control.Applicative ((<$>))
 import Control.Monad
 import Control.Monad.Reader
@@ -36,11 +39,25 @@ methods = toJsonFunctions [getContext, keyPressMethod, writeText, pause]
 keyPressMethod = toJsonFunction "key_press" (\k ms d c d' -> liftR (keyPressF k ms d c d'))
            (Param "key" Nothing,
             (Param "modifiers" (Just []),
-             (Param "direction" (Just "press"),
+             (Param "direction" (Just Press),
               (Param "count" (Just 1),
-               (Param "delay" (Just (-1)), ())))))
-              where keyPressF :: String -> [String] -> String -> Int -> Int -> IO ()
-                    keyPressF key' modifiers direction count delay = withKeyPress key_ALT $ keyPress key_RIGHT
+               (Param "delay" (Just (defaultKeyDelay)), ())))))
+
+keyPressF :: Text -> [Text] -> Direction -> Int -> Int -> IO ()
+keyPressF key modifiers direction count delayMillis = do
+  print (keyNames key')
+  forM_ allModKeys (\k -> keyDown k >> delay)
+  replicateM_ count $ (keyEvent direction key' >> delay)
+  forM_ allModKeys (\k -> keyUp k >> delay)
+    where Just key' = nameToKey key
+          modKeys = map (fromJust . nameToKey) modifiers
+          allModKeys = if keyRequiresShift key'
+                       then nub (key_SHIFT : modKeys) 
+                       else modKeys
+          delay = threadDelay millis
+          millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
+
+defaultKeyDelay = -1
 
 getContext = toJsonFunction "get_context" (liftR $ return $ defaultContext) ()
     where defaultContext = object ["id" .= emptyStr, "title" .= emptyStr]
@@ -51,3 +68,8 @@ writeText = toJsonFunction "write_text" (\t -> liftR (putStrLn t >> keyPress key
 
 pause = toJsonFunction "pause" (\millis -> liftR $ threadDelay (1000 * millis))
         (Param "amount" Nothing, ())
+
+instance FromJSON Direction where
+    parseJSON "up" = return Up
+    parseJSON "down" = return Down
+    parseJSON "press" = return Press
