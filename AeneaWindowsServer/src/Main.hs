@@ -27,14 +27,17 @@ main = simpleHTTP (nullConf {port = 8240}) $ do
 --         liftIO $ print r
          body <- liftIO $ getBody r
 --         liftIO $ print b
-         r2 <- lift $ call methods body
+         r2 <- lift $ call (toJsonFunctions methods) body
          let r3 = maybe "" id r2
          return $ toResponse $ r3
 
 getBody :: Request -> IO B.ByteString
 getBody r = unBody <$> (readMVar $ rqBody r)
 
-methods = toJsonFunctions [getContext, keyPressMethod, writeText, pause]
+methods = [ getContextMethod
+          , keyPressMethod
+          , writeTextMethod
+          , pauseMethod ]
 
 keyPressMethod = toJsonFunction "key_press" (\k ms d c d' -> liftR (keyPressF k ms d c d'))
            (Param "key" Nothing,
@@ -59,14 +62,16 @@ keyPressF key modifiers direction count delayMillis = do
 
 defaultKeyDelay = -1
 
-getContext = toJsonFunction "get_context" (liftR $ return $ defaultContext) ()
+getContextMethod = toJsonFunction "get_context" (liftR $ return $ defaultContext) ()
     where defaultContext = object ["id" .= emptyStr, "title" .= emptyStr]
           emptyStr = "" :: String
 
-writeText = toJsonFunction "write_text" (\t -> liftR (putStrLn t))
-            (Param "text" Nothing, ())
+writeTextMethod = toJsonFunction "write_text" (\t -> liftR $ writeTextFunction t) (Param "text" Nothing, ())
 
-pause = toJsonFunction "pause" (\millis -> liftR $ threadDelay (1000 * millis))
+writeTextFunction :: Text -> IO ()
+writeTextFunction text = forM_ (unpack text) (keyPress . fromJust . charToKey)
+
+pauseMethod = toJsonFunction "pause" (\millis -> liftR $ threadDelay (1000 * millis))
         (Param "amount" Nothing, ())
 
 instance FromJSON Direction where

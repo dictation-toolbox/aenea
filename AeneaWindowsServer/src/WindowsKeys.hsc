@@ -7,6 +7,7 @@
 module WindowsKeys ( Key
                    , Direction (..)
                    , nameToKey
+                   , charToKey
                    , keyEvent
                    , keyPress
                    , keyUp
@@ -23,6 +24,8 @@ import Foreign.C.Types
 import Foreign.Storable
 import Foreign.Marshal.Array
 import Data.Text (Text)
+import Data.Maybe
+import qualified Data.Map as M
 import Control.Applicative
 import Control.Exception
 
@@ -174,6 +177,13 @@ keys = [ key_ALT
 
 nameToKey key = lookup key keyMap
                 where keyMap = concatMap (\k -> map ( , k) (keyNames k)) keys
+
+charToKey :: Char -> Maybe Key
+charToKey char = M.lookup char keyMap
+    where keyMap = M.fromList [(fromJust $ keyCharacter key, key) | key <- keys, isJust $ keyCharacter key]
+
+keyMap :: Ord a => (Key -> a) -> M.Map a Key
+keyMap f = M.fromList [(f k, k) | k <- keys]
 
 key_ALT = Key vK_MENU ["alt"] Nothing False True
 key_CONTROL = Key vK_CONTROL ["ctrl", "control"] Nothing False True
