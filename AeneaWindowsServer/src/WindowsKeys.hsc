@@ -41,6 +41,134 @@ data Key = Key { keyCode :: VKey
                , keyIsModifier :: Bool }
          deriving (Eq)
 
+nameToKey key = lookup key keyMap
+                where keyMap = concatMap (\k -> map ( , k) (keyNames k)) keys
+
+charToKey :: Char -> Maybe Key
+charToKey char = M.lookup char keyMap
+    where keyMap = M.fromList [(fromJust $ keyCharacter key, key) | key <- keys, isJust $ keyCharacter key]
+
+keyMap :: Ord a => (Key -> a) -> M.Map a Key
+keyMap f = M.fromList [(f k, k) | k <- keys]
+
+data Direction = Press | Down | Up
+
+keyEvent :: Direction -> Key -> IO ()
+keyEvent d k = case d of
+                 Press -> keyPress k
+                 Down -> keyDown k
+                 Up -> keyUp k
+
+keyPress :: Key -> IO ()
+keyPress k = keyDown k >> keyUp k
+
+keyUp :: Key -> IO ()
+keyUp k = key code False >> when (keyRequiresShift k) (shift False)
+    where code = keyCode k
+
+keyDown :: Key -> IO ()
+keyDown k = when (keyRequiresShift k) (shift True) >> key code True
+    where code = keyCode k
+
+withKeyPress :: Key -> IO () -> IO ()
+withKeyPress k task = keyDown k >> finally (keyUp k) task
+
+shift :: Bool -> IO ()
+shift = key $ keyCode key_SHIFT
+
+key :: VKey -> Bool -> IO ()
+key code isDown = let direction = if isDown then 0 else 2
+                      c = fromIntegral code
+                  in c_keybd_event c 0 direction 0
+
+key2 :: Int -> IO ()
+key2 code = key2Internal code True >> key2Internal code False >> return ()
+
+key2Internal :: Int -> Bool -> IO Int
+key2Internal code isDown = let c = fromIntegral code
+                               direction = if isDown then 0 else 2
+            in fromIntegral <$> (withArrayLen [Input (#const INPUT_KEYBOARD) (Key' (KeybdInput c 0 direction 0 nullPtr))] $ \len array ->
+               c_SendInput (fromIntegral len) array (fromIntegral (sizeOf (undefined :: Input))))
+
+foreign import stdcall unsafe "winuser.h keybd_event"
+        c_keybd_event :: BYTE
+                      -> BYTE
+                      -> DWORD
+                      -> DWORD
+                      -> IO ()
+                 
+data Input = Input { input_type :: DWORD
+                   , input_union :: InputUnion}
+
+instance Storable Input where
+    sizeOf _ = #{size INPUT}
+    alignment _ = 5
+
+data InputUnion = Mouse MouseInput
+                | Key' KeybdInput
+                | Hardware HardwareInput
+
+instance Storable InputUnion where
+    sizeOf (Key' k) = sizeOf k
+    sizeOf (Mouse m) = sizeOf m
+    sizeOf (Hardware h) = sizeOf h
+    alignment _ = maximum [ alignment (undefined :: MouseInput)
+                          , alignment (undefined :: KeybdInput)
+                          , alignment (undefined :: HardwareInput)]
+
+data KeybdInput = KeybdInput { key_wVk :: WORD
+                             , key_wScan :: WORD
+                             , key_dwFlags :: DWORD
+                             , key_time :: DWORD
+                             , key_dwExtraInfo :: Ptr LONG}
+
+instance Storable KeybdInput where
+    sizeOf _ = #{size KEYBDINPUT}
+    alignment _ = maximum [ alignment (undefined :: WORD)
+                          , alignment (undefined :: DWORD)
+                          , alignment (undefined :: Ptr LONG)]
+    poke p kbInput = do
+      #{poke KEYBDINPUT, wVk} p $ key_wVk kbInput
+      #{poke KEYBDINPUT, wScan} p $ key_wScan kbInput
+      #{poke KEYBDINPUT, dwFlags} p $ key_dwFlags kbInput
+      #{poke KEYBDINPUT, time} p $ key_time kbInput
+      #{poke KEYBDINPUT, dwExtraInfo} p $ key_dwExtraInfo kbInput
+    peek p = do
+      wVk <- (#peek KEYBDINPUT, wVk) p
+      wScan <- (#peek KEYBDINPUT, wScan) p
+      dwFlags <- (#peek KEYBDINPUT, dwFlags) p
+      time <- (#peek KEYBDINPUT, time) p
+      dwExtraInfo <- (#peek KEYBDINPUT, dwExtraInfo) p
+      return $ KeybdInput wVk wScan dwFlags time dwExtraInfo
+
+data MouseInput = MouseInput { mouse_dx :: LONG
+                             , mouse_dy :: LONG
+                             , mouse_mouseData :: DWORD
+                             , mouse_dwFlags :: DWORD
+                             , mouse_time :: DWORD
+                             , mouse_dwExtraInfo :: Ptr LONG}
+
+instance Storable MouseInput where
+    sizeOf _ = #{size MOUSEINPUT}
+    alignment _ = maximum [alignment (undefined :: WORD)
+                          , alignment (undefined :: DWORD)
+                          , alignment (undefined :: Ptr LONG)]
+
+data HardwareInput = HardwareInput { hardware_uMsg :: DWORD
+                                   , hardware_wParamL :: WORD
+                                   , hardware_wParamH :: WORD}
+
+instance Storable HardwareInput where
+    sizeOf _ = #{size HARDWAREINPUT}
+    alignment _ = max (alignment (undefined :: WORD)) (alignment (undefined :: DWORD))
+
+
+foreign import stdcall unsafe "winuser.h SendInput"
+        c_SendInput :: UINT
+                    -> Ptr Input
+                    -> CInt
+                    -> IO UINT
+
 keys = [ key_ALT
        , key_CONTROL
        , key_SHIFT
@@ -175,16 +303,6 @@ keys = [ key_ALT
        , key_ASTERISK
        , key_LEFT_PAREN
        , key_RIGHT_PAREN ]
-
-nameToKey key = lookup key keyMap
-                where keyMap = concatMap (\k -> map ( , k) (keyNames k)) keys
-
-charToKey :: Char -> Maybe Key
-charToKey char = M.lookup char keyMap
-    where keyMap = M.fromList [(fromJust $ keyCharacter key, key) | key <- keys, isJust $ keyCharacter key]
-
-keyMap :: Ord a => (Key -> a) -> M.Map a Key
-keyMap f = M.fromList [(f k, k) | k <- keys]
 
 key_ALT = Key vK_MENU ["alt"] Nothing False True
 key_CONTROL = Key vK_CONTROL ["ctrl", "control"] Nothing False True
@@ -355,122 +473,3 @@ key_RIGHT_PAREN = Key (keyCode key_0) ["rightparen", "rparen"] (Just ')') True F
 -- key_RIGHT_ANGLE = Key vK_PERIOD ["rightangle"] (Just '>') True False
 -- key_RANGLE = Key vK_PERIOD ["rangle"] (Just '>') True False
 -- key_QUESTION = Key vK_SLASH ["question"] (Just '?') True False
-
-data Direction = Press | Down | Up
-
-keyEvent :: Direction -> Key -> IO ()
-keyEvent d k = case d of
-                 Press -> keyPress k
-                 Down -> keyDown k
-                 Up -> keyUp k
-
-keyPress :: Key -> IO ()
-keyPress k = keyDown k >> keyUp k
-
-keyUp :: Key -> IO ()
-keyUp k = key code False >> when (keyRequiresShift k) (shift False)
-    where code = keyCode k
-
-keyDown :: Key -> IO ()
-keyDown k = when (keyRequiresShift k) (shift True) >> key code True
-    where code = keyCode k
-
-withKeyPress :: Key -> IO () -> IO ()
-withKeyPress k task = keyDown k >> finally (keyUp k) task
-
-shift :: Bool -> IO ()
-shift = key $ keyCode key_SHIFT
-
-key :: VKey -> Bool -> IO ()
-key code isDown = let direction = if isDown then 0 else 2
-                      c = fromIntegral code
-                  in c_keybd_event c 0 direction 0
-
-key2 :: Int -> IO ()
-key2 code = key2Internal code True >> key2Internal code False >> return ()
-
-key2Internal :: Int -> Bool -> IO Int
-key2Internal code isDown = let c = fromIntegral code
-                               direction = if isDown then 0 else 2
-            in fromIntegral <$> (withArrayLen [Input (#const INPUT_KEYBOARD) (Key' (KeybdInput c 0 direction 0 nullPtr))] $ \len array ->
-               c_SendInput (fromIntegral len) array (fromIntegral (sizeOf (undefined :: Input))))
-
-foreign import stdcall unsafe "winuser.h keybd_event"
-        c_keybd_event :: BYTE
-                      -> BYTE
-                      -> DWORD
-                      -> DWORD
-                      -> IO ()
-                 
-data Input = Input { input_type :: DWORD
-                   , input_union :: InputUnion}
-
-instance Storable Input where
-    sizeOf _ = #{size INPUT}
-    alignment _ = 5
-
-data InputUnion = Mouse MouseInput
-                | Key' KeybdInput
-                | Hardware HardwareInput
-
-instance Storable InputUnion where
-    sizeOf (Key' k) = sizeOf k
-    sizeOf (Mouse m) = sizeOf m
-    sizeOf (Hardware h) = sizeOf h
-    alignment _ = maximum [ alignment (undefined :: MouseInput)
-                          , alignment (undefined :: KeybdInput)
-                          , alignment (undefined :: HardwareInput)]
-
-data KeybdInput = KeybdInput { key_wVk :: WORD
-                             , key_wScan :: WORD
-                             , key_dwFlags :: DWORD
-                             , key_time :: DWORD
-                             , key_dwExtraInfo :: Ptr LONG}
-
-instance Storable KeybdInput where
-    sizeOf _ = #{size KEYBDINPUT}
-    alignment _ = maximum [ alignment (undefined :: WORD)
-                          , alignment (undefined :: DWORD)
-                          , alignment (undefined :: Ptr LONG)]
-    poke p kbInput = do
-      #{poke KEYBDINPUT, wVk} p $ key_wVk kbInput
-      #{poke KEYBDINPUT, wScan} p $ key_wScan kbInput
-      #{poke KEYBDINPUT, dwFlags} p $ key_dwFlags kbInput
-      #{poke KEYBDINPUT, time} p $ key_time kbInput
-      #{poke KEYBDINPUT, dwExtraInfo} p $ key_dwExtraInfo kbInput
-    peek p = do
-      wVk <- (#peek KEYBDINPUT, wVk) p
-      wScan <- (#peek KEYBDINPUT, wScan) p
-      dwFlags <- (#peek KEYBDINPUT, dwFlags) p
-      time <- (#peek KEYBDINPUT, time) p
-      dwExtraInfo <- (#peek KEYBDINPUT, dwExtraInfo) p
-      return $ KeybdInput wVk wScan dwFlags time dwExtraInfo
-
-data MouseInput = MouseInput { mouse_dx :: LONG
-                             , mouse_dy :: LONG
-                             , mouse_mouseData :: DWORD
-                             , mouse_dwFlags :: DWORD
-                             , mouse_time :: DWORD
-                             , mouse_dwExtraInfo :: Ptr LONG}
-
-instance Storable MouseInput where
-    sizeOf _ = #{size MOUSEINPUT}
-    alignment _ = maximum [alignment (undefined :: WORD)
-                          , alignment (undefined :: DWORD)
-                          , alignment (undefined :: Ptr LONG)]
-
-data HardwareInput = HardwareInput { hardware_uMsg :: DWORD
-                                   , hardware_wParamL :: WORD
-                                   , hardware_wParamH :: WORD}
-
-instance Storable HardwareInput where
-    sizeOf _ = #{size HARDWAREINPUT}
-    alignment _ = max (alignment (undefined :: WORD)) (alignment (undefined :: DWORD))
-
-
-foreign import stdcall unsafe "winuser.h SendInput"
-        c_SendInput :: UINT
-                    -> Ptr Input
-                    -> CInt
-                    -> IO UINT
-
