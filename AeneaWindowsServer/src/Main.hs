@@ -49,14 +49,11 @@ keyPressMethod = toJsonFunction "key_press" (\k ms d c d' -> liftR (keyPressF k 
 keyPressF :: Text -> [Text] -> Direction -> Int -> Int -> IO ()
 keyPressF key modifiers direction count delayMillis = do
   print (keyNames key')
-  forM_ allModKeys (\k -> keyDown k >> delay)
+  forM_ modKeys (\k -> keyDown k >> delay)
   replicateM_ count $ (keyEvent direction key' >> delay)
-  forM_ allModKeys (\k -> keyUp k >> delay)
+  forM_ modKeys (\k -> keyUp k >> delay)
     where Just key' = nameToKey key
           modKeys = map (fromJust . nameToKey) modifiers
-          allModKeys = if keyRequiresShift key'
-                       then nub (key_SHIFT : modKeys) 
-                       else modKeys
           delay = threadDelay millis
           millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
 
@@ -66,13 +63,14 @@ getContextMethod = toJsonFunction "get_context" (liftR $ return $ defaultContext
     where defaultContext = object ["id" .= emptyStr, "title" .= emptyStr]
           emptyStr = "" :: String
 
-writeTextMethod = toJsonFunction "write_text" (\t -> liftR $ writeTextFunction t) (Param "text" Nothing, ())
+writeTextMethod = toJsonFunction "write_text" (\t -> liftR $ writeTextFunction t)
+                  (Param "text" Nothing, ())
 
 writeTextFunction :: Text -> IO ()
 writeTextFunction text = forM_ (unpack text) (keyPress . fromJust . charToKey)
 
 pauseMethod = toJsonFunction "pause" (\millis -> liftR $ threadDelay (1000 * millis))
-        (Param "amount" Nothing, ())
+              (Param "amount" Nothing, ())
 
 instance FromJSON Direction where
     parseJSON "up" = return Up

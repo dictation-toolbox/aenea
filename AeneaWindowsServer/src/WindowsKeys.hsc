@@ -27,6 +27,7 @@ import Data.Text (Text)
 import Data.Maybe
 import qualified Data.Map as M
 import Control.Applicative
+import Control.Monad (when)
 import Control.Exception
 
 #include "Windows.h"
@@ -367,23 +368,23 @@ keyPress :: Key -> IO ()
 keyPress k = keyDown k >> keyUp k
 
 keyUp :: Key -> IO ()
-keyUp k = key k True
+keyUp k = key code False >> when (keyRequiresShift k) (shift False)
+    where code = keyCode k
 
 keyDown :: Key -> IO ()
-keyDown k = key k False
+keyDown k = when (keyRequiresShift k) (shift True) >> key code True
+    where code = keyCode k
 
 withKeyPress :: Key -> IO () -> IO ()
 withKeyPress k task = keyDown k >> finally (keyUp k) task
 
-key :: Key -> Bool -> IO ()
-key k isDown = let code = fromIntegral $ keyCode k
-                   direction = if isDown then 2 else 0
-               in c_keybd_event code 0 direction 0
+shift :: Bool -> IO ()
+shift = key $ keyCode key_SHIFT
 
--- key :: DWORD -> Bool -> IO ()
--- key code = let c = fromIntegral code
---            in c_keybd_event c 0 2 0 >>
---               c_keybd_event c 0 0 0
+key :: VKey -> Bool -> IO ()
+key code isDown = let direction = if isDown then 0 else 2
+                      c = fromIntegral code
+                  in c_keybd_event c 0 direction 0
 
 key2 :: Int -> IO ()
 key2 code = key2Internal code True >> key2Internal code False >> return ()
