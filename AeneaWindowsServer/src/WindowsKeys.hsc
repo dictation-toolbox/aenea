@@ -49,9 +49,6 @@ charToKey char = M.lookup char keyMap
     where keyMap = M.fromList $ concatMap pair keys
           pair key = maybe [] (\char -> [(char, key)]) (keyCharacter key)
 
-keyMap :: Ord a => (Key -> a) -> M.Map a Key
-keyMap f = M.fromList [(f k, k) | k <- keys]
-
 data Direction = Press | Down | Up
 
 keyEvent :: Direction -> Key -> IO ()
