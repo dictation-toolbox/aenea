@@ -300,7 +300,9 @@ keys = [ key_ALT
        , key_AMPERSAND
        , key_ASTERISK
        , key_LEFT_PAREN
-       , key_RIGHT_PAREN ]
+       , key_RIGHT_PAREN
+       , key_LEFT_BRACKET
+       , key_RIGHT_BRACKET ]
 
 key_ALT = Key vK_MENU ["alt"] Nothing False True
 key_CONTROL = Key vK_CONTROL ["ctrl", "control"] Nothing False True
@@ -436,25 +438,20 @@ key_AMPERSAND = Key (keyCode key_7) ["ampersand", "and"] (Just '&') True False
 key_ASTERISK = Key (keyCode key_8) ["asterisk", "star"] (Just '*') True False
 key_LEFT_PAREN = Key (keyCode key_9) ["leftparen", "lparen"] (Just '(') True False
 key_RIGHT_PAREN = Key (keyCode key_0) ["rightparen", "rparen"] (Just ')') True False
--- key_MINUS = Key (#const VK_OEM_MINUS) ["minus"] (Just '-') False False
--- key_HYPEN = Key vK_MINUS ["hyphen"] (Just '-') False False
--- key_UNDERSCORE = Key vK_MINUS ["underscore"] (Just '_') True False
--- key_PLUS = Key (#const VK_OEM_PLUS) ["plus"] (Just '+') True False
--- key_EQUAL = Key (#const VK_OEM_PLUS) ["equal", "equals"] (Just '=') False False
+key_MINUS = Key vK_SUBTRACT ["hyphen", "minus"] (Just '-') False False
+key_UNDERSCORE = Key vK_SUBTRACT ["underscore"] (Just '_') True False
+key_PLUS = Key vK_ADD ["plus"] (Just '+') True False
+key_EQUAL = Key vK_ADD ["equal", "equals"] (Just '=') False False
 -- key_BACKTICK = Key vK_BACK_QUOTE ["backtick"] (Just '`') False False
 -- key_TILDE = Key vK_BACK_QUOTE ["tilde"] (Just '~') True False
--- key_LEFT_BRACKET = Key vK_OPEN_BRACKET ["leftbracket"] (Just '[') False False
--- key_L_BRACKET = Key vK_OPEN_BRACKET ["lbracket"] (Just '[') False False
--- key_RIGHT_BRACKET = Key vK_CLOSE_BRACKET ["rightbracket"] (Just ']') False False
--- key_R_BRACKET = Key vK_CLOSE_BRACKET ["rbracket"] (Just ']') False False
--- key_LEFT_BRACE = Key vK_OPEN_BRACKET ["leftbrace"] (Just '{') True False
--- key_L_BRACE = Key vK_OPEN_BRACKET ["lbrace"] (Just '{') True False
--- key_RIGHT_BRACE = Key vK_CLOSE_BRACKET ["rightbrace"] (Just '}') True False
--- key_R_BRACE = Key vK_CLOSE_BRACKET ["rbrace"] (Just '}') True False
--- key_BACKSLASH = Key vK_BACK_SLASH ["backslash"] (Just '\\') False False
--- key_BAR = Key vK_BACK_SLASH ["bar"] (Just '|') True False
--- key_COLON = Key vK_SEMICOLON ["colon"] (Just ':') True False
--- key_SEMICOLON = Key vK_SEMICOLON ["semicolon"] (Just ';') False False
+key_LEFT_BRACKET = Key (#const VK_OEM_4) ["leftbracket", "lbracket"] (Just '[') False False
+key_RIGHT_BRACKET = Key (#const VK_OEM_6) ["rightbracket", "rbracket"] (Just ']') False False
+key_LEFT_BRACE = Key (#const VK_OEM_4) ["leftbrace", "lbrace"] (Just '{') True False
+key_RIGHT_BRACE = Key (#const VK_OEM_6) ["rightbrace", "rbrace"] (Just '}') True False
+key_BACKSLASH = Key (#const VK_OEM_5) ["backslash"] (Just '\\') False False
+key_BAR = Key (#const VK_OEM_5) ["bar"] (Just '|') True False
+key_COLON = Key (#const VK_OEM_1) ["colon"] (Just ':') True False
+key_SEMICOLON = Key (#const VK_OEM_1) ["semicolon"] (Just ';') False False
 -- key_APOSTROPHE = Key vK_QUOTE ["apostrophe"] (Just '\'') False False
 -- key_SINGLE_QUOTE = Key vK_QUOTE ["singlequote"] (Just '\'') False False
 -- key_SQUOTE = Key vK_QUOTE ["squote"] (Just '\'') False False
