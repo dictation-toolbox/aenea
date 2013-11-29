@@ -317,10 +317,10 @@ keys = [ key_ALT
        , key_SEMICOLON
        , key_APOSTROPHE
        , key_QUOTE
---        , key_COMMA
---        , key_DOT
---        , key_LESS_THAN
---        , key_GREATER_THAN
+       , key_COMMA
+       , key_DOT
+       , key_LESS_THAN
+       , key_GREATER_THAN
        , key_SLASH
        , key_QUESTION ]
 
@@ -474,9 +474,9 @@ key_COLON = Key (#const VK_OEM_1) ["colon"] (Just ':') True False
 key_SEMICOLON = Key (#const VK_OEM_1) ["semicolon"] (Just ';') False False
 key_APOSTROPHE = Key (#const VK_OEM_7) ["apostrophe", "singlequote, squote"] (Just '\'') False False
 key_QUOTE = Key (#const VK_OEM_7) ["quote", "doublequote", "dquote"] (Just '"') True False
--- key_COMMA = Key (#const VK_OEM_PERIOD) ["comma"] (Just ',') False False
--- key_DOT = Key vK_PERIOD ["dot"] (Just '.') False False
--- key_LESS_THAN = Key vK_COMMA ["lessthan", "leftangle", "langle"] (Just '<') True False
--- key_GREATER_THAN = Key vK_PERIOD ["greaterthan", "rightangle", "rangle"] (Just '>') True False
+key_COMMA = Key 0xBC ["comma"] (Just ',') False False
+key_DOT = Key 0xBE ["dot"] (Just '.') False False
+key_LESS_THAN = Key 0xBC ["lessthan", "leftangle", "langle"] (Just '<') True False
+key_GREATER_THAN = Key 0xBE ["greaterthan", "rightangle", "rangle"] (Just '>') True False
 key_SLASH = Key (#const VK_OEM_2) ["slash"] (Just '/') False False
 key_QUESTION = Key (#const VK_OEM_2) ["question"] (Just '?') True False
