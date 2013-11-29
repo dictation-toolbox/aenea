@@ -46,7 +46,8 @@ nameToKey key = lookup key keyMap
 
 charToKey :: Char -> Maybe Key
 charToKey char = M.lookup char keyMap
-    where keyMap = M.fromList [(fromJust $ keyCharacter key, key) | key <- keys, isJust $ keyCharacter key]
+    where keyMap = M.fromList $ concatMap pair keys
+          pair key = maybe [] (\char -> [(char, key)]) (keyCharacter key)
 
 keyMap :: Ord a => (Key -> a) -> M.Map a Key
 keyMap f = M.fromList [(f k, k) | k <- keys]
