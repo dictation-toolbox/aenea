@@ -6,13 +6,13 @@ import WindowsKeys
 import JsonRpcServer
 import Data.Maybe
 import Data.Text (Text, unpack, append)
-import Data.String
+import Data.String (fromString)
 import Control.Applicative ((<$>))
-import Control.Monad
-import Control.Monad.Reader
-import Control.Monad.Error
-import Control.Concurrent
-import Happstack.Lite hiding (port, serve, method)
+import Control.Monad (forM_, replicateM_)
+import Control.Monad.Reader (lift, liftIO)
+import Control.Monad.Error (throwError)
+import Control.Concurrent (threadDelay, readMVar)
+import Happstack.Lite (Request, toResponse)
 import Happstack.Server.SimpleHTTP (nullConf, port, simpleHTTP, askRq, rqBody, unBody)
 import qualified Data.ByteString.Lazy as B
 import Data.Aeson (object, (.=))
@@ -44,16 +44,15 @@ keyPressMethod = toJsonFunction "key_press" keyPressFunction
 
 keyPressFunction :: Text -> [Text] -> Direction -> Int -> Int -> RpcResult IO ()
 keyPressFunction keyName modifiers direction count delayMillis = do
-  let maybeKey = nameToKey keyName
-  when (isNothing maybeKey) $ throwError $ keyNotFound keyName
-  let key = fromJust maybeKey
-  liftIO $ do
-    forM_ modKeys (\k -> keyDown k >> delay)
-    replicateM_ count $ (keyAction direction key >> delay)
-    forM_ modKeys (\k -> keyUp k >> delay)
-      where modKeys = map (fromJust . nameToKey) modifiers
-            delay = threadDelay millis
-            millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
+  case nameToKey keyName of
+    Nothing -> throwError $ keyNotFound keyName
+    Just key -> liftIO $ do
+                  forM_ modKeys (\k -> keyDown k >> delay)
+                  replicateM_ count $ (keyAction direction key >> delay)
+                  forM_ modKeys (\k -> keyUp k >> delay)
+                      where modKeys = map (fromJust . nameToKey) modifiers
+                            delay = threadDelay millis
+                            millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
 
 defaultKeyDelay = -1
 
@@ -66,9 +65,9 @@ writeTextMethod = toJsonFunction "write_text" writeTextFunction
 
 writeTextFunction :: Text -> RpcResult IO ()
 writeTextFunction text = forM_ (unpack text) $ \k -> do
-                           let key = charToKey k
-                           when (isNothing key) $ throwError $ keyNotFound $ fromString [k]
-                           liftIO $ keyPress $ fromJust key
+                           case charToKey k of
+                             Nothing -> throwError $ keyNotFound $ fromString [k]
+                             Just key -> liftIO $ keyPress key
 
 pauseMethod = toJsonFunction "pause" (\millis -> liftR $ threadDelay (1000 * millis))
               (Param "amount" Nothing, ())
