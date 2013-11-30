@@ -39,7 +39,6 @@ data Key = Key { keyCode :: VKey
                , keyCharacter :: Maybe Char
                , keyRequiresShift :: Bool
                , keyIsModifier :: Bool }
-         deriving (Eq)
 
 nameToKey key = lookup key keyMap
                 where keyMap = concatMap (\k -> map ( , k) (keyNames k)) keys
