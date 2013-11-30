@@ -41,24 +41,25 @@ methods = [ getContextMethod
           , writeTextMethod
           , pauseMethod ]
 
-keyPressMethod = toJsonFunction "key_press" (\k ms d c d' -> keyPressF k ms d c d')
+keyPressMethod = toJsonFunction "key_press" keyPressFunction
            (Param "key" Nothing,
             (Param "modifiers" (Just []),
              (Param "direction" (Just Press),
               (Param "count" (Just 1),
                (Param "delay" (Just (defaultKeyDelay)), ())))))
 
-keyPressF :: Text -> [Text] -> Direction -> Int -> Int -> RpcResult IO ()
-keyPressF key modifiers direction count delayMillis = do
-  let maybeKey = nameToKey key
-  when (isNothing maybeKey) (throwError $ rpcError 32000 ("Cannot find key: " `append` key))
-  let k = fromJust maybeKey
-  liftIO $ forM_ modKeys (\k -> keyDown k >> delay)
-  liftIO $ replicateM_ count $ (keyEvent direction k >> delay)
-  liftIO $ forM_ modKeys (\k -> keyUp k >> delay)
-    where modKeys = map (fromJust . nameToKey) modifiers
-          delay = threadDelay millis
-          millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
+keyPressFunction :: Text -> [Text] -> Direction -> Int -> Int -> RpcResult IO ()
+keyPressFunction keyName modifiers direction count delayMillis = do
+  let maybeKey = nameToKey keyName
+  when (isNothing maybeKey) $ throwError $ keyNotFound keyName
+  let key = fromJust maybeKey
+  liftIO $ do
+    forM_ modKeys (\k -> keyDown k >> delay)
+    replicateM_ count $ (keyEvent direction key >> delay)
+    forM_ modKeys (\k -> keyUp k >> delay)
+      where modKeys = map (fromJust . nameToKey) modifiers
+            delay = threadDelay millis
+            millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
 
 defaultKeyDelay = -1
 
@@ -79,3 +80,6 @@ instance FromJSON Direction where
     parseJSON "up" = return Up
     parseJSON "down" = return Down
     parseJSON "press" = return Press
+
+keyNotFound :: Text -> RpcError
+keyNotFound key = rpcError 32000 $ "Cannot find key: " `append` key
