@@ -8,7 +8,7 @@ module WindowsKeys ( Key
                    , Direction (..)
                    , nameToKey
                    , charToKey
-                   , keyEvent
+                   , keyAction
                    , keyPress
                    , keyUp
                    , keyDown
@@ -21,10 +21,8 @@ import System.Win32.Types
 import Graphics.Win32.Key
 import Foreign hiding (shift)
 import Foreign.C.Types
-import Foreign.Storable
-import Foreign.Marshal.Array
 import Data.Text (Text)
-import Data.Maybe
+import Data.Aeson (FromJSON, parseJSON)
 import qualified Data.Map as M
 import Control.Applicative
 import Control.Monad (when)
@@ -50,8 +48,13 @@ charToKey char = M.lookup char keyMap
 
 data Direction = Press | Down | Up
 
-keyEvent :: Direction -> Key -> IO ()
-keyEvent d k = case d of
+instance FromJSON Direction where
+    parseJSON "up" = return Up
+    parseJSON "down" = return Down
+    parseJSON "press" = return Press
+
+keyAction :: Direction -> Key -> IO ()
+keyAction d k = case d of
                  Press -> keyPress k
                  Down -> keyDown k
                  Up -> keyUp k
@@ -60,23 +63,23 @@ keyPress :: Key -> IO ()
 keyPress k = keyDown k >> keyUp k
 
 keyUp :: Key -> IO ()
-keyUp k = key code False >> when (keyRequiresShift k) (shift False)
+keyUp k = keyCodeAction code False >> when (keyRequiresShift k) (shift False)
     where code = keyCode k
 
 keyDown :: Key -> IO ()
-keyDown k = when (keyRequiresShift k) (shift True) >> key code True
+keyDown k = when (keyRequiresShift k) (shift True) >> keyCodeAction code True
     where code = keyCode k
 
 withKeyPress :: Key -> IO () -> IO ()
 withKeyPress k task = keyDown k >> finally (keyUp k) task
 
 shift :: Bool -> IO ()
-shift = key $ keyCode key_SHIFT
+shift = keyCodeAction $ keyCode key_SHIFT
 
-key :: VKey -> Bool -> IO ()
-key code isDown = let direction = if isDown then 0 else 2
-                      c = fromIntegral code
-                  in c_keybd_event c 0 direction 0
+keyCodeAction :: VKey -> Bool -> IO ()
+keyCodeAction code isDown = let direction = if isDown then 0 else 2
+                                c = fromIntegral code
+                            in c_keybd_event c 0 direction 0
 
 key2 :: Int -> IO ()
 key2 code = key2Internal code True >> key2Internal code False >> return ()

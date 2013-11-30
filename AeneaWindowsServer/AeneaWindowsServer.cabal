@@ -14,6 +14,7 @@ executable WindowsKeys
   build-depends:       base, Win32, bytestring, aeson,
                        happstack-lite, happstack-server, mtl,
                        containers, text, json-rpc-server
+  ghc-options:         -Wall -fno-warn-missing-signatures
   hs-source-dirs:      src
   build-tools:         hsc2hs
   includes:            windows.h, winuser.h
