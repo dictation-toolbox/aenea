@@ -67,11 +67,14 @@ getContextMethod = toJsonFunction "get_context" (liftR $ return $ defaultContext
     where defaultContext = object ["id" .= emptyStr, "title" .= emptyStr]
           emptyStr = "" :: String
 
-writeTextMethod = toJsonFunction "write_text" (\t -> liftR $ writeTextFunction t)
+writeTextMethod = toJsonFunction "write_text" writeTextFunction
                   (Param "text" Nothing, ())
 
-writeTextFunction :: Text -> IO ()
-writeTextFunction text = forM_ (unpack text) (keyPress . fromJust . charToKey)
+writeTextFunction :: Text -> RpcResult IO ()
+writeTextFunction text = forM_ (unpack text) $ \k -> do
+                           let key = charToKey k
+                           when (isNothing key) $ throwError $ keyNotFound $ fromString [k]
+                           liftIO $ keyPress $ fromJust key
 
 pauseMethod = toJsonFunction "pause" (\millis -> liftR $ threadDelay (1000 * millis))
               (Param "amount" Nothing, ())
