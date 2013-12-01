@@ -7,8 +7,9 @@ import JsonRpcServer
 import Data.Maybe
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)
+import Data.List (intersperse)
 import Control.Applicative ((<$>))
-import Control.Monad (forM_, replicateM_)
+import Control.Monad (forM_)
 import Control.Monad.Reader (lift, liftIO)
 import Control.Monad.Error (throwError)
 import Control.Concurrent (threadDelay, readMVar)
@@ -46,13 +47,14 @@ keyPressFunction :: Text -> [Text] -> Direction -> Int -> Int -> RpcResult IO ()
 keyPressFunction keyName modifiers direction count delayMillis = do
   case nameToKey keyName of
     Nothing -> throwError $ keyNotFound keyName
-    Just key -> liftIO $ do
-                  forM_ modKeys (\k -> keyDown k >> delay)
-                  replicateM_ count $ (keyAction direction key >> delay)
-                  forM_ modKeys (\k -> keyUp k >> delay)
-                      where modKeys = map (fromJust . nameToKey) modifiers
-                            delay = threadDelay millis
-                            millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
+    Just key -> liftIO $ sequence_ $ intersperse delay keyActions
+        where keyActions = modsDown ++ keyPresses ++ modsUp
+              modsDown = map keyDown modKeys
+              modsUp = map keyUp modKeys
+              keyPresses = replicate count $ keyAction direction key
+              modKeys = map (fromJust . nameToKey) modifiers
+              delay = threadDelay millis
+              millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
 
 defaultKeyDelay = -1
 
