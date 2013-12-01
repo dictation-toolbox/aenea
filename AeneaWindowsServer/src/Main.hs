@@ -56,8 +56,13 @@ keyPressFunction keyName modifiers direction count delayMillis = do
 
 defaultKeyDelay = -1
 
-getContextMethod = toJsonFunction "get_context" (liftR $ return $ defaultContext) ()
-    where defaultContext = object ["id" .= emptyStr, "title" .= emptyStr]
+getContextMethod = toJsonFunction "get_context" (liftR $ context) ()
+    where context = do
+            windowText <- getActiveWindowText
+            let pairs = case windowText of
+                          Nothing -> []
+                          Just text -> ["id" .= emptyStr, "title" .= text]
+            return $ object pairs
           emptyStr = "" :: String
 
 writeTextMethod = toJsonFunction "write_text" writeTextFunction

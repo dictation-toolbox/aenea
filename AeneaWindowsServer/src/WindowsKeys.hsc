@@ -15,10 +15,12 @@ module WindowsKeys ( Key
                    , withKeyPress
                    , keyNames
                    , keyRequiresShift
-                   , key_SHIFT) where
+                   , key_SHIFT
+                   , getActiveWindowText) where
 
 import System.Win32.Types
 import Graphics.Win32.Key
+import Graphics.Win32.GDI.Types (HWND)
 import Foreign hiding (shift)
 import Foreign.C.Types
 import Data.Text (Text)
@@ -81,6 +83,23 @@ keyCodeAction code isDown = let direction = if isDown then 0 else 2
                                 c = fromIntegral code
                             in c_keybd_event c 0 direction 0
 
+getActiveWindowText :: IO (Maybe String)
+getActiveWindowText = do
+  maybeH <- getForegroundWindow
+  case maybeH of
+    Nothing -> return Nothing
+    Just h -> do
+      length <- c_GetWindowTextLength h
+      withTString "" $ \textPtr -> do
+                        err <- c_GetWindowText h textPtr length
+                        case err of
+                          0 -> return Nothing
+                          _ -> Just <$> (peekTString textPtr)
+
+getForegroundWindow :: IO (Maybe HWND)
+getForegroundWindow = f <$> c_GetForegroundWindow
+    where f ptr = if ptr == nullPtr then Nothing else Just ptr
+
 key2 :: Int -> IO ()
 key2 code = key2Internal code True >> key2Internal code False >> return ()
 
@@ -96,7 +115,19 @@ foreign import stdcall unsafe "winuser.h keybd_event"
                       -> DWORD
                       -> DWORD
                       -> IO ()
-                 
+
+foreign import stdcall unsafe "winuser.h GetActiveWindow"
+        c_GetActiveWindow2 :: IO HWND
+
+foreign import stdcall unsafe "winuser.h GetForegroundWindow"
+        c_GetForegroundWindow :: IO HWND
+
+foreign import stdcall unsafe "winuser.h GetWindowTextLengthW"
+        c_GetWindowTextLength :: HWND -> IO CInt
+
+foreign import stdcall unsafe "winuser.h GetWindowTextW"
+        c_GetWindowText :: HWND -> LPTSTR -> CInt -> IO CInt
+
 data Input = Input { input_type :: DWORD
                    , input_union :: InputUnion}
 
