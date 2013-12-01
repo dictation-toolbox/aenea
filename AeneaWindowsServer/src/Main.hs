@@ -4,7 +4,6 @@ module Main (main) where
 
 import WindowsKeys
 import JsonRpcServer
-import Data.Maybe
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)
 import Data.List (intersperse)
@@ -45,16 +44,15 @@ keyPressMethod = toJsonFunction "key_press" keyPressFunction
 
 keyPressFunction :: Text -> [Text] -> Direction -> Int -> Int -> RpcResult IO ()
 keyPressFunction keyName modifiers direction count delayMillis = do
-  case nameToKey keyName of
-    Nothing -> throwError $ keyNotFound keyName
-    Just key -> liftIO $ sequence_ $ intersperse delay keyActions
-        where keyActions = modsDown ++ keyPresses ++ modsUp
-              modsDown = map keyDown modKeys
-              modsUp = map keyUp modKeys
-              keyPresses = replicate count $ keyAction direction key
-              modKeys = map (fromJust . nameToKey) modifiers
-              delay = threadDelay millis
-              millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
+  key <- tryLookupKey nameToKey id keyName
+  modKeys <- mapM (tryLookupKey nameToKey id) modifiers
+  let keyActions = modsDown ++ keyPresses ++ modsUp
+      modsDown = map keyDown modKeys
+      modsUp = map keyUp modKeys
+      keyPresses = replicate count $ keyAction direction key
+      delay = threadDelay millis
+      millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
+  liftIO $ sequence_ $ intersperse delay keyActions
 
 defaultKeyDelay = -1
 
@@ -63,21 +61,22 @@ getContextMethod = toJsonFunction "get_context" (liftR $ context) ()
             windowText <- getActiveWindowText
             let pairs = case windowText of
                           Nothing -> []
-                          Just text -> ["id" .= emptyStr, "title" .= text]
+                          Just text -> ["id" .= ("" :: String), "title" .= text]
             return $ object pairs
-          emptyStr = "" :: String
 
 writeTextMethod = toJsonFunction "write_text" writeTextFunction
                   (Param "text" Nothing, ())
 
 writeTextFunction :: Text -> RpcResult IO ()
-writeTextFunction text = forM_ (unpack text) $ \k -> do
-                           case charToKey k of
-                             Nothing -> throwError $ keyNotFound $ fromString [k]
-                             Just key -> liftIO $ keyPress key
+writeTextFunction text = forM_ (unpack text) $ \k ->
+                         keyPress <$> tryLookupKey charToKey charToText k
+                         where charToText = fromString . (:[])
 
 pauseMethod = toJsonFunction "pause" (\millis -> liftR $ threadDelay (1000 * millis))
               (Param "amount" Nothing, ())
 
-keyNotFound :: Text -> RpcError
-keyNotFound key = rpcError 32000 $ "Cannot find key: " `append` key
+tryLookupKey :: (a -> Maybe Key) -> (a -> Text) -> a -> RpcResult IO Key
+tryLookupKey f toText k = case f k of
+                              Nothing -> throwError $ keyNotFound $ toText k
+                              Just key -> return key
+    where keyNotFound key = rpcError 32000 $ "Cannot find key: " `append` key
