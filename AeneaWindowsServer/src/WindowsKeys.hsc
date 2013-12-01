@@ -91,7 +91,7 @@ getActiveWindowText = do
     Just h -> do
       length <- c_GetWindowTextLength h
       withTString "" $ \textPtr -> do
-                        err <- c_GetWindowText h textPtr length
+                        err <- c_GetWindowText h textPtr (length + 1)
                         case err of
                           0 -> return Nothing
                           _ -> Just <$> (peekTString textPtr)
