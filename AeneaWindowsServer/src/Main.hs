@@ -69,7 +69,7 @@ writeTextMethod = toJsonFunction "write_text" writeTextFunction
 
 writeTextFunction :: Text -> RpcResult IO ()
 writeTextFunction text = forM_ (unpack text) $ \k ->
-                         keyPress <$> tryLookupKey charToKey charToText k
+                         tryLookupKey charToKey charToText k >>= liftIO . keyPress
                          where charToText = fromString . (:[])
 
 pauseMethod = toJsonFunction "pause" (\millis -> liftR $ threadDelay (1000 * millis))
