@@ -14,6 +14,7 @@ import Control.Monad.Error (throwError)
 import Control.Concurrent (threadDelay, readMVar)
 import Happstack.Lite (Request, toResponse)
 import Happstack.Server.SimpleHTTP (nullConf, port, simpleHTTP, askRq, rqBody, unBody)
+import Happstack.Server.Internal.Types (noContentLength)
 import qualified Data.ByteString.Lazy as B
 import Data.Aeson (object, (.=))
 
@@ -26,8 +27,10 @@ main = simpleHTTP (nullConf {port = 8240}) $ do
          r2 <- lift $ call (toJsonFunctions methods) body
          let r3 = maybe "" id r2
          let r4 = toResponse r3
-  --       liftIO $ print r4
-         return r4
+--         liftIO $ print r4
+         let r5 = noContentLength r4
+--         liftIO $ print r5
+         return r5
 
 getBody :: Request -> IO B.ByteString
 getBody r = unBody <$> (readMVar $ rqBody r)
