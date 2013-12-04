@@ -91,8 +91,9 @@ getActiveWindowText = do
     Nothing -> return Nothing
     Just h -> do
       length <- c_GetWindowTextLength h
-      withTString "" $ \textPtr -> do
-                        err <- c_GetWindowText h textPtr (length + 1)
+      let lengthWithNull = length + 1
+      allocaArray (fromIntegral lengthWithNull) $ \textPtr -> do
+                        err <- c_GetWindowText h textPtr lengthWithNull
                         case err of
                           0 -> return Nothing
                           _ -> Just <$> (peekTString textPtr)
