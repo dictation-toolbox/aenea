@@ -54,6 +54,7 @@ instance FromJSON Direction where
     parseJSON "up" = return Up
     parseJSON "down" = return Down
     parseJSON "press" = return Press
+    parseJSON _ = empty
 
 keyAction :: Direction -> Key -> IO ()
 keyAction d k = case d of
