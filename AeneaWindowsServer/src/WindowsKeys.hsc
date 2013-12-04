@@ -90,13 +90,12 @@ getActiveWindowText = do
   case maybeH of
     Nothing -> return Nothing
     Just h -> do
-      length <- c_GetWindowTextLength h
-      let lengthWithNull = length + 1
-      allocaArray (fromIntegral lengthWithNull) $ \textPtr -> do
-                        err <- c_GetWindowText h textPtr lengthWithNull
-                        case err of
-                          0 -> return Nothing
-                          _ -> Just <$> (peekTString textPtr)
+      lengthWithNull <- (+1) <$> c_GetWindowTextLength h
+      allocaArray (fromIntegral lengthWithNull) $ \textPtr ->
+          c_GetWindowText h textPtr lengthWithNull >>= \length ->
+          if length > 0
+          then Just <$> (peekTString textPtr)
+          else return Nothing
 
 getForegroundWindow :: IO (Maybe HWND)
 getForegroundWindow = f <$> c_GetForegroundWindow
@@ -117,9 +116,6 @@ foreign import stdcall unsafe "winuser.h keybd_event"
                       -> DWORD
                       -> DWORD
                       -> IO ()
-
-foreign import stdcall unsafe "winuser.h GetActiveWindow"
-        c_GetActiveWindow2 :: IO HWND
 
 foreign import stdcall unsafe "winuser.h GetForegroundWindow"
         c_GetForegroundWindow :: IO HWND
