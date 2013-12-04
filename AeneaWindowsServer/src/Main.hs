@@ -25,7 +25,9 @@ main = simpleHTTP (nullConf {port = 8240}) $ do
 --         liftIO $ print body
          r2 <- lift $ call (toJsonFunctions methods) body
          let r3 = maybe "" id r2
-         return $ toResponse $ r3
+         let r4 = toResponse r3
+  --       liftIO $ print r4
+         return r4
 
 getBody :: Request -> IO B.ByteString
 getBody r = unBody <$> (readMVar $ rqBody r)
@@ -56,7 +58,7 @@ keyPressFunction keyName modifiers direction count delayMillis = do
 
 defaultKeyDelay = -1
 
-getContextMethod = toJsonFunction "get_context" (liftR $ context) ()
+getContextMethod = toJsonFunction "get_context" (liftToResult $ context) ()
     where context = do
             windowText <- getActiveWindowText
             let pairs = case windowText of
@@ -72,7 +74,7 @@ writeTextFunction text = forM_ (unpack text) $ \k ->
                          tryLookupKey charToKey charToText k >>= liftIO . keyPress
                          where charToText = fromString . (:[])
 
-pauseMethod = toJsonFunction "pause" (\millis -> liftR $ threadDelay (1000 * millis))
+pauseMethod = toJsonFunction "pause" (\millis -> liftToResult $ threadDelay (1000 * millis))
               (Param "amount" Nothing, ())
 
 tryLookupKey :: (a -> Maybe Key) -> (a -> Text) -> a -> RpcResult IO Key
