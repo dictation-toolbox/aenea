@@ -491,8 +491,8 @@ key_LEFT_PAREN = Key (keyCode key_9) ["leftparen", "lparen"] (Just '(') True Fal
 key_RIGHT_PAREN = Key (keyCode key_0) ["rightparen", "rparen"] (Just ')') True False
 key_MINUS = Key vK_SUBTRACT ["hyphen", "minus"] (Just '-') False False
 key_UNDERSCORE = Key vK_SUBTRACT ["underscore"] (Just '_') True False
-key_PLUS = Key vK_ADD ["plus"] (Just '+') True False
-key_EQUAL = Key vK_ADD ["equal", "equals"] (Just '=') False False
+key_PLUS = Key 0xBB ["plus"] (Just '+') True False
+key_EQUAL = Key 0xBB ["equal", "equals"] (Just '=') False False
 key_BACKTICK = Key (#const VK_OEM_3) ["backtick"] (Just '`') False False
 key_TILDE = Key (#const VK_OEM_3) ["tilde"] (Just '~') True False
 key_LEFT_BRACKET = Key (#const VK_OEM_4) ["leftbracket", "lbracket"] (Just '[') False False
@@ -503,7 +503,7 @@ key_BACKSLASH = Key (#const VK_OEM_5) ["backslash"] (Just '\\') False False
 key_BAR = Key (#const VK_OEM_5) ["bar"] (Just '|') True False
 key_COLON = Key (#const VK_OEM_1) ["colon"] (Just ':') True False
 key_SEMICOLON = Key (#const VK_OEM_1) ["semicolon"] (Just ';') False False
-key_APOSTROPHE = Key (#const VK_OEM_7) ["apostrophe", "singlequote, squote"] (Just '\'') False False
+key_APOSTROPHE = Key (#const VK_OEM_7) ["apostrophe", "singlequote", "squote"] (Just '\'') False False
 key_QUOTE = Key (#const VK_OEM_7) ["quote", "doublequote", "dquote"] (Just '"') True False
 key_COMMA = Key 0xBC ["comma"] (Just ',') False False
 key_DOT = Key 0xBE ["dot"] (Just '.') False False
