@@ -3,14 +3,20 @@
 module Main (main) where
 
 import Windows
-import Data.JsonRpc.Server
+import Data.JsonRpc.Server( Param (..)
+                          , RpcResult
+                          , call
+                          , toJsonFunction
+                          , toJsonFunctions
+                          , rpcError
+                          , liftToResult)
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)
 import Data.List (intersperse)
 import Data.Maybe (catMaybes)
 import Control.Applicative ((<$>))
 import Control.Monad (forM_)
-import Control.Monad.Reader (lift, liftIO)
+import Control.Monad.Reader (lift)
 import Control.Monad.Error (throwError)
 import Control.Concurrent (threadDelay, readMVar)
 import Happstack.Lite (Request, toResponse)
@@ -22,7 +28,7 @@ import Data.Aeson (object, (.=))
 main :: IO ()
 main = simpleHTTP (nullConf {port = 8240}) $ do
          request <- askRq
-         body <- liftIO $ getBody request
+         body <- lift $ getBody request
          result <- lift $ call (toJsonFunctions methods) body
          let resultStr = maybe "" id result
              response = toResponse resultStr
@@ -53,7 +59,7 @@ keyPressFunction keyName modifiers direction count delayMillis = do
       keyPresses = replicate count $ keyAction direction key
       delay = threadDelay millis
       millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
-  liftIO $ sequence_ $ intersperse delay keyActions
+  lift $ sequence_ $ intersperse delay keyActions
 
 defaultKeyDelay = (-1)
 
@@ -68,7 +74,7 @@ writeTextMethod = toJsonFunction "write_text" writeTextFunction
 
 writeTextFunction :: Text -> RpcResult IO ()
 writeTextFunction text = forM_ (unpack text) $ \k ->
-                         tryLookupKey charToKey charToText k >>= liftIO . keyPress
+                         tryLookupKey charToKey charToText k >>= lift . keyPress
                          where charToText = fromString . (:[])
 
 pauseMethod = toJsonFunction "pause" (\millis -> liftToResult $ threadDelay (1000 * millis))
