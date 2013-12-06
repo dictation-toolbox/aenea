@@ -80,7 +80,7 @@ shift :: Bool -> IO ()
 shift = keyCodeAction $ keyCode key_SHIFT
 
 keyCodeAction :: VKey -> Bool -> IO ()
-keyCodeAction code isDown = let direction = if isDown then 0 else 2
+keyCodeAction code isDown = let direction = if isDown then 0 else (#const KEYEVENTF_KEYUP)
                                 c = fromIntegral code
                             in c_keybd_event c 0 direction 0
 
