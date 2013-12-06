@@ -7,6 +7,7 @@ import Data.JsonRpc.Server
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)
 import Data.List (intersperse)
+import Data.Maybe (catMaybes)
 import Control.Applicative ((<$>))
 import Control.Monad (forM_)
 import Control.Monad.Reader (lift, liftIO)
@@ -62,12 +63,10 @@ keyPressFunction keyName modifiers direction count delayMillis = do
 defaultKeyDelay = -1
 
 getContextMethod = toJsonFunction "get_context" (liftToResult $ context) ()
-    where context = do
-            windowText <- getActiveWindowText
-            let pairs = case windowText of
-                          Nothing -> []
-                          Just text -> ["id" .= ("" :: String), "title" .= text]
-            return $ object pairs
+    where context = (object . concat . catMaybes) <$> sequence [ancestor, active]
+          ancestor = ((\t -> ["name" .= t]) <$>) <$> getForegroundWindowAncestorText
+          active = (titlePair <$>) <$> getForegroundWindowText
+          titlePair text = ["id" .= ("" :: String), "title" .= text]
 
 writeTextMethod = toJsonFunction "write_text" writeTextFunction
                   (Param "text" Nothing, ())

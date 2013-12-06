@@ -16,7 +16,8 @@ module WindowsKeys ( Key
                    , keyNames
                    , keyRequiresShift
                    , key_SHIFT
-                   , getActiveWindowText) where
+                   , getForegroundWindowText
+                   , getForegroundWindowAncestorText) where
 
 import System.Win32.Types
 import Graphics.Win32.Key
@@ -84,18 +85,20 @@ keyCodeAction code isDown = let direction = if isDown then 0 else 2
                                 c = fromIntegral code
                             in c_keybd_event c 0 direction 0
 
-getActiveWindowText :: IO (Maybe String)
-getActiveWindowText = do
-  maybeH <- getForegroundWindowAncestor
-  case maybeH of
-    Nothing -> return Nothing
-    Just h -> do
-      lengthWithNull <- (+1) <$> c_GetWindowTextLength h
-      allocaArray (fromIntegral lengthWithNull) $ \textPtr ->
-          c_GetWindowText h textPtr lengthWithNull >>= \length ->
-          if length > 0
-          then Just <$> (peekTString textPtr)
-          else return Nothing
+getForegroundWindowText :: IO (Maybe String)
+getForegroundWindowText = getForegroundWindow >>= maybe (return Nothing) getWindowText
+
+getForegroundWindowAncestorText :: IO (Maybe String)
+getForegroundWindowAncestorText = getForegroundWindowAncestor >>= maybe (return Nothing) getWindowText
+
+getWindowText :: HWND -> IO (Maybe String)
+getWindowText h = do
+  lengthWithNull <- (+1) <$> c_GetWindowTextLength h
+  allocaArray (fromIntegral lengthWithNull) $ \textPtr ->
+      c_GetWindowText h textPtr lengthWithNull >>= \length ->
+      if length > 0
+      then Just <$> (peekTString textPtr)
+      else return Nothing
 
 getForegroundWindow :: IO (Maybe HWND)
 getForegroundWindow = f <$> c_GetForegroundWindow
