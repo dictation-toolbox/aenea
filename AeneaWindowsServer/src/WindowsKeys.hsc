@@ -86,7 +86,7 @@ keyCodeAction code isDown = let direction = if isDown then 0 else 2
 
 getActiveWindowText :: IO (Maybe String)
 getActiveWindowText = do
-  maybeH <- getForegroundWindow
+  maybeH <- getForegroundWindowAncestor
   case maybeH of
     Nothing -> return Nothing
     Just h -> do
@@ -100,6 +100,15 @@ getActiveWindowText = do
 getForegroundWindow :: IO (Maybe HWND)
 getForegroundWindow = f <$> c_GetForegroundWindow
     where f ptr = if ptr == nullPtr then Nothing else Just ptr
+
+getForegroundWindowAncestor :: IO (Maybe HWND)
+getForegroundWindowAncestor = do
+    w <- f <$> c_GetForegroundWindow
+    a <- case w of
+         Nothing -> return Nothing
+         Just w' -> f <$> c_GetAncestor w' (#const GA_ROOTOWNER)
+    return a
+      where f ptr = if ptr == nullPtr then Nothing else Just ptr
 
 key2 :: Int -> IO ()
 key2 code = key2Internal code True >> key2Internal code False >> return ()
@@ -116,6 +125,9 @@ foreign import stdcall unsafe "winuser.h keybd_event"
                       -> DWORD
                       -> DWORD
                       -> IO ()
+
+foreign import stdcall unsafe "winuser.h GetAncestor"
+        c_GetAncestor :: HWND -> UINT -> IO HWND
 
 foreign import stdcall unsafe "winuser.h GetForegroundWindow"
         c_GetForegroundWindow :: IO HWND
