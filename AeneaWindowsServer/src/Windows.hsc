@@ -30,8 +30,7 @@ import Control.Monad (when)
 import Control.Exception
 
 #include "Windows.h"
-#include "winuser.h"
-#include "winable.h"
+#include "Winuser.h"
 
 data Key = Key { keyCode :: VKey
                , keyNames :: [Text]
@@ -110,23 +109,23 @@ getForegroundWindowAncestor = do
     return a
       where f ptr = if ptr == nullPtr then Nothing else Just ptr
 
-foreign import stdcall unsafe "winuser.h keybd_event"
+foreign import stdcall unsafe "Winuser.h keybd_event"
         c_keybd_event :: BYTE
                       -> BYTE
                       -> DWORD
                       -> DWORD
                       -> IO ()
 
-foreign import stdcall unsafe "winuser.h GetAncestor"
+foreign import stdcall unsafe "Winuser.h GetAncestor"
         c_GetAncestor :: HWND -> UINT -> IO HWND
 
-foreign import stdcall unsafe "winuser.h GetForegroundWindow"
+foreign import stdcall unsafe "Winuser.h GetForegroundWindow"
         c_GetForegroundWindow :: IO HWND
 
-foreign import stdcall unsafe "winuser.h GetWindowTextLengthW"
+foreign import stdcall unsafe "Winuser.h GetWindowTextLengthW"
         c_GetWindowTextLength :: HWND -> IO CInt
 
-foreign import stdcall unsafe "winuser.h GetWindowTextW"
+foreign import stdcall unsafe "Winuser.h GetWindowTextW"
         c_GetWindowText :: HWND -> LPTSTR -> CInt -> IO CInt
 
 keys = [ key_ALT

@@ -27,6 +27,5 @@ executable aenea-windows-server
   ghc-options:         -Wall -fno-warn-missing-signatures
   hs-source-dirs:      src
   build-tools:         hsc2hs
-  default-language:    Haskell2010
-  includes:            windows.h, winuser.h
-  extra-libraries:     user32
+  includes:            Windows.h, Winuser.h
+  extra-libraries:     User32
