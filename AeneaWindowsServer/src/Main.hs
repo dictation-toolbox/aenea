@@ -3,7 +3,7 @@
 module Main (main) where
 
 import WindowsKeys
-import JsonRpcServer
+import Data.JsonRpc.Server
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)
 import Data.List (intersperse)
