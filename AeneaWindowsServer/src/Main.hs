@@ -21,17 +21,12 @@ import Data.Aeson (object, (.=))
 
 main :: IO ()
 main = simpleHTTP (nullConf {port = 8240}) $ do
-         r <- askRq
---         liftIO $ print r
-         body <- liftIO $ getBody r
---         liftIO $ print body
-         r2 <- lift $ call (toJsonFunctions methods) body
-         let r3 = maybe "" id r2
-         let r4 = toResponse r3
---         liftIO $ print r4
-         let r5 = noContentLength r4
---         liftIO $ print r5
-         return r5
+         request <- askRq
+         body <- liftIO $ getBody request
+         result <- lift $ call (toJsonFunctions methods) body
+         let resultStr = maybe "" id result
+             response = toResponse resultStr
+         return $ noContentLength response
 
 getBody :: Request -> IO B.ByteString
 getBody r = unBody <$> (readMVar $ rqBody r)
