@@ -55,7 +55,7 @@ keyPressFunction keyName modifiers direction count delayMillis = do
       millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
   liftIO $ sequence_ $ intersperse delay keyActions
 
-defaultKeyDelay = -1
+defaultKeyDelay = (-1)
 
 getContextMethod = toJsonFunction "get_context" (liftToResult $ context) ()
     where context = (object . concat . catMaybes) <$> sequence [ancestor, active]
