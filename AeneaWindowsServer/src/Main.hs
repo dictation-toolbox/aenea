@@ -2,7 +2,7 @@
 
 module Main (main) where
 
-import WindowsKeys
+import Windows
 import Data.JsonRpc.Server
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)

@@ -4,20 +4,20 @@
 , OverloadedStrings
 , TupleSections #-}
 
-module WindowsKeys ( Key
-                   , Direction (..)
-                   , nameToKey
-                   , charToKey
-                   , keyAction
-                   , keyPress
-                   , keyUp
-                   , keyDown
-                   , withKeyPress
-                   , keyNames
-                   , keyRequiresShift
-                   , key_SHIFT
-                   , getForegroundWindowText
-                   , getForegroundWindowAncestorText) where
+module Windows ( Key
+               , Direction (..)
+               , nameToKey
+               , charToKey
+               , keyAction
+               , keyPress
+               , keyUp
+               , keyDown
+               , withKeyPress
+               , keyNames
+               , keyRequiresShift
+               , key_SHIFT
+               , getForegroundWindowText
+               , getForegroundWindowAncestorText) where
 
 import System.Win32.Types
 import Graphics.Win32.Key
