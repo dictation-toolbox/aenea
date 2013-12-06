@@ -1,8 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface
 , CPP
-, GeneralizedNewtypeDeriving
-, OverloadedStrings
-, TupleSections #-}
+, OverloadedStrings #-}
 
 module Windows ( Key
                , Direction (..)
@@ -41,7 +39,7 @@ data Key = Key { keyCode :: VKey
                , keyRequiresShift :: Bool }
 
 nameToKey key = lookup key keyMap
-                where keyMap = concatMap (\k -> map ( , k) (keyNames k)) keys
+                where keyMap = concatMap (\k -> zip (keyNames k) (repeat k)) keys
 
 charToKey :: Char -> Maybe Key
 charToKey char = M.lookup char keyMap
