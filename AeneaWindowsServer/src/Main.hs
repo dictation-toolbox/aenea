@@ -56,7 +56,7 @@ exitWithError msg = putStrLn msg >> exitWith (ExitFailure 1)
 
 parseInt :: String -> Maybe Int
 parseInt x = case reads x of
-               [(i, _)] -> Just i
+               [(i, [])] -> Just i
                _ -> Nothing
 
 getBody :: Request -> IO B.ByteString
