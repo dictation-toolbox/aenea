@@ -13,26 +13,51 @@ import Data.JsonRpc.Server( Param (..)
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)
 import Data.List (intersperse)
-import Data.Maybe (catMaybes)
+import Data.Maybe (isNothing, catMaybes)
+import Data.Aeson (object, (.=))
+import qualified Data.ByteString.Lazy as B
 import Control.Applicative ((<$>))
-import Control.Monad (forM_)
+import Control.Monad (when, forM_)
 import Control.Monad.Reader (lift)
 import Control.Monad.Error (throwError)
 import Control.Concurrent (threadDelay, readMVar)
 import Happstack.Lite (Request, toResponse)
-import Happstack.Server.SimpleHTTP (nullConf, port, simpleHTTP, askRq, rqBody, unBody)
+import Happstack.Server.SimpleHTTP( nullConf
+                                  , bindIPv4
+                                  , port
+                                  , simpleHTTPWithSocket
+                                  , askRq
+                                  , rqBody
+                                  , unBody)
 import Happstack.Server.Internal.Types (noContentLength)
-import qualified Data.ByteString.Lazy as B
-import Data.Aeson (object, (.=))
+import System.Environment (getArgs)
+import System.Exit (ExitCode (ExitFailure), exitWith)
 
 main :: IO ()
-main = simpleHTTP (nullConf {port = 8240}) $ do
+main = do
+  args <- getArgs
+  when (length args /= 2) $ exitWithError "expecting IP address and port"
+  let address = args !! 0
+      maybePort = parseInt $ args !! 1
+  when (isNothing maybePort) $
+       exitWithError "expecting IP address and port, cannot parse port"
+  let Just port' = maybePort
+  s <- bindIPv4 address port'
+  simpleHTTPWithSocket s (nullConf {port = port'}) $ do
          request <- askRq
          body <- lift $ getBody request
          result <- lift $ call (toJsonFunctions methods) body
          let resultStr = maybe "" id result
              response = toResponse resultStr
          return $ noContentLength response
+
+exitWithError :: String -> IO ()
+exitWithError msg = putStrLn msg >> exitWith (ExitFailure 1)
+
+parseInt :: String -> Maybe Int
+parseInt x = case reads x of
+               [(i, _)] -> Just i
+               _ -> Nothing
 
 getBody :: Request -> IO B.ByteString
 getBody r = unBody <$> (readMVar $ rqBody r)
