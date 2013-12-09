@@ -419,8 +419,8 @@ key_AMPERSAND = Key (keyCode key_7) ["ampersand", "and"] (Just '&') True
 key_ASTERISK = Key (keyCode key_8) ["asterisk", "star"] (Just '*') True
 key_LEFT_PAREN = Key (keyCode key_9) ["leftparen", "lparen"] (Just '(') True
 key_RIGHT_PAREN = Key (keyCode key_0) ["rightparen", "rparen"] (Just ')') True
-key_MINUS = Key vK_SUBTRACT ["hyphen", "minus"] (Just '-') False
-key_UNDERSCORE = Key vK_SUBTRACT ["underscore"] (Just '_') True
+key_MINUS = Key 0xBD ["hyphen", "minus"] (Just '-') False
+key_UNDERSCORE = Key 0xBD ["underscore"] (Just '_') True
 key_PLUS = Key 0xBB ["plus"] (Just '+') True
 key_EQUAL = Key 0xBB ["equal", "equals"] (Just '=') False
 key_BACKTICK = Key (#const VK_OEM_3) ["backtick"] (Just '`') False
