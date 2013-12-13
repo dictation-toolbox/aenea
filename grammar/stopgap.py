@@ -1,4 +1,4 @@
-from dragonfly import CompoundRule, Grammar, Key, MappingRule
+from dragonfly import CompoundRule, Grammar, Key, MappingRule, Integer
 
 from raul import SelfChoice
 
@@ -21,16 +21,14 @@ class MouseClick(MappingRule):
 
 class QuadCommand(CompoundRule):
   spec = "zip <xcoord> <ycoord>"
-  cmd = ["zero", "one", "two", "too", "to", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
-  extras = [SelfChoice("xcoord", cmd), SelfChoice("ycoord", cmd)]
+  extras = [Integer("xcoord", min=0, max=11), Integer("ycoord", min=0, max=11)]
 
   def _process_recognition(self, node, extras):
     x = extras["xcoord"]
     y = extras["ycoord"]
-    x = numbers.get(x, x)
-    y = numbers.get(y, y)
-    x = 1280 * int(x) / 10
-    y = 800 * int(y) / 10
+    xres, yres = config.SCREEN_RESOLUTION
+    x = xres * int(x) / 10
+    y = yres * int(y) / 10
     Mouse("[%s, %s]" % (x, y)).execute()
 
 class LaunchBrowser(MappingRule):

@@ -9,6 +9,8 @@ PLATFORM = "proxy"
 # Whether to use the server's multiple_actions RPC method.
 USE_MULTIPLE_ACTIONS = True
 
+SCREEN_RESOLUTION = (1920 * 2 + 2560), 1440
+
 import os
 import shutil
 
