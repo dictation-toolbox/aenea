@@ -1,3 +1,0 @@
-[submodule "WindowsServer/json-rpc-server"]
-	path = WindowsServer/json-rpc-server
-	url = git://github.com/grayjay/json-rpc-server.git

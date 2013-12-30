@@ -3,14 +3,14 @@
 module Main (main) where
 
 import Windows
-import Data.JsonRpc.Server( Parameter (..)
-                          , (:+:) (..)
-                          , RpcResult
-                          , call
-                          , Method
-                          , toMethod
-                          , toMethods
-                          , rpcError)
+import Network.JsonRpc.Server( Parameter (..)
+                             , (:+:) (..)
+                             , RpcResult
+                             , call
+                             , Method
+                             , toMethod
+                             , toMethods
+                             , rpcError)
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)
 import Data.List (intersperse)
