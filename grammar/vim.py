@@ -79,20 +79,20 @@ class Fugitive(MappingRule):
 
 class VimCommand(MappingRule):
   mapping = {
-      "vim query [<text>]":escape + Text("/%(text)sa"),
-      "vim query back [<text>]":escape + Text("?%(text)si"),
-      "vim search":escape + Text("/\na"),
-      "vim search back":escape + Text("?\ni"),
+      "vim query [<text>]":escape + Text("/%(text)s"),
+      "vim query back [<text>]":escape + Text("?%(text)s"),
+      "vim search":escape + Text("/\n"),
+      "vim search back":escape + Text("?\n"),
 
-      "vim write":escape + Text(":w\na"),
-      "vim write and quit":escape + Text(":wq\na"),
-      "vim quit bang":escape + Text(":q!\na"),
-      "vim quit":escape + Text(":q\na"),
-      "vim undo [<number>]":escape + Text("%(number)dua"),
-      "vim redo":escape + Text(":redo\na"),
-      "vim [buf] close":escape + Text(":bd\na"),
-      "vim [buf] close bang":escape + Text(":bd!\na"),
-      "<number> go":escape + Text("%(number)dGa"),
+      "vim write":escape + Text(":w\n"),
+      "vim write and quit":escape + Text(":wq\n"),
+      "vim quit bang":escape + Text(":q!\n"),
+      "vim quit":escape + Text(":q\n"),
+      "vim undo [<number>]":escape + Text("%(number)du"),
+      "vim redo":escape + Text(":redo\n"),
+      "vim [buf] close":escape + Text(":bd\n"),
+      "vim [buf] close bang":escape + Text(":bd!\n"),
+      "<number> go":escape + Text("%(number)dG"),
     }
   extras = [IntegerRef("number", 1, 1000), Dictation("text")]
   defaults = {"text":"", "number":1}
