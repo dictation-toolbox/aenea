@@ -3,21 +3,23 @@
 module Main (main) where
 
 import Windows
-import Data.JsonRpc.Server( Param (..)
-                          , RpcResult
-                          , call
-                          , toJsonFunction
-                          , toJsonFunctions
-                          , rpcError
-                          , liftToResult)
+import Network.JsonRpc.Server( Parameter (..)
+                             , (:+:) (..)
+                             , RpcResult
+                             , call
+                             , Method
+                             , toMethod
+                             , toMethods
+                             , rpcError)
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)
 import Data.List (intersperse)
 import Data.Maybe (isNothing, catMaybes)
-import Data.Aeson (object, (.=))
+import Data.Aeson (Value, object, (.=))
 import qualified Data.ByteString.Lazy as B
 import Control.Applicative ((<$>))
 import Control.Monad (when, forM_)
+import Control.Monad.Trans (liftIO)
 import Control.Monad.Reader (lift)
 import Control.Monad.Error (throwError)
 import Control.Concurrent (threadDelay, readMVar)
@@ -46,7 +48,7 @@ main = do
   simpleHTTPWithSocket s (nullConf {port = port'}) $ do
          request <- askRq
          body <- lift $ getBody request
-         result <- lift $ call (toJsonFunctions methods) body
+         result <- lift $ call (toMethods methods) body
          let resultStr = maybe "" id result
              response = toResponse resultStr
          return $ noContentLength response
@@ -67,12 +69,12 @@ methods = [ getContextMethod
           , writeTextMethod
           , pauseMethod ]
 
-keyPressMethod = toJsonFunction "key_press" keyPressFunction
-           (Param "key" Nothing,
-            (Param "modifiers" (Just []),
-             (Param "direction" (Just Press),
-              (Param "count" (Just 1),
-               (Param "delay" (Just (defaultKeyDelay)), ())))))
+keyPressMethod = toMethod "key_press" keyPressFunction
+                 (Required "key" :+:
+                  Optional "modifiers" [] :+:
+                  Optional "direction" Press :+:
+                  Optional "count" 1 :+:
+                  Optional "delay" defaultKeyDelay :+: ())
 
 keyPressFunction :: Text -> [Text] -> Direction -> Int -> Int -> RpcResult IO ()
 keyPressFunction keyName modifiers direction count delayMillis = do
@@ -88,22 +90,25 @@ keyPressFunction keyName modifiers direction count delayMillis = do
 
 defaultKeyDelay = (-1)
 
-getContextMethod = toJsonFunction "get_context" (liftToResult $ context) ()
-    where context = (object . concat . catMaybes) <$> sequence [ancestor, active]
+getContextMethod :: Method IO
+getContextMethod = toMethod "get_context" context ()
+    where context :: RpcResult IO Value
+          context = liftIO $ (object . concat . catMaybes) <$> sequence [ancestor, active]
           ancestor = ((\t -> ["name" .= t]) <$>) <$> getForegroundWindowAncestorText
           active = (titlePair <$>) <$> getForegroundWindowText
           titlePair text = ["id" .= ("" :: String), "title" .= text]
 
-writeTextMethod = toJsonFunction "write_text" writeTextFunction
-                  (Param "text" Nothing, ())
+writeTextMethod = toMethod "write_text" writeTextFunction
+                  (Required "text" :+: ())
 
 writeTextFunction :: Text -> RpcResult IO ()
 writeTextFunction text = forM_ (unpack text) $ \k ->
                          tryLookupKey charToKey charToText k >>= lift . keyPress
                          where charToText = fromString . (:[])
 
-pauseMethod = toJsonFunction "pause" (\millis -> liftToResult $ threadDelay (1000 * millis))
-              (Param "amount" Nothing, ())
+pauseMethod = toMethod "pause" pause (Required "amount" :+: ())
+    where pause :: Int -> RpcResult IO ()
+          pause ms = liftIO $ threadDelay (1000 * ms)
 
 tryLookupKey :: (a -> Maybe Key) -> (a -> Text) -> a -> RpcResult IO Key
 tryLookupKey f toText k = case f k of
