@@ -22,7 +22,7 @@ A system to allow speech recognition via Dragonfly on one computer to send event
 Summary
 -------
 
-Aenea is a project to allow Dragonfly (a Python-based voice macro system for Windows) to send commands to another computer. Typically, this is used to run Dragonfly in a virtual machine while commands are sent to the host operating system. Currently only Linux hosts are supported, but work is underway to support Windows and OS X. The primary audience is system administrators and software engineers.
+Aenea is a project to allow Dragonfly (a Python-based voice macro system for Windows) to send commands to another computer. Typically, this is used to run Dragonfly in a virtual machine while commands are sent to the host operating system. Currently only Linux hosts are fully supported, but a working subset of the functionality is available for Windows, and work is underway to support OS X. The primary audience is system administrators and software engineers.
 
 Current Features:
 
@@ -44,8 +44,8 @@ Primary limitations:
 Missing features:
 
 - Currently no encryption or authentication for remote control protocol (not a huge issue since it is typically used on single user systems via loopback).
-- Currently only supports a Linux host.
-- No actions for window management/etc on Gnome/KDE/etc.
+- Currently only fully supports a Linux host. Partial support for Windows is available, and OS X support is in development here.
+- No actions for window management/etc on Gnome/KDE/etc. (pull requests welcome)
 
 The primary focus of this project is writing code, system administration, terminal use, etc, and it works quite well for those tasks. For writing prose, word processing, etc., this project is quite limited compared to using Dragon natively on Windows.
 
@@ -146,6 +146,12 @@ Non-exhaustive list of Dragonfly modules that should work (with the above change
 - kbbreak
 - firefox (except save_now command)
 - audacity
+
+Windows/OS X Server
+----------------------------
+grayjay implemented a windows server (available in WindowsServer) that supports some of the commands. Not all functionality is available.
+
+dopey wrote a OS X server for the older version of the communication protocol, and some work would be necessary to get it to work with the current version (pull requests welcome): https://github.com/dopey/aenea-fork
 
 Writing Your Own Modules
 ----------------------------
