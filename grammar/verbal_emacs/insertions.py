@@ -135,6 +135,10 @@ class CppInsertion(MappingRule):
     "range for":          Key("f, o, r, r, tab"),
     "for auto":           Key("f, o, r, a, tab"),
     "forcato":            Key("f, o, r, o, tab"),
+
+    "resolve":            Text("::"),
+    "left shift":         Text("<< "),
+    "right shift":        Text(">> "),
   }
 ruleCppInsertion = RuleRef(CppInsertion(), name="CppInsertion")
 
