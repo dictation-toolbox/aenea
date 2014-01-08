@@ -14,11 +14,11 @@ import Network.JsonRpc.Server( Parameter (..)
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)
 import Data.List (delete, intersperse)
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, mapMaybe, fromMaybe)
 import Data.Aeson (Value, object, (.=))
 import qualified Data.ByteString.Lazy as B
 import Control.Applicative ((<$>))
-import Control.Monad (guard, forM_)
+import Control.Monad ((<=<), guard, forM_)
 import Control.Monad.Trans (liftIO)
 import Control.Monad.Reader (lift)
 import Control.Monad.Error (throwError)
@@ -29,12 +29,12 @@ import Happstack.Server.Internal.Types (noContentLength)
 import System.Environment (getArgs)
 import System.Console.GetOpt( OptDescr (Option), ArgDescr(..)
                             , ArgOrder (Permute), getOpt, usageInfo)
-import System.Exit (ExitCode (..), exitWith)
+import System.Exit (ExitCode (ExitFailure), exitSuccess, exitWith)
 
 main :: IO ()
 main = getArgs >>= \args ->
   case parseArgs args of
-    Left Nothing -> putStrLn usage >> exitWith ExitSuccess
+    Left Nothing -> putStrLn usage >> exitSuccess
     Left (Just errs) -> putStrLn (errs ++ usage) >> exitWith (ExitFailure 1)
     Right (maybeAddress, portStr) -> case parseInt portStr of
                                        Nothing -> putStrLn "cannot parse port" >> exitWith (ExitFailure 1)
@@ -55,12 +55,12 @@ handleRequests = do
   request <- H.askRq
   body <- lift $ getBody request
   result <- lift $ call (toMethods methods) body
-  let resultStr = maybe "" id result
+  let resultStr = fromMaybe "" result
       response = toResponse resultStr
   return $ noContentLength response
 
 getBody :: Request -> IO B.ByteString
-getBody r = H.unBody <$> (readMVar $ H.rqBody r)
+getBody r = H.unBody <$> readMVar (H.rqBody r)
 
 usage :: String
 usage = usageInfo "usage: aenea [options]" options
@@ -79,7 +79,7 @@ parseArgs args = case getOpt Permute options args of
                          return (addr, port)
 
 getArg :: [Flag] -> (Flag -> Maybe (Flag, a)) -> a -> Maybe (a, [Flag])
-getArg opts f default' = case catMaybes $ map f opts of
+getArg opts f default' = case mapMaybe f opts of
                            [(flag, arg)] -> Just (arg, delete flag opts)
                            [] -> Just (default', opts)
                            _ -> Nothing
@@ -127,7 +127,7 @@ keyPressFunction keyName modifiers direction count delayMillis = do
       millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
   lift $ sequence_ $ intersperse delay keyActions
 
-defaultKeyDelay = (-1)
+defaultKeyDelay = -1
 
 getContextMethod :: Method IO
 getContextMethod = toMethod "get_context" context ()
@@ -141,9 +141,9 @@ writeTextMethod = toMethod "write_text" writeTextFunction
                   (Required "text" :+: ())
 
 writeTextFunction :: Text -> RpcResult IO ()
-writeTextFunction text = forM_ (unpack text) $ \k ->
-                         tryLookupKey charToKey charToText k >>= lift . keyPress
-                         where charToText = fromString . (:[])
+writeTextFunction text = forM_ (unpack text) $
+                         lift . keyPress <=< tryLookupKey charToKey charToText
+    where charToText = fromString . (:[])
 
 pauseMethod = toMethod "pause" pause (Required "amount" :+: ())
     where pause :: Int -> RpcResult IO ()
