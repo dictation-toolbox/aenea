@@ -27,7 +27,8 @@ import Happstack.Lite (Request, toResponse)
 import qualified Happstack.Server.SimpleHTTP as H
 import Happstack.Server.Internal.Types (noContentLength)
 import System.Environment (getArgs)
-import System.Console.GetOpt
+import System.Console.GetOpt( OptDescr (Option), ArgDescr(..)
+                            , ArgOrder (Permute), getOpt, usageInfo)
 import System.Exit (ExitCode (..), exitWith)
 
 main :: IO ()
