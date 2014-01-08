@@ -68,6 +68,8 @@ Aenea provides Proxy versions of Dragonfly actions such as Key, Text, and Mouse 
 Getting Started
 ---------------
 
+Note: poppe1219 has other installation instructions at https://github.com/poppe1219/dragonfly-scripts; take a look if you're having trouble getting everything working in the VM.
+
 Windows VM Software (versions given are ones I used, others likely work too):
 
 - Windows 7 Ultimate 32 bit
