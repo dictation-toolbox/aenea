@@ -13,56 +13,95 @@ import Network.JsonRpc.Server( Parameter (..)
                              , rpcError)
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)
-import Data.List (intersperse)
-import Data.Maybe (isNothing, catMaybes)
+import Data.List (delete, intersperse)
+import Data.Maybe (catMaybes, mapMaybe, fromMaybe)
 import Data.Aeson (Value, object, (.=))
 import qualified Data.ByteString.Lazy as B
 import Control.Applicative ((<$>))
-import Control.Monad (when, forM_)
+import Control.Monad ((<=<), guard, forM_)
 import Control.Monad.Trans (liftIO)
 import Control.Monad.Reader (lift)
 import Control.Monad.Error (throwError)
 import Control.Concurrent (threadDelay, readMVar)
 import Happstack.Lite (Request, toResponse)
-import Happstack.Server.SimpleHTTP( nullConf
-                                  , bindIPv4
-                                  , port
-                                  , simpleHTTPWithSocket
-                                  , askRq
-                                  , rqBody
-                                  , unBody)
+import qualified Happstack.Server.SimpleHTTP as H
 import Happstack.Server.Internal.Types (noContentLength)
 import System.Environment (getArgs)
-import System.Exit (ExitCode (ExitFailure), exitWith)
+import System.Console.GetOpt( OptDescr (Option), ArgDescr(..)
+                            , ArgOrder (Permute), getOpt, usageInfo)
+import System.Exit (ExitCode (ExitFailure), exitSuccess, exitWith)
 
 main :: IO ()
-main = do
-  args <- getArgs
-  when (length args /= 2) $ exitWithError "expecting IP address and port"
-  let address = args !! 0
-      maybePort = parseInt $ args !! 1
-  when (isNothing maybePort) $
-       exitWithError "expecting IP address and port, cannot parse port"
-  let Just port' = maybePort
-  s <- bindIPv4 address port'
-  simpleHTTPWithSocket s (nullConf {port = port'}) $ do
-         request <- askRq
-         body <- lift $ getBody request
-         result <- lift $ call (toMethods methods) body
-         let resultStr = maybe "" id result
-             response = toResponse resultStr
-         return $ noContentLength response
+main = getArgs >>= \args ->
+  case parseArgs args of
+    Left Nothing -> putStrLn usage >> exitSuccess
+    Left (Just errs) -> putStrLn (errs ++ usage) >> exitWith (ExitFailure 1)
+    Right (maybeAddress, portStr) -> case parseInt portStr of
+                                       Nothing -> putStrLn "cannot parse port" >> exitWith (ExitFailure 1)
+                                       Just port -> serve maybeAddress port
 
-exitWithError :: String -> IO ()
-exitWithError msg = putStrLn msg >> exitWith (ExitFailure 1)
+serve :: Maybe String -> Int -> IO ()
+serve maybeAddress port = let conf = H.nullConf {H.port = port}
+                          in case maybeAddress of
+                               Nothing -> putStrLn ("listening on port " ++ show port) >>
+                                          H.simpleHTTP conf handleRequests
+                               Just addr -> do
+                                 s <- H.bindIPv4 addr port
+                                 putStrLn $ "listening on " ++ addr ++ ":" ++ show port
+                                 H.simpleHTTPWithSocket s conf handleRequests
+
+handleRequests :: H.ServerPartT IO H.Response
+handleRequests = do
+  request <- H.askRq
+  body <- lift $ getBody request
+  result <- lift $ call (toMethods methods) body
+  let resultStr = fromMaybe "" result
+      response = toResponse resultStr
+  return $ noContentLength response
+
+getBody :: Request -> IO B.ByteString
+getBody r = H.unBody <$> readMVar (H.rqBody r)
+
+usage :: String
+usage = usageInfo "usage: aenea [options]" options
+
+parseArgs :: [String] -> Either (Maybe String) (Maybe String, String)
+parseArgs args = case getOpt Permute options args of
+                   (opts, _, []) | Help `elem` opts -> Left Nothing
+                   (opts, [], []) -> maybe (Left $ Just msg) Right $ parseOpts opts
+                   (_, _, []) -> Left $ Just msg
+                   (_, _, errs) -> Left $ Just $ concat errs
+                 where msg = "unexpected arguments\n"
+                       parseOpts opts = do
+                         (addr, opts') <- getArg opts getAddress Nothing
+                         (port, opts'') <- getArg opts' getPort "8240"
+                         guard $ null opts''
+                         return (addr, port)
+
+getArg :: [Flag] -> (Flag -> Maybe (Flag, a)) -> a -> Maybe (a, [Flag])
+getArg opts f default' = case mapMaybe f opts of
+                           [(flag, arg)] -> Just (arg, delete flag opts)
+                           [] -> Just (default', opts)
+                           _ -> Nothing
+
+getAddress x@(Address a) = Just (x, Just a)
+getAddress _ = Nothing
+
+getPort x@(Port p) = Just (x, p)
+getPort _ = Nothing
 
 parseInt :: String -> Maybe Int
 parseInt x = case reads x of
                [(i, [])] -> Just i
                _ -> Nothing
 
-getBody :: Request -> IO B.ByteString
-getBody r = unBody <$> (readMVar $ rqBody r)
+data Flag = Address String | Port String | Help
+            deriving (Eq, Ord, Show)
+
+options :: [OptDescr Flag]
+options = [ Option "a" ["address"] (ReqArg Address "address") "specify host IP address (not host name)"
+          , Option "p" ["port"] (ReqArg Port "port") "specify host port (default is 8240)"
+          , Option "h" ["help"] (NoArg Help) "show this message"]
 
 methods = [ getContextMethod
           , keyPressMethod
@@ -88,7 +127,7 @@ keyPressFunction keyName modifiers direction count delayMillis = do
       millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
   lift $ sequence_ $ intersperse delay keyActions
 
-defaultKeyDelay = (-1)
+defaultKeyDelay = -1
 
 getContextMethod :: Method IO
 getContextMethod = toMethod "get_context" context ()
@@ -102,9 +141,9 @@ writeTextMethod = toMethod "write_text" writeTextFunction
                   (Required "text" :+: ())
 
 writeTextFunction :: Text -> RpcResult IO ()
-writeTextFunction text = forM_ (unpack text) $ \k ->
-                         tryLookupKey charToKey charToText k >>= lift . keyPress
-                         where charToText = fromString . (:[])
+writeTextFunction text = forM_ (unpack text) $
+                         lift . keyPress <=< tryLookupKey charToKey charToText
+    where charToText = fromString . (:[])
 
 pauseMethod = toMethod "pause" pause (Required "amount" :+: ())
     where pause :: Int -> RpcResult IO ()

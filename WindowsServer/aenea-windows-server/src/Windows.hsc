@@ -1,6 +1,6 @@
-{-# LANGUAGE ForeignFunctionInterface
-, CPP
-, OverloadedStrings #-}
+{-# LANGUAGE ForeignFunctionInterface,
+             CPP,
+             OverloadedStrings #-}
 
 module Windows ( Key
                , Direction (..)
