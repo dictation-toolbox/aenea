@@ -149,10 +149,19 @@ Non-exhaustive list of Dragonfly modules that should work (with the above change
 - firefox (except save_now command)
 - audacity
 
-Windows/OS X Server
+Windows Server
 ----------------------------
-grayjay implemented a windows server (available in WindowsServer) that supports some of the commands. Not all functionality is available.
+grayjay (grayjay@wordroute.com) implemented a windows server (available in WindowsServer) that supports some of the commands, including ``key_press``, ``write_text``, and ``pause``. ``get_context`` currently only returns the title of the foreground window as "title" and the title of the foreground window's ancestor as "name".
 
+Installation:
+
+- Install the Haskell Platform for Windows from http://www.haskell.org/platform .
+- Run the command ``cabal update``.
+- Run ``cabal install`` in the folder ...aenea\\WindowsServer\\aenea-windows-server to install aenea.exe for the current user.
+- aenea takes optional arguments specifying the IP address and port.
+
+OS X Server
+----------------------------
 dopey wrote a OS X server for the older version of the communication protocol, and some work would be necessary to get it to work with the current version (pull requests welcome): https://github.com/dopey/aenea-fork
 
 Writing Your Own Modules
