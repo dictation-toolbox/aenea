@@ -26,7 +26,10 @@ def reload_aenea_configuration():
       shutil.rmtree("C:\\NatLink\\NatLink\\MacroSystem\\%s" % name, ignore_errors=True)
       shutil.copytree("%s\\grammar\\%s" % (PROJECT_ROOT, name), "C:\\NatLink\\NatLink\\MacroSystem\\%s" % name)
   for name in os.listdir("%s\\util" % PROJECT_ROOT):
-    full_src = "%s\\util\\" % PROJECT_ROOT + name
+    if name == "config.py":
+      # This file is likely to be customized for each user's environment, so don't blow away any environment-specif config.
+      continue
+
     if name.endswith(".py") or name.endswith(".txt"):
       with open("%s\\util\\%s" % (PROJECT_ROOT, name)) as infd:
         with open("C:\\NatLink\\NatLink\\MacroSystem\\%s" % name, "w") as outfd:
