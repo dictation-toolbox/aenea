@@ -29,3 +29,6 @@ def reload_aenea_configuration():
       with open("E:\\aenea\\util\\%s" % name) as infd:
         with open("C:\\NatLink\\NatLink\\MacroSystem\\%s" % name, "w") as outfd:
           outfd.write(infd.read())
+
+if  __name__ =='__main__':
+  reload_aenea_configuration()
