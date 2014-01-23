@@ -17,14 +17,14 @@ import os
 import shutil
 
 def reload_aenea_configuration():
-  for name in os.listdir("%s\\grammar" % PROJECT_ROOT):
+  for name in os.listdir("%s\\grammars_enabled" % PROJECT_ROOT):
     if name.endswith(".py"):
-      with open("%s\\grammar\\%s" % (PROJECT_ROOT, name)) as infd:
+      with open("%s\\grammars_enabled\\%s" % (PROJECT_ROOT, name)) as infd:
         with open("C:\\NatLink\\NatLink\\MacroSystem\\_%s" % name, "w") as outfd:
           outfd.write(infd.read())
-    elif os.path.isdir("%s\\grammar\\%s" % (PROJECT_ROOT, name)):
+    elif os.path.isdir("%s\\grammars_enabled\\%s" % (PROJECT_ROOT, name)):
       shutil.rmtree("C:\\NatLink\\NatLink\\MacroSystem\\%s" % name, ignore_errors=True)
-      shutil.copytree("%s\\grammar\\%s" % (PROJECT_ROOT, name), "C:\\NatLink\\NatLink\\MacroSystem\\%s" % name)
+      shutil.copytree("%s\\grammars_enabled\\%s" % (PROJECT_ROOT, name), "C:\\NatLink\\NatLink\\MacroSystem\\%s" % name)
   for name in os.listdir("%s\\util" % PROJECT_ROOT):
     if name == "config.py":
       # This file is likely to be customized for each user's environment, so don't blow away any environment-specif config.
