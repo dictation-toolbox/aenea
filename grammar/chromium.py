@@ -8,7 +8,7 @@ if config.PLATFORM == "proxy":
   from proxy_nicknames import Key
   chromium_context = AppContext(cls_name="chromium", cls="chromium") & aenea.global_context
 else:
-  chromium_context = (AppContext(name="Chrome") | AppContext(name="Chromium"))
+  chromium_context = (AppContext(executable="chrome") | AppContext(executable="chromium"))
 
 chromium_grammar = Grammar("chromium", context=chromium_context)
 
