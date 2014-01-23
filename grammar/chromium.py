@@ -1,13 +1,16 @@
-from dragonfly import AppContext, Grammar, Dictation, IntegerRef, MappingRule, Key, Text, IntegerRef, Dictation
+from dragonfly import (AppContext, Grammar, Dictation, IntegerRef, MappingRule,
+                       Key, Text, IntegerRef, Dictation)
 
 import aenea
 import config
 
 if config.PLATFORM == "proxy":
   from proxy_nicknames import *
-  chromium_context = AppContext(cls_name="chromium", cls="chromium") & aenea.global_context
+  chromium_context = (AppContext(cls_name="chromium", cls="chromium") &
+                      aenea.global_context)
 else:
-  chromium_context = (AppContext(executable="chrome") | AppContext(executable="chromium"))
+  chromium_context = (AppContext(executable="chrome") |
+                      AppContext(executable="chromium"))
 
 chromium_grammar = Grammar("chromium", context=chromium_context)
 
