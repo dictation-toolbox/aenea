@@ -10,9 +10,9 @@ if config.PLATFORM == "proxy":
   mail_context = thunderbird_context & AppContext(cls_name="Mail")
   compose_context = thunderbird_context  & AppContext(cls_name="Msgcompose")
 else:
-  thunderbird_context = AppContext(name="Thunderbird")
-  mail_context = thunderbird_context & AppContext(name="Mail")
-  compose_context = thunderbird_context  & AppContext(name="Msgcompose")
+  thunderbird_context = AppContext(title="Thunderbird")
+  mail_context = thunderbird_context & AppContext(title="Mail")
+  compose_context = thunderbird_context  & AppContext(title="Msgcompose")
   MousePhantomClick = Mouse
 
 email_grammar = Grammar("email", context=mail_context)
