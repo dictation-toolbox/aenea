@@ -65,8 +65,13 @@ class AeneaClient(tk.Tk):
     def log(self, message):
         timeStamp = datetime.datetime.now()
         self.tab1.text2.insert(END, "%s: %s\n" % (timeStamp, message))
+        self.tab1.text2.see(END)  # Scroll to end.
 
     def start_capture(self):
+        # Release VirtualBox keyboard capture.
+        # Doesn't seem to help though... :(
+        self.client.server.key_press(key="Control_R")
+
         self.log("Starting capture")
         self.bind("<Any KeyPress>", lambda event: self.send_key(event.keysym))
 
@@ -79,6 +84,7 @@ class AeneaClient(tk.Tk):
 
     def send_key(self, key):
         self.tab1.text1.insert(END, key)
+        self.tab1.text1.see(END)  # Scroll to end.
         if key in ('Shift_L', 'Control_L', 'Alt_L', '??'):
             return
         if key in translateKeys.keys():
