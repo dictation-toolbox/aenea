@@ -19,10 +19,12 @@ class AeneaClient(tk.Tk):
         self.tab2 = Frame(note)
         w = LabelFrame(self.tab1, text=u"Controls")
         w.pack(side=TOP, fill=BOTH)
-        button = Button(w, text=u"Start capture", command=self.start_capture)
-        button.pack(side=LEFT)
-        button = Button(w, text=u"Stop capture", command=self.stop_capture)
-        button.pack(side=LEFT)
+        self.button1 = Button(w, text=u"Start capture",
+            command=self.start_capture)
+        self.button1.pack(side=LEFT)
+        self.button2 = Button(w, text=u"Stop capture",
+            command=self.stop_capture, state=DISABLED)
+        self.button2.pack(side=LEFT)
 
         dFont = tkFont.Font(family="Tahoma", size=8)
 
@@ -71,13 +73,17 @@ class AeneaClient(tk.Tk):
         # Release VirtualBox keyboard capture.
         # Doesn't seem to help though... :(
         self.client.server.key_press(key="Control_R")
-
         self.log("Starting capture")
-        self.bind("<Any KeyPress>", lambda event: self.send_key(event.keysym))
+        self.bind("<Any KeyPress>",
+            lambda event: self.send_key(event.keysym))
+        self.button1.config(state=DISABLED)
+        self.button2.config(state=NORMAL)
 
     def stop_capture(self):
         self.log("Stopping capture")
         self.bind("<Any KeyPress>", self.foo)
+        self.button1.config(state=NORMAL)
+        self.button2.config(state=DISABLED)
 
     def foo(self, event):  # Dummy method.
         pass
