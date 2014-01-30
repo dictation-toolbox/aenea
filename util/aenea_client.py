@@ -7,7 +7,30 @@ import ttk
 import communications
 import config
 
-FLUSH_DELAY = 20 # 20 milliseconds
+# Keys that should be translated from a TK name to the name expected
+# by the server.
+TRANSLATE_KEYS = {
+    "space": " ",
+    "Left": "left",
+    "Right": "right",
+    "Up": "up",
+    "Down": "down",
+    "Home": "home",
+    "Next": "pgup",
+    "Prior": "pgdown",
+    "End": "end",
+    "BackSpace": "backspace",
+    "Delete": "delete",
+}
+
+# Keys that may be sent as part of a text string. Any key pressed that is not in
+# the ignored set or in this mapping will be sent as a keypress event, which is
+# slightly less efficient.
+LITERAL_KEYS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!? "
+
+# Keys that should be completely ignored when pressed. This has the side effect
+# that Dragon commands like "press control J" will not work via this cilent.
+IGNORED_KEYS = ('Shift_L', 'Control_L', 'Alt_L', '??')
 
 class AeneaClient(tk.Tk):
 
@@ -108,15 +131,23 @@ class AeneaClient(tk.Tk):
     def send_key(self, key):
         self.tab1.text1.insert(tk.END, key)
         self.tab1.text1.see(tk.END)  # Scroll to end.
-        if key in ('Shift_L', 'Control_L', 'Alt_L', '??'):
+        if key in IGNORED_KEYS:
             return
-        if key in translateKeys.keys():
-            key = translateKeys[key]
-    #         print(key)
+        key = TRANSLATE_KEYS.get(key, key)
         self.last_aenea_buffer_update = datetime.datetime.now().microsecond / 1000
-        
-        # TODO does this catch all cases?
-        if len(key) == 1:
+
+        # If buffering is disabled, send the key immediately.
+        if config.AENEA_CLIENT_FLUSH_DELAY == 0:
+            if key in LITERAL_KEYS:
+                self.client.server.write_text(key)
+            else:
+                self.client.server.key_press(key=key)
+            return
+
+        # Since buffering is enabled, add to the keystroke to the outgoing buffer
+        # as either a keypress or part of text, and insure that a event is
+        # scheduled to empty the buffer and further text is not received.
+        if key in LITERAL_KEYS:
             self.aenea_buffer.append(key)
         else:
             self.client_proxy.write_text(''.join(self.aenea_buffer))
@@ -124,13 +155,13 @@ class AeneaClient(tk.Tk):
             self.aenea_buffer = []
         if not self.aenea_worker_active:
             self.aenea_worker_active = True
-            self.after(FLUSH_DELAY, self.flush_buffer)
+            self.after(config.AENEA_CLIENT_FLUSH_DELAY, self.flush_buffer)
     
     def flush_buffer(self):
         delta = (datetime.datetime.now().microsecond / 1000 -
                  self.last_aenea_buffer_update)
-        if delta < FLUSH_DELAY:
-            self.after(FLUSH_DELAY - delta, self.flush_buffer)
+        if delta < config.AENEA_CLIENT_FLUSH_DELAY:
+            self.after(config.AENEA_CLIENT_FLUSH_DELAY - delta, self.flush_buffer)
         else:
             if self.aenea_buffer:
                 self.client_proxy.write_text(''.join(self.aenea_buffer))
@@ -138,21 +169,6 @@ class AeneaClient(tk.Tk):
             self.aenea_worker_active = False
             self.client.execute_batch(self.client_proxy._commands)
             self.client_proxy = communications.BatchProxy()
-
-
-translateKeys = {
-#     "space": "space",
-    "Left": "left",
-    "Right": "right",
-    "Up": "up",
-    "Down": "down",
-    "Home": "home",
-    "Next": "pgup",
-    "Prior": "pgdown",
-    "End": "end",
-    "BackSpace": "backspace",
-    "Delete": "delete",
-}
 
 
 if __name__ == "__main__":
