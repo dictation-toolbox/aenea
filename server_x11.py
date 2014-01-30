@@ -115,8 +115,8 @@ def read_command(command, executable="xdotool"):
     rval = fd.read()
   return rval
 
-def write_command(message, executable="xdotool"):
-  with os.popen("%s type --file -" % executable, "w") as fd:
+def write_command(message, arguments="type --file -", executable="xdotool"):
+  with os.popen("%s %s" % (executable, arguments), "w") as fd:
     fd.write(message)
 
 def get_active_window(_xdotool=None):
@@ -202,12 +202,33 @@ def key_press(key, modifiers=(), direction="press", count=1, count_delay=None, _
   else:
     run_command(delay + " ".join(keys))
 
-def write_text(text, _xdotool=None):
-  """send text formatted exactly as written to active window."""
+def write_text(text, paste=False, _xdotool=None):
+  """send text formatted exactly as written to active window. If paste is True,
+     will use X11 PRIMARY clipboard to paste the text instead of typing it.
+     See config.ENABLE_XSEL documentation for more information on this."""
   # Workaround for https://github.com/jordansissel/xdotool/pull/29
   if text:
-    flush_xdotool(_xdotool)
-    write_command(text)
+    if paste and config.ENABLE_XSEL:
+      # swap primary and secondary X11 clipboards so we can restore after paste
+      run_command("-x", executable="xsel")
+
+      # copy the pasted text to the clipboard
+      write_command(text, arguments="-i", executable="xsel")
+
+      # paste by simulating midde click
+      # TODO: can we do this even in programs that don't have a middle click?
+      #       if not, we may need a blacklist of buggy programs.
+      click_mouse(2, _xdotool=_xdotool)
+      flush_xdotool(_xdotool)
+
+      # nuke the text we selected
+      run_command("-c", executable="xsel")
+
+      # restore the previous clipboard contents
+      run_command("-x", executable="xsel")
+    else:
+      flush_xdotool(_xdotool)
+      write_command(text)
 
 def click_mouse(button, direction="click", count=1, count_delay=None, _xdotool=None):
   """click the mouse button specified. button maybe one of "right", "left",
