@@ -5,6 +5,7 @@ import tkFont
 import datetime
 
 import communications
+import config
 
 FLUSH_DELAY = 20 # 20 milliseconds
 
@@ -148,8 +149,8 @@ if __name__ == "__main__":
         ip = sys.argv[1]
         port = sys.argv[2]
     except IndexError:
-        ip = "192.168.0.3"
-        port = 8240
+        host = config.HOST
+        port = config.PORT
 
     root = AeneaClient(ip, port)
     root.mainloop()
