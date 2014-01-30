@@ -18,4 +18,12 @@ PORT = 8240
 # The server should clear the text it entered from the system clipboard after
 # entering it, so you do not need to worry about accidentally pasting it
 # somewhere else later.
-ENABLE_XSEL = True
+
+# Currently this is implemented by sending a middle click. unfortunately, not
+# many programs will work with this if the mouse is not precisely where you want
+# to click. There is no cross when doing environment way of pasting, which means
+# this approach would require a great deal of per environment coding to be
+# functional. When and if GTK ever fixes its  broken shift+insert behavior, or at
+# least enables users to configure it to work properly, this will become
+# workable.
+ENABLE_XSEL = False
