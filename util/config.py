@@ -13,6 +13,12 @@ SCREEN_RESOLUTION = (1920 * 2 + 2560), 1440
 
 PROJECT_ROOT = "E:\\aenea"
 
+# If this is enabled, reloading the configuration will not copy over the
+# client-side configuration file at util/config.py (ie this file). this is useful
+# if you wish to keep the master copy of your configuration files in the Natlink
+# directory.
+DONT_UPDATE_CONFIG = False
+
 # When capturing keystrokes in the client, how long to wait (in milliseconds)
 # after the last keystroke before sending the text to the server.
 #
@@ -38,8 +44,7 @@ def reload_aenea_configuration():
       shutil.rmtree("C:\\NatLink\\NatLink\\MacroSystem\\%s" % name, ignore_errors=True)
       shutil.copytree("%s\\grammars_enabled\\%s" % (PROJECT_ROOT, name), "C:\\NatLink\\NatLink\\MacroSystem\\%s" % name)
   for name in os.listdir("%s\\util" % PROJECT_ROOT):
-    if name == "config.py":
-      # This file is likely to be customized for each user's environment, so don't blow away any environment-specif config.
+    if name == "config.py" and DONT_UPDATE_CONFIG:
       continue
 
     if name.endswith(".py") or name.endswith(".txt"):
