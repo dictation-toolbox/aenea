@@ -149,7 +149,7 @@ if __name__ == "__main__":
         ip = sys.argv[1]
         port = sys.argv[2]
     except IndexError:
-        host = config.HOST
+        ip = config.HOST
         port = config.PORT
 
     root = AeneaClient(ip, port)
