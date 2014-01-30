@@ -6,11 +6,15 @@ import datetime
 
 import communications
 
+FLUSH_DELAY = 20 # 20 milliseconds
 
 class AeneaClient(tk.Tk):
 
     def __init__(self, ip, port):
         tk.Tk.__init__(self)
+        self.aenea_buffer = []
+        self.last_aenea_buffer_update = 0
+        self.aenea_worker_active = False
         self.wm_title("Aenea client - Dictation capturing")
         self.geometry('400x600+400+0')
         self.wait_visibility(self)
@@ -61,6 +65,7 @@ class AeneaClient(tk.Tk):
 
         try:
             self.client = communications.Proxy(ip, int(port))
+            self.client_proxy = communications.BatchProxy()
         except Exception as e:
             self.log(str(e))
 
@@ -96,12 +101,31 @@ class AeneaClient(tk.Tk):
         if key in translateKeys.keys():
             key = translateKeys[key]
     #         print(key)
-        cmd = [('key_press', (), {
-            'count': 1,
-            'modifiers': [],
-            'key': '%s' % key
-        })]
-        self.client.execute_batch(cmd)
+        self.last_aenea_buffer_update = datetime.datetime.now().microsecond / 1000
+        
+        # TODO does this catch all cases?
+        if len(key) == 1:
+            self.aenea_buffer.append(key)
+        else:
+            self.client_proxy.write_text(''.join(self.aenea_buffer))
+            self.client_proxy.key_press(key=key)
+            self.aenea_buffer = []
+        if not self.aenea_worker_active:
+            self.aenea_worker_active = True
+            self.after(FLUSH_DELAY, self.flush_buffer)
+    
+    def flush_buffer(self):
+        delta = (datetime.datetime.now().microsecond / 1000 -
+                 self.last_aenea_buffer_update)
+        if delta < FLUSH_DELAY:
+            self.after(FLUSH_DELAY - delta, self.flush_buffer)
+        else:
+            if self.aenea_buffer:
+                self.client_proxy.write_text(''.join(self.aenea_buffer))
+                self.aenea_buffer = []
+            self.aenea_worker_active = False
+            self.client.execute_batch(self.client_proxy._commands)
+            self.client_proxy = communications.BatchProxy()
 
 
 translateKeys = {
