@@ -228,7 +228,7 @@ def write_text(text, paste=False, _xdotool=None):
       run_command("-x", executable="xsel")
     else:
       flush_xdotool(_xdotool)
-      write_command(text)
+      write_command(text, arguments="type --file - --delay 0")
 
 def click_mouse(button, direction="click", count=1, count_delay=None, _xdotool=None):
   """click the mouse button specified. button maybe one of "right", "left",
