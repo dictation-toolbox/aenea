@@ -99,9 +99,11 @@ Setup instructions:
 
 7) On the Linux host, install python-jsonrpclib, xdotool, and xsel (optional but recommended). If necessary, adjust the networking settings in aenea/config.py (server) and aenea/util/config.py (client).
 
-8) Run server_x11.py to listen for commands and execute them. Note that the grammars that ship with aenea will only be active if Notepad is open and selected in the VirtualMachine (see aenea/util/aenea.py to change this). A simple test is saying "zip 0 0", which should move the mouse to the upper left of your screen.
+8) Run server_x11.py to listen for commands and execute them. Note that the grammars that ship with aenea will only be active if Notepad or the aenea client is open and selected in the VirtualMachine (see aenea/util/aenea.py to change this). A simple test is saying "zip 0 0", which should move the mouse to the upper left of your screen.
 
-9) Please let me know if you encounter issues with this setup, especially if you manage to get it working -- I hope to update this document with advice to make the setup easier for future users.
+9) If you would like to capture normal mode dictation, you can run the experimental client that works by capturing all keystrokes typed into its window and transmitting them to the server. It is in aenea/util/aenea_client.py. Regular commands should continue to work as normal.
+
+10) Please let me know if you encounter issues with this setup, especially if you manage to get it working -- I hope to update this document with advice to make the setup easier for future users.
 
 Security
 ----------------
@@ -113,7 +115,7 @@ Please remember that the server simply accepts any connection made to it and wil
 Performance
 ---------------
 
-Since regular dictation and built in Dragon commands will go to the virtual machine instead of your computer, I recommend leaving Dragon in command mode. This will substantially improve both speed and accuracy of recognition.
+Since regular dictation and built in Dragon commands will go to the virtual machine instead of your computer, I recommend leaving Dragon in command mode. This will substantially improve both speed and accuracy of recognition. You can use the aenea client to capture normal mode dictation and transmit it to the server.
 
 Having more grammars and especially complex grammars will adversely affect recognition performance.
 
