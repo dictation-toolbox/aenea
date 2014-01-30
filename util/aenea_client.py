@@ -24,11 +24,17 @@ class AeneaClient(tk.Tk):
         self.tab2 = tk.Frame(note)
         w = tk.LabelFrame(self.tab1, text=u"Controls")
         w.pack(side=tk.TOP, fill=tk.BOTH)
-        self.button1 = tk.Button(w, text=u"Start capture",
-            command=self.start_capture)
+        self.button1 = tk.Button(
+                w,
+                text=u"Start capture",
+                command=self.start_capture
+            )
         self.button1.pack(side=tk.LEFT)
-        self.button2 = tk.Button(w, text=u"Stop capture",
-            command=self.stop_capture, state=tk.DISABLED)
+        self.button2 = tk.Button(
+                w,
+                text=u"Stop capture",
+                command=self.stop_capture, state=tk.DISABLED
+            )
         self.button2.pack(side=tk.LEFT)
 
         dFont = tkFont.Font(family="Tahoma", size=8)
@@ -37,8 +43,11 @@ class AeneaClient(tk.Tk):
         l.pack(side=tk.TOP)
 
         self.tab1.text1 = tk.Text(self.tab1, width=16, height=5, font=dFont)
-        yscrollbar = tk.Scrollbar(self.tab1.text1, orient=tk.VERTICAL,
-            command=self.tab1.text1.yview)
+        yscrollbar = tk.Scrollbar(
+                self.tab1.text1,
+                orient=tk.VERTICAL,
+                command=self.tab1.text1.yview
+            )
         yscrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.tab1.text1["yscrollcommand"] = yscrollbar.set
         self.tab1.text1.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
@@ -49,8 +58,11 @@ class AeneaClient(tk.Tk):
         l.pack(side=tk.TOP)
 
         self.tab1.text2 = tk.Text(self.tab1, width=16, height=5, font=dFont)
-        yscrollbar = tk.Scrollbar(self.tab1.text2, orient=tk.VERTICAL,
-            command=self.tab1.text2.yview)
+        yscrollbar = tk.Scrollbar(
+                self.tab1.text2,
+                orient=tk.VERTICAL,
+                command=self.tab1.text2.yview
+            )
         yscrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.tab1.text2["yscrollcommand"] = yscrollbar.set
         self.tab1.text2.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
@@ -80,8 +92,7 @@ class AeneaClient(tk.Tk):
         # Doesn't seem to help though... :(
         self.client.server.key_press(key="Control_R")
         self.log("Starting capture")
-        self.bind("<Any KeyPress>",
-            lambda event: self.send_key(event.keysym))
+        self.bind("<Any KeyPress>", lambda event: self.send_key(event.keysym))
         self.button1.config(state=tk.DISABLED)
         self.button2.config(state=tk.NORMAL)
 
