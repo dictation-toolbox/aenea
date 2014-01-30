@@ -4,7 +4,9 @@ import os, shutil
 
 from config import reload_aenea_configuration
 
-global_context = AppContext(executable="notepad")
+# global_context = AppContext(executable="notepad")
+global_context = AppContext(executable="python",
+    title="Aenea client - Dictation capturing")
 
 class DigitalInteger(Repetition):
   digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
