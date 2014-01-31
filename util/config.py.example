@@ -18,15 +18,3 @@ PROJECT_ROOT = "E:\\aenea"
 # if you wish to keep the master copy of your configuration files in the Natlink
 # directory.
 DONT_UPDATE_CONFIG = False
-
-# When capturing keystrokes in the client, how long to wait (in milliseconds)
-# after the last keystroke before sending the text to the server.
-#
-# A larger value will result in higher latency and bandwidth, meaning that if you
-# frequently speak long, complicated phrases they will be transmitted more
-# quickly this way.  A smaller value will result in lower latency and bandwidth,
-# meaning that phrases will show up more quickly after you speak them but the
-# overall transmission speed will be reduced. I would experiment with values in
-# the range from 2 to 20 to find a balance you like. This only affects the
-# dictation capture client, not grammars in command mode.
-AENEA_CLIENT_FLUSH_DELAY = 2
