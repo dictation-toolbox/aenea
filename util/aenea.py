@@ -2,8 +2,6 @@ from dragonfly import AppContext, Repetition, Choice
 from proxy_nicknames import Text, Key
 import os, shutil
 
-from config import reload_aenea_configuration
-
 # global_context = AppContext(executable="notepad")
 global_context = AppContext(executable="python",
     title="Aenea client - Dictation capturing")
