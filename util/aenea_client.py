@@ -2,6 +2,7 @@ import Tkinter as tk
 import tkFont
 import datetime
 import sys
+import threading
 import ttk
 
 import communications
@@ -37,6 +38,8 @@ class AeneaClient(tk.Tk):
     def __init__(self, ip, port):
         tk.Tk.__init__(self)
         self.aenea_buffer = []
+        self.buffer_lock = threading.Lock()
+        self.buffer_ready = threading.Condition(self.buffer_lock)
         self.last_aenea_buffer_update = 0
         self.aenea_worker_active = False
         self.wm_title("Aenea client - Dictation capturing")
@@ -105,6 +108,8 @@ class AeneaClient(tk.Tk):
         except Exception as e:
             self.log(str(e))
 
+        threading.Thread(target=self.worker_thread).start()
+
     def log(self, message):
         timeStamp = datetime.datetime.now()
         self.tab1.text2.insert(tk.END, "%s: %s\n" % (timeStamp, message))
@@ -136,39 +141,30 @@ class AeneaClient(tk.Tk):
         key = TRANSLATE_KEYS.get(key, key)
         self.last_aenea_buffer_update = datetime.datetime.now().microsecond / 1000
 
-        # If buffering is disabled, send the key immediately.
-        if config.AENEA_CLIENT_FLUSH_DELAY == 0:
+        with self.buffer_lock:
             if key in LITERAL_KEYS:
-                self.client.server.write_text(key)
+                self.aenea_buffer.append(key)
             else:
-                self.client.server.key_press(key=key)
-            return
-
-        # Since buffering is enabled, add to the keystroke to the outgoing buffer
-        # as either a keypress or part of text, and insure that a event is
-        # scheduled to empty the buffer and further text is not received.
-        if key in LITERAL_KEYS:
-            self.aenea_buffer.append(key)
-        else:
-            self.client_proxy.write_text(''.join(self.aenea_buffer))
-            self.client_proxy.key_press(key=key)
-            self.aenea_buffer = []
-        if not self.aenea_worker_active:
-            self.aenea_worker_active = True
-            self.after(config.AENEA_CLIENT_FLUSH_DELAY, self.flush_buffer)
-    
-    def flush_buffer(self):
-        delta = (datetime.datetime.now().microsecond / 1000 -
-                 self.last_aenea_buffer_update)
-        if delta < config.AENEA_CLIENT_FLUSH_DELAY:
-            self.after(config.AENEA_CLIENT_FLUSH_DELAY - delta, self.flush_buffer)
-        else:
-            if self.aenea_buffer:
                 self.client_proxy.write_text(''.join(self.aenea_buffer))
+                self.client_proxy.key_press(key=key)
                 self.aenea_buffer = []
-            self.aenea_worker_active = False
-            self.client.execute_batch(self.client_proxy._commands)
-            self.client_proxy = communications.BatchProxy()
+            self.buffer_ready.notify()
+
+    def worker_thread(self):
+        while 1:
+            with self.buffer_lock:
+                # Wait until buffer is non-empty.
+                while not self.aenea_buffer and not self.client_proxy._commands:
+                    self.buffer_ready.wait()
+
+                # Add text to batch buffer
+                if self.aenea_buffer:
+                    self.client_proxy.write_text(''.join(self.aenea_buffer))
+                    self.aenea_buffer = []
+
+                # Flush buffer. Note that RPC calls block.
+                self.client.execute_batch(self.client_proxy._commands)
+                self.client_proxy = communications.BatchProxy()
 
 
 if __name__ == "__main__":
