@@ -40,7 +40,6 @@ class AeneaClient(tk.Tk):
         self.aenea_buffer = []
         self.buffer_lock = threading.Lock()
         self.buffer_ready = threading.Condition(self.buffer_lock)
-        self.last_aenea_buffer_update = 0
         self.aenea_worker_active = False
         self.wm_title("Aenea client - Dictation capturing")
         self.geometry('400x600+400+0')
@@ -139,7 +138,6 @@ class AeneaClient(tk.Tk):
         if key in IGNORED_KEYS:
             return
         key = TRANSLATE_KEYS.get(key, key)
-        self.last_aenea_buffer_update = datetime.datetime.now().microsecond / 1000
 
         with self.buffer_lock:
             if key in LITERAL_KEYS:
