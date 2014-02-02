@@ -148,7 +148,7 @@ class AeneaClient(tk.Tk):
 
     def send_key(self, key):
         if self.display_entered_text.get():
-            self.tab1.text1.insert(tk.END, key)
+            self.tab1.text1.insert(tk.END, (key if key != 'space' else ' '))
             self.tab1.text1.see(tk.END)  # Scroll to end.
         if key in IGNORED_KEYS:
             return
