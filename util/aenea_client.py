@@ -168,19 +168,28 @@ class AeneaClient(tk.Tk):
 
     def worker_thread(self):
         while 1:
-            with self.buffer_lock:
-                # Wait until buffer is non-empty.
-                while not self.aenea_buffer and not self.client_proxy._commands:
-                    self.buffer_ready.wait()
+            self.buffer_lock.acquire()
 
-                # Add text to batch buffer
-                if self.aenea_buffer:
-                    self.client_proxy.write_text(''.join(self.aenea_buffer))
-                    self.aenea_buffer = []
+            # Wait until buffer is non-empty.
+            while not self.aenea_buffer and not self.client_proxy._commands:
+                self.buffer_ready.wait()
 
-                # Flush buffer. Note that RPC calls block.
-                self.client.execute_batch(self.client_proxy._commands)
-                self.client_proxy = communications.BatchProxy()
+            # Grab the buffer
+            text = self.aenea_buffer
+            commands = self.client_proxy
+
+            # Flush the buffer
+            self.aenea_buffer = []
+            self.client_proxy = communications.BatchProxy()
+
+            self.buffer_lock.release()
+
+            # Add text to batch buffer
+            if text:
+                commands.write_text(''.join(text))
+
+            # Flush buffer. Note that RPC calls block.
+            self.client.execute_batch(commands._commands)
 
 
 if __name__ == "__main__":
