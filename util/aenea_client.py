@@ -58,9 +58,23 @@ class AeneaClient(tk.Tk):
         self.button2 = tk.Button(
                 w,
                 text=u"Stop capture",
-                command=self.stop_capture, state=tk.DISABLED
+                command=self.stop_capture,
+                state=tk.DISABLED
             )
         self.button2.pack(side=tk.LEFT)
+        self.button3 = tk.Button(
+                w,
+                text=u"Clear box",
+                command=self.clear_text
+            )
+        self.button3.pack(side=tk.LEFT)
+        self.display_entered_text = tk.IntVar()
+        self.checkbox1 = tk.Checkbutton(
+                w,
+                text="Display entered text",
+                variable=self.display_entered_text
+            )
+        self.checkbox1.pack(side=tk.LEFT)
 
         dFont = tkFont.Font(family="Tahoma", size=8)
 
@@ -133,8 +147,9 @@ class AeneaClient(tk.Tk):
         pass
 
     def send_key(self, key):
-        self.tab1.text1.insert(tk.END, key)
-        self.tab1.text1.see(tk.END)  # Scroll to end.
+        if self.display_entered_text.get():
+            self.tab1.text1.insert(tk.END, key)
+            self.tab1.text1.see(tk.END)  # Scroll to end.
         if key in IGNORED_KEYS:
             return
         key = TRANSLATE_KEYS.get(key, key)
@@ -147,6 +162,9 @@ class AeneaClient(tk.Tk):
                 self.client_proxy.key_press(key=key)
                 self.aenea_buffer = []
             self.buffer_ready.notify()
+
+    def clear_text(self):
+        self.tab1.text1.delete("1.0", tk.END)
 
     def worker_thread(self):
         while 1:
