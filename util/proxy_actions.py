@@ -1,6 +1,7 @@
 """performs black magic on the dragonfly actions objects to force them to
    forward their actions to a remote server."""
 
+import os
 import pyparsing
 
 import communications
@@ -20,8 +21,14 @@ def _get_key_symbols():
     with open("keys.txt") as keyfile:
       return [line.strip() for line in keyfile]
   except Exception:
-    with open("C:\\NatLink\\NatLink\\MacroSystem\\keys.txt") as keyfile:
-      return [line.strip() for line in keyfile]
+    try:
+      path = os.path.dirname(os.path.abspath(__file__))
+      path = os.path.join(path, "keys.txt")
+      with open(path) as keyfile:
+        return [line.strip() for line in keyfile]
+    except Exception:
+      with open("C:\\NatLink\\NatLink\\MacroSystem\\keys.txt") as keyfile:
+        return [line.strip() for line in keyfile]
 
 _modifier_keys = {
         "a": "alt",
