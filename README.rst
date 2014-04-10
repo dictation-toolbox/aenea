@@ -34,7 +34,6 @@ Current Features:
 
 Primary limitations:
 
-- Lacks ability to transmit formatted text (eg capitalization).
 - Lacks ability to take advantage of context when dictating.
 - Lacks ability to use context dependent editing commands (select that, etc)
 - Requires some knowledge of Python programming to edit or create new modules, and in some cases to customize.
@@ -44,7 +43,7 @@ Primary limitations:
 Missing features:
 
 - Currently no encryption or authentication for remote control protocol (not a huge issue since it is typically used on single user systems via loopback).
-- Currently only fully supports a Linux host. Partial support for Windows is available, and OS X support is in development here.
+- Currently only fully supports a Linux host. Partial support for Windows is available, and OS X support is in development here: https://github.com/dopey/aenea-fork.
 - No actions for window management/etc on Gnome/KDE/etc. (pull requests welcome)
 
 The primary focus of this project is writing code, system administration, terminal use, etc, and it works quite well for those tasks. For writing prose, word processing, etc., this project is quite limited compared to using Dragon natively on Windows.
@@ -57,6 +56,10 @@ Existing Modules:
 - Thunderbird/Icedove
 - VIM (module is named verbal_emacs.py)
 - Multiedit text editing (expanded version of Christo Butcher's multiedit)
+
+Current Status
+---------------
+This project currently does everything I need well enough, and no new features are currently planned. I remain astounded by what Nuance has made possible via Natlink, and the flexibility and power of Dragonfly. I'm happy to help with troubles getting set up and take a look at bugs you may encounter, and still welcome pull requests.
 
 Overview
 --------
