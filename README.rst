@@ -31,10 +31,11 @@ Current Features:
 - Access to Dragonfly's powerful grammar specification, using Dragon NaturallySpeaking (via Natlink) or Windows Speech Recognition.
 - Many Dragonfly modules will work with only minor modification via proxy.
 - Includes a detailed module for using VIM, and a customized version of the Dragonfly multiedit module designed for programming.
+- Dictate prose directly into any remote application via emulated keystrokes using the keystroke capture client.
 
 Primary limitations:
 
-- Lacks ability to take advantage of context when dictating.
+- Limited ability to take advantage of context when dictating prose.
 - Lacks ability to use context dependent editing commands (select that, etc)
 - Requires some knowledge of Python programming to edit or create new modules, and in some cases to customize.
 - Relies on neither free nor gratis Windows and Dragon NaturallySpeaking.
