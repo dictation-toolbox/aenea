@@ -119,13 +119,13 @@ keyPressFunction :: Text -> [Text] -> Direction -> Int -> Int -> RpcResult IO ()
 keyPressFunction keyName modifiers direction count delayMillis = do
   key <- tryLookupKey nameToKey id keyName
   modKeys <- mapM (tryLookupKey nameToKey id) modifiers
-  let keyActions = modsDown ++ keyPresses ++ modsUp
-      modsDown = map keyDown modKeys
-      modsUp = map keyUp modKeys
-      keyPresses = replicate count $ keyAction direction key
+  let withPress k task = withKeyPress k (delay >> task >> delay)
+      pressKey = sequence_ $ intersperse delay $
+                   replicate count $ keyAction direction key
       delay = threadDelay millis
       millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
-  lift $ sequence_ $ intersperse delay keyActions
+  lift $ compose (withPress <$> modKeys) pressKey
+    where compose = foldl (.) id
 
 defaultKeyDelay = -1
 
@@ -143,7 +143,7 @@ writeTextMethod = toMethod "write_text" writeTextFunction
 writeTextFunction :: Text -> RpcResult IO ()
 writeTextFunction text = forM_ (unpack text) $
                          lift . keyPress <=< tryLookupKey charToKey charToText
-    where charToText = fromString . (:[])
+    where charToText c = fromString [c]
 
 pauseMethod = toMethod "pause" pause (Required "amount" :+: ())
     where pause :: Int -> RpcResult IO ()

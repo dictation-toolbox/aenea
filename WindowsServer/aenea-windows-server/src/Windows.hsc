@@ -37,8 +37,8 @@ data Key = Key { keyCode :: VKey
                , keyCharacter :: Maybe Char
                , keyRequiresShift :: Bool }
 
-nameToKey key = lookup key keyMap
-                where keyMap = concatMap (\k -> zip (keyNames k) (repeat k)) keys
+nameToKey key = M.lookup key keyMap
+    where keyMap = M.fromList $ concatMap (\k -> zip (keyNames k) (repeat k)) keys
 
 charToKey :: Char -> Maybe Key
 charToKey char = M.lookup char keyMap
@@ -54,10 +54,9 @@ instance FromJSON Direction where
     parseJSON _ = empty
 
 keyAction :: Direction -> Key -> IO ()
-keyAction d k = case d of
-                 Press -> keyPress k
-                 Down -> keyDown k
-                 Up -> keyUp k
+keyAction Press = keyPress
+keyAction Down = keyDown
+keyAction Up = keyUp
 
 keyPress :: Key -> IO ()
 keyPress k = keyDown k >> keyUp k
@@ -71,7 +70,7 @@ keyDown k = when (keyRequiresShift k) (shift True) >> keyCodeAction code True
     where code = keyCode k
 
 withKeyPress :: Key -> IO () -> IO ()
-withKeyPress k task = keyDown k >> finally (keyUp k) task
+withKeyPress k task = keyDown k >> task `finally` keyUp k
 
 shift :: Bool -> IO ()
 shift = keyCodeAction $ keyCode key_SHIFT
@@ -93,7 +92,7 @@ getWindowText h = do
   allocaArray (fromIntegral lengthWithNull) $ \textPtr ->
       c_GetWindowText h textPtr lengthWithNull >>= \len ->
       if len > 0
-      then Just <$> (peekTString textPtr)
+      then Just <$> peekTString textPtr
       else return Nothing
 
 getForegroundWindow :: IO (Maybe HWND)
@@ -103,11 +102,10 @@ getForegroundWindow = f <$> c_GetForegroundWindow
 getForegroundWindowAncestor :: IO (Maybe HWND)
 getForegroundWindowAncestor = do
     w <- f <$> c_GetForegroundWindow
-    a <- case w of
-         Nothing -> return Nothing
-         Just w' -> f <$> c_GetAncestor w' (#const GA_ROOTOWNER)
-    return a
-      where f ptr = if ptr == nullPtr then Nothing else Just ptr
+    case w of
+      Nothing -> return Nothing
+      Just w' -> f <$> c_GetAncestor w' (#const GA_ROOTOWNER)
+  where f ptr = if ptr == nullPtr then Nothing else Just ptr
 
 foreign import stdcall unsafe "Winuser.h keybd_event"
         c_keybd_event :: BYTE
