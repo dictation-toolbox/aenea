@@ -8,31 +8,26 @@ module Windows ( Key
                , charToKey
                , keyAction
                , keyPress
-               , keyUp
-               , keyDown
                , withKeyPress
-               , keyNames
-               , keyRequiresShift
-               , key_SHIFT
                , getForegroundWindowText
                , getForegroundWindowAncestorText) where
 
-import System.Win32.Types
-import Graphics.Win32.Key
+import System.Win32.Types (BYTE, DWORD, UINT, LPTSTR, peekTString)
+import qualified Graphics.Win32.Key as W
 import Graphics.Win32.GDI.Types (HWND)
 import Foreign hiding (shift)
-import Foreign.C.Types
+import Foreign.C.Types (CInt (..))
 import Data.Text (Text)
 import Data.Aeson (FromJSON, parseJSON)
 import qualified Data.Map as M
-import Control.Applicative
+import Control.Applicative ((<$>), empty)
 import Control.Monad (when)
-import Control.Exception
+import Control.Exception (finally)
 
 #include "Windows.h"
 #include "Winuser.h"
 
-data Key = Key { keyCode :: VKey
+data Key = Key { keyCode :: W.VKey
                , keyNames :: [Text]
                , keyCharacter :: Maybe Char
                , keyRequiresShift :: Bool }
@@ -75,7 +70,7 @@ withKeyPress k task = keyDown k >> task `finally` keyUp k
 shift :: Bool -> IO ()
 shift = keyCodeAction $ keyCode key_SHIFT
 
-keyCodeAction :: VKey -> Bool -> IO ()
+keyCodeAction :: W.VKey -> Bool -> IO ()
 keyCodeAction code isDown = let direction = if isDown then 0 else (#const KEYEVENTF_KEYUP)
                                 c = fromIntegral code
                             in c_keybd_event c 0 direction 0
@@ -283,9 +278,9 @@ keys = [ key_ALT
        , key_SLASH
        , key_QUESTION ]
 
-key_ALT = Key vK_MENU ["alt"] Nothing False
-key_CONTROL = Key vK_CONTROL ["ctrl", "control"] Nothing False
-key_SHIFT = Key vK_SHIFT ["shift"] Nothing False
+key_ALT = Key W.vK_MENU ["alt"] Nothing False
+key_CONTROL = Key W.vK_CONTROL ["ctrl", "control"] Nothing False
+key_SHIFT = Key W.vK_SHIFT ["shift"] Nothing False
 key_0 = Key 0x30 ["0"] (Just '0') False
 key_1 = Key 0x31 ["1"] (Just '1') False
 key_2 = Key 0x32 ["2"] (Just '2') False
@@ -348,65 +343,65 @@ key_w = Key 0x57 ["w"] (Just 'w') False
 key_x = Key 0x58 ["x"] (Just 'x') False
 key_y = Key 0x59 ["y"] (Just 'y') False
 key_z = Key 0x5A ["z"] (Just 'z') False
-key_LEFT = Key vK_LEFT ["left"] Nothing False
-key_RIGHT = Key vK_RIGHT ["right"] Nothing False
-key_UP = Key vK_UP ["up"] Nothing False
-key_DOWN = Key vK_DOWN ["down"] Nothing False
-key_PGUP = Key vK_PRIOR ["pgup"] Nothing False
-key_PGDOWN = Key vK_NEXT ["pgdown"] Nothing False
-key_HOME = Key vK_HOME ["home"] Nothing False
-key_END = Key vK_END ["end"] Nothing False
-key_SPACE = Key vK_SPACE ["space"] (Just ' ') False
-key_TAB = Key vK_TAB ["tab"] (Just '\t') False
-key_ENTER = Key vK_RETURN ["enter", "return"] (Just '\n') False
-key_BACKSPACE = Key vK_BACK ["back", "backspace"] Nothing False
-key_INSERT = Key vK_INSERT ["insert"] Nothing False
-key_DELETE = Key vK_DELETE ["delete"] Nothing False
-key_DEL = Key vK_DELETE ["del"] Nothing False
+key_LEFT = Key W.vK_LEFT ["left"] Nothing False
+key_RIGHT = Key W.vK_RIGHT ["right"] Nothing False
+key_UP = Key W.vK_UP ["up"] Nothing False
+key_DOWN = Key W.vK_DOWN ["down"] Nothing False
+key_PGUP = Key W.vK_PRIOR ["pgup"] Nothing False
+key_PGDOWN = Key W.vK_NEXT ["pgdown"] Nothing False
+key_HOME = Key W.vK_HOME ["home"] Nothing False
+key_END = Key W.vK_END ["end"] Nothing False
+key_SPACE = Key W.vK_SPACE ["space"] (Just ' ') False
+key_TAB = Key W.vK_TAB ["tab"] (Just '\t') False
+key_ENTER = Key W.vK_RETURN ["enter", "return"] (Just '\n') False
+key_BACKSPACE = Key W.vK_BACK ["back", "backspace"] Nothing False
+key_INSERT = Key W.vK_INSERT ["insert"] Nothing False
+key_DELETE = Key W.vK_DELETE ["delete"] Nothing False
+key_DEL = Key W.vK_DELETE ["del"] Nothing False
 key_LWIN = Key (#const VK_LWIN) ["win"] Nothing False
-key_APPS = Key vK_MENU ["apps", "popup"] Nothing False
-key_PAUSE = Key vK_PAUSE ["pause"] Nothing False
-key_ESCAPE = Key vK_ESCAPE ["escape"] Nothing False
-key_MULTIPLY = Key vK_MULTIPLY ["npmul"] Nothing False
-key_ADD = Key vK_ADD ["npadd"] Nothing False
-key_SEPARATOR = Key vK_SEPARATOR ["npsep"] Nothing False
-key_SUBTRACT = Key vK_SUBTRACT ["npsub"] Nothing False
-key_DECIMAL = Key vK_DECIMAL ["npdec"] Nothing False
-key_DIVIDE = Key vK_DIVIDE ["npdiv"] Nothing False
-key_NUMPAD0 = Key vK_NUMPAD0 ["numpad0", "np0"] Nothing False
-key_NUMPAD1 = Key vK_NUMPAD1 ["numpad1", "np1"] Nothing False
-key_NUMPAD2 = Key vK_NUMPAD2 ["numpad2", "np2"] Nothing False
-key_NUMPAD3 = Key vK_NUMPAD3 ["numpad3", "np3"] Nothing False
-key_NUMPAD4 = Key vK_NUMPAD4 ["numpad4", "np4"] Nothing False
-key_NUMPAD5 = Key vK_NUMPAD5 ["numpad5", "np5"] Nothing False
-key_NUMPAD6 = Key vK_NUMPAD6 ["numpad6", "np6"] Nothing False
-key_NUMPAD7 = Key vK_NUMPAD7 ["numpad7", "np7"] Nothing False
-key_NUMPAD8 = Key vK_NUMPAD8 ["numpad8", "np8"] Nothing False
-key_NUMPAD9 = Key vK_NUMPAD9 ["numpad9", "np9"] Nothing False
-key_F1 = Key vK_F1 ["f1"] Nothing False
-key_F2 = Key vK_F2 ["f2"] Nothing False
-key_F3 = Key vK_F3 ["f3"] Nothing False
-key_F4 = Key vK_F4 ["f4"] Nothing False
-key_F5 = Key vK_F5 ["f5"] Nothing False
-key_F6 = Key vK_F6 ["f6"] Nothing False
-key_F7 = Key vK_F7 ["f7"] Nothing False
-key_F8 = Key vK_F8 ["f8"] Nothing False
-key_F9 = Key vK_F9 ["f9"] Nothing False
-key_F10 = Key vK_F10 ["f10"] Nothing False
-key_F11 = Key vK_F11 ["f11"] Nothing False
-key_F12 = Key vK_F12 ["f12"] Nothing False
-key_F13 = Key vK_F13 ["f13"] Nothing False
-key_F14 = Key vK_F14 ["f14"] Nothing False
-key_F15 = Key vK_F15 ["f15"] Nothing False
-key_F16 = Key vK_F16 ["f16"] Nothing False
-key_F17 = Key vK_F17 ["f17"] Nothing False
-key_F18 = Key vK_F18 ["f18"] Nothing False
-key_F19 = Key vK_F19 ["f19"] Nothing False
-key_F20 = Key vK_F20 ["f20"] Nothing False
-key_F21 = Key vK_F21 ["f21"] Nothing False
-key_F22 = Key vK_F22 ["f22"] Nothing False
-key_F23 = Key vK_F23 ["f23"] Nothing False
-key_F24 = Key vK_F24 ["f24"] Nothing False
+key_APPS = Key W.vK_MENU ["apps", "popup"] Nothing False
+key_PAUSE = Key W.vK_PAUSE ["pause"] Nothing False
+key_ESCAPE = Key W.vK_ESCAPE ["escape"] Nothing False
+key_MULTIPLY = Key W.vK_MULTIPLY ["npmul"] Nothing False
+key_ADD = Key W.vK_ADD ["npadd"] Nothing False
+key_SEPARATOR = Key W.vK_SEPARATOR ["npsep"] Nothing False
+key_SUBTRACT = Key W.vK_SUBTRACT ["npsub"] Nothing False
+key_DECIMAL = Key W.vK_DECIMAL ["npdec"] Nothing False
+key_DIVIDE = Key W.vK_DIVIDE ["npdiv"] Nothing False
+key_NUMPAD0 = Key W.vK_NUMPAD0 ["numpad0", "np0"] Nothing False
+key_NUMPAD1 = Key W.vK_NUMPAD1 ["numpad1", "np1"] Nothing False
+key_NUMPAD2 = Key W.vK_NUMPAD2 ["numpad2", "np2"] Nothing False
+key_NUMPAD3 = Key W.vK_NUMPAD3 ["numpad3", "np3"] Nothing False
+key_NUMPAD4 = Key W.vK_NUMPAD4 ["numpad4", "np4"] Nothing False
+key_NUMPAD5 = Key W.vK_NUMPAD5 ["numpad5", "np5"] Nothing False
+key_NUMPAD6 = Key W.vK_NUMPAD6 ["numpad6", "np6"] Nothing False
+key_NUMPAD7 = Key W.vK_NUMPAD7 ["numpad7", "np7"] Nothing False
+key_NUMPAD8 = Key W.vK_NUMPAD8 ["numpad8", "np8"] Nothing False
+key_NUMPAD9 = Key W.vK_NUMPAD9 ["numpad9", "np9"] Nothing False
+key_F1 = Key W.vK_F1 ["f1"] Nothing False
+key_F2 = Key W.vK_F2 ["f2"] Nothing False
+key_F3 = Key W.vK_F3 ["f3"] Nothing False
+key_F4 = Key W.vK_F4 ["f4"] Nothing False
+key_F5 = Key W.vK_F5 ["f5"] Nothing False
+key_F6 = Key W.vK_F6 ["f6"] Nothing False
+key_F7 = Key W.vK_F7 ["f7"] Nothing False
+key_F8 = Key W.vK_F8 ["f8"] Nothing False
+key_F9 = Key W.vK_F9 ["f9"] Nothing False
+key_F10 = Key W.vK_F10 ["f10"] Nothing False
+key_F11 = Key W.vK_F11 ["f11"] Nothing False
+key_F12 = Key W.vK_F12 ["f12"] Nothing False
+key_F13 = Key W.vK_F13 ["f13"] Nothing False
+key_F14 = Key W.vK_F14 ["f14"] Nothing False
+key_F15 = Key W.vK_F15 ["f15"] Nothing False
+key_F16 = Key W.vK_F16 ["f16"] Nothing False
+key_F17 = Key W.vK_F17 ["f17"] Nothing False
+key_F18 = Key W.vK_F18 ["f18"] Nothing False
+key_F19 = Key W.vK_F19 ["f19"] Nothing False
+key_F20 = Key W.vK_F20 ["f20"] Nothing False
+key_F21 = Key W.vK_F21 ["f21"] Nothing False
+key_F22 = Key W.vK_F22 ["f22"] Nothing False
+key_F23 = Key W.vK_F23 ["f23"] Nothing False
+key_F24 = Key W.vK_F24 ["f24"] Nothing False
 key_EXCLAMATION = Key (keyCode key_1) ["exclamation", "bang"] (Just '!') True
 key_AT = Key (keyCode key_2) ["at"] (Just '@') True
 key_HASH = Key (keyCode key_3) ["hash"] (Just '#') True

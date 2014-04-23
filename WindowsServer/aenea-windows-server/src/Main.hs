@@ -2,7 +2,12 @@
 
 module Main (main) where
 
-import Windows
+import Windows( Key, Direction (..)
+              , nameToKey, charToKey
+              , keyPress, keyAction
+              , withKeyPress
+              , getForegroundWindowText
+              , getForegroundWindowAncestorText)
 import Network.JsonRpc.Server( Parameter (..)
                              , (:+:) (..)
                              , RpcResult
