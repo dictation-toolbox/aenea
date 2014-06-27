@@ -2,9 +2,9 @@ from dragonfly import AppContext, Repetition, Choice
 from proxy_nicknames import Text, Key
 import os, shutil
 
-# global_context = AppContext(executable="notepad")
-global_context = AppContext(executable="python",
-    title="Aenea client - Dictation capturing")
+global_context = (AppContext(executable="python",
+    title="Aenea client - Dictation capturing") |
+    AppContext(executable="notepad"))
 
 class DigitalInteger(Repetition):
   digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
