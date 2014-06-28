@@ -8,8 +8,8 @@ import ttk
 import communications
 import config
 
-# Keys that should be translated from a TK name to the name expected
-# by the server.
+# Keys that should be translated from a TK name to the name expected by
+# the server.
 TRANSLATE_KEYS = {
     "space": " ",
     "Left": "left",
@@ -24,14 +24,17 @@ TRANSLATE_KEYS = {
     "Delete": "delete",
 }
 
-# Keys that may be sent as part of a text string. Any key pressed that is not in
-# the ignored set or in this mapping will be sent as a keypress event, which is
-# slightly less efficient.
-LITERAL_KEYS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!? "
+# Keys that may be sent as part of a text string. Any key pressed that
+# is not in the ignored set or in this mapping will be sent as a
+# keypress event, which is slightly less efficient.
+LITERAL_KEYS = ("abcdefghijklmnopqrstuvwxyz"
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!? ")
 
-# Keys that should be completely ignored when pressed. This has the side effect
-# that Dragon commands like "press control J" will not work via this cilent.
+# Keys that should be completely ignored when pressed. This has the side
+# effect that Dragon commands like "press control J" will not work via
+# this cilent.
 IGNORED_KEYS = ('Shift_L', 'Control_L', 'Alt_L', '??')
+
 
 class AeneaClient(tk.Tk):
 
@@ -50,29 +53,29 @@ class AeneaClient(tk.Tk):
         w = tk.LabelFrame(self.tab1, text=u"Controls")
         w.pack(side=tk.TOP, fill=tk.BOTH)
         self.button1 = tk.Button(
-                w,
-                text=u"Start capture",
-                command=self.start_capture
+            w,
+            text=u"Start capture",
+            command=self.start_capture
             )
         self.button1.pack(side=tk.LEFT)
         self.button2 = tk.Button(
-                w,
-                text=u"Stop capture",
-                command=self.stop_capture,
-                state=tk.DISABLED
+            w,
+            text=u"Stop capture",
+            command=self.stop_capture,
+            state=tk.DISABLED
             )
         self.button2.pack(side=tk.LEFT)
         self.button3 = tk.Button(
-                w,
-                text=u"Clear box",
-                command=self.clear_text
+            w,
+            text=u"Clear box",
+            command=self.clear_text
             )
         self.button3.pack(side=tk.LEFT)
         self.display_entered_text = tk.IntVar()
         self.checkbox1 = tk.Checkbutton(
-                w,
-                text="Display entered text",
-                variable=self.display_entered_text
+            w,
+            text="Display entered text",
+            variable=self.display_entered_text
             )
         self.checkbox1.pack(side=tk.LEFT)
 
@@ -83,9 +86,9 @@ class AeneaClient(tk.Tk):
 
         self.tab1.text1 = tk.Text(self.tab1, width=16, height=5, font=dFont)
         yscrollbar = tk.Scrollbar(
-                self.tab1.text1,
-                orient=tk.VERTICAL,
-                command=self.tab1.text1.yview
+            self.tab1.text1,
+            orient=tk.VERTICAL,
+            command=self.tab1.text1.yview
             )
         yscrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.tab1.text1["yscrollcommand"] = yscrollbar.set
@@ -98,9 +101,9 @@ class AeneaClient(tk.Tk):
 
         self.tab1.text2 = tk.Text(self.tab1, width=16, height=5, font=dFont)
         yscrollbar = tk.Scrollbar(
-                self.tab1.text2,
-                orient=tk.VERTICAL,
-                command=self.tab1.text2.yview
+            self.tab1.text2,
+            orient=tk.VERTICAL,
+            command=self.tab1.text2.yview
             )
         yscrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.tab1.text2["yscrollcommand"] = yscrollbar.set
