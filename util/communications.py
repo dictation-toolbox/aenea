@@ -5,7 +5,7 @@ import config
 
 class Proxy(object):
     def __init__(self, host, port):
-        self.server = jsonrpclib.Server("http://%s:%i" % (host, port))
+        self.server = jsonrpclib.Server('http://%s:%i' % (host, port))
 
     def execute_batch(self, batch):
         if config.USE_MULTIPLE_ACTIONS:
@@ -21,6 +21,6 @@ class BatchProxy(object):
 
     def __getattr__(self, key):
         def call(*a, **kw):
-            if not key.startswith("_"):
+            if not key.startswith('_'):
                 self._commands.append((key, a, kw))
         return call

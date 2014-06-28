@@ -6,7 +6,7 @@ import util.communications
 
 import server_x11
 
-HOST = "127.0.0.1"
+HOST = '127.0.0.1'
 PORT = 58382
 
 
@@ -16,12 +16,12 @@ class test_server_x11_info(unittest.TestCase):
         self.assertEqual(comm.server.get_context(), return_value)
         self.server.shutdown()
 
-    @mock.patch("server_x11.get_context")
+    @mock.patch('server_x11.get_context')
     def test_get_context(self, get_context):
         self.port = PORT
-        return_value = {"test_successful": "Yep"}
+        return_value = {'test_successful': 'Yep'}
         get_context.return_value = return_value
-        get_context.__name__ = "get_context"
+        get_context.__name__ = 'get_context'
         self.server = server_x11.setup_server(HOST, self.port)
         test_thread = threading.Thread(
             target=self.get_context,
@@ -47,13 +47,13 @@ class test_server_x11_actions(unittest.TestCase):
         test_thread.join()
 
     def key_press(self, comm):
-        comm.key_press(key="a")
-        comm.key_press(key="a", modifiers=["shift"])
-        comm.key_press(key="shift", direction="down")
-        comm.key_press(key="b", count_delay=100, count=3)
-        comm.key_press(key="shift", direction="up")
+        comm.key_press(key='a')
+        comm.key_press(key='a', modifiers=['shift'])
+        comm.key_press(key='shift', direction='down')
+        comm.key_press(key='b', count_delay=100, count=3)
+        comm.key_press(key='shift', direction='up')
 
-    @mock.patch("server_x11.run_command")
+    @mock.patch('server_x11.run_command')
     def test_key_press(self, run_command):
         self.port = PORT + 1
         commands = []
@@ -68,25 +68,25 @@ class test_server_x11_actions(unittest.TestCase):
             ])
 
     def write_text(self, comm):
-        comm.write_text(text="Hello world!")
+        comm.write_text(text='Hello world!')
 
-    @mock.patch("server_x11.write_command")
+    @mock.patch('server_x11.write_command')
     def test_write_text(self, write_command):
         self.port = PORT + 2
         self.run_request_thread(self.single_request_client(self.write_text))
         write_command.assert_called_with(
-            "Hello world!",
+            'Hello world!',
             arguments='type --file - --delay 0'
             )
 
     def click_mouse(self, comm):
-        comm.click_mouse(button="left", count=2)
-        comm.click_mouse(button="wheelup", count=2)
-        comm.click_mouse(button="right")
-        comm.click_mouse(button="right", count=5, count_delay=70)
-        comm.click_mouse(button="middle", count_delay=7)
+        comm.click_mouse(button='left', count=2)
+        comm.click_mouse(button='wheelup', count=2)
+        comm.click_mouse(button='right')
+        comm.click_mouse(button='right', count=5, count_delay=70)
+        comm.click_mouse(button='middle', count_delay=7)
 
-    @mock.patch("server_x11.run_command")
+    @mock.patch('server_x11.run_command')
     def test_click_mouse(self, run_command):
         self.port = PORT + 3
         commands = [
@@ -104,27 +104,27 @@ class test_server_x11_actions(unittest.TestCase):
         comm.pause(amount=100)
         comm.move_mouse(x=0.5, y=0.5, proportional=True)
         comm.pause(amount=100)
-        comm.move_mouse(x=75, y=45, reference="relative_active")
+        comm.move_mouse(x=75, y=45, reference='relative_active')
         comm.pause(amount=100)
-        comm.move_mouse(x=0, y=0, phantom="left")
+        comm.move_mouse(x=0, y=0, phantom='left')
         comm.pause(amount=100)
-        comm.move_mouse(x=0, y=50, reference="relative")
+        comm.move_mouse(x=0, y=50, reference='relative')
         comm.pause(amount=100)
 
-    @mock.patch("server_x11.get_active_window")
-    @mock.patch("time.sleep")
-    @mock.patch("server_x11.get_geometry")
-    @mock.patch("server_x11.run_command")
+    @mock.patch('server_x11.get_active_window')
+    @mock.patch('time.sleep')
+    @mock.patch('server_x11.get_geometry')
+    @mock.patch('server_x11.run_command')
     def test_move_mouse(self, run_command, geo, wait, get_active_window):
         self.port = PORT + 4
         geo.return_value = {
-            "x": 50,
-            "y": 50,
-            "width": 100,
-            "height": 100,
-            "screen": 0
+            'x': 50,
+            'y': 50,
+            'width': 100,
+            'height': 100,
+            'screen': 0
             }
-        get_active_window.return_value = 103, "test"
+        get_active_window.return_value = 103, 'test'
         commands = [
             mock.call('mousemove 0.000000 0.000000'),
             mock.call('mousemove 50.000000 50.000000'),
@@ -138,23 +138,23 @@ class test_server_x11_actions(unittest.TestCase):
 
     def drag_mouse(self, comm):
         comm.move_mouse(x=0, y=0, proportional=True)
-        comm.click_mouse(button="left", direction="down")
+        comm.click_mouse(button='left', direction='down')
         comm.move_mouse(x=1, y=1, proportional=True)
-        comm.click_mouse(button="left", direction="up")
+        comm.click_mouse(button='left', direction='up')
 
-    @mock.patch("server_x11.get_active_window")
-    @mock.patch("server_x11.get_geometry")
-    @mock.patch("server_x11.run_command")
+    @mock.patch('server_x11.get_active_window')
+    @mock.patch('server_x11.get_geometry')
+    @mock.patch('server_x11.run_command')
     def test_drag_mouse(self, run_command, geo, get_active_window):
         self.port = PORT + 5
         geo.return_value = {
-            "x": 50,
-            "y": 50,
-            "width": 100,
-            "height": 100,
-            "screen": 0
+            'x': 50,
+            'y': 50,
+            'width': 100,
+            'height': 100,
+            'screen': 0
             }
-        get_active_window.return_value = 103, "test"
+        get_active_window.return_value = 103, 'test'
         commands = [
             mock.call('mousemove 0.000000 0.000000'),
             mock.call('mousedown   1'),
@@ -173,7 +173,7 @@ class test_server_x11_actions(unittest.TestCase):
             self.server.shutdown()
         return worker
 
-    @mock.patch("time.sleep")
+    @mock.patch('time.sleep')
     def test_pause(self, wait):
         self.port = PORT + 6
         self.run_request_thread(self.single_request_client(self.pause))
@@ -193,14 +193,14 @@ class test_server_x11_actions(unittest.TestCase):
         proxy.execute_batch(batch._commands)
         self.server.shutdown()
 
-    @mock.patch("server_x11.write_command")
-    @mock.patch("server_x11.flush_xdotool")
-    @mock.patch("server_x11.run_command")
+    @mock.patch('server_x11.write_command')
+    @mock.patch('server_x11.flush_xdotool')
+    @mock.patch('server_x11.run_command')
     def test_multiple_actions(self, run_command, flush, write_command):
         calls = []
 
         def mock_flush(actions):
-            """Mock has issues with the del [:]."""
+            '''Mock has issues with the del [:].'''
             if actions:
                 calls.append(actions[:])
             del actions[:]
@@ -219,7 +219,7 @@ class test_server_x11_actions(unittest.TestCase):
         self.assertEqual(
             write_command.mock_calls,
             [mock.call(
-                "Hello world!",
+                'Hello world!',
                 arguments='type --file - --delay 0'
                 )] * 2
             )
