@@ -1,4 +1,0 @@
-[submodule "aenea-grammars"]
-	path = grammars_available
-	url = https://github.com/dictation-toolbox/aenea-grammars
-	branch = master
