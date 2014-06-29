@@ -1,4 +1,4 @@
-# Guest-side config (Windows guest sending commands)
+# Client-side config (Windows running Dragon sending commands)
 HOST = "192.168.56.1"
 PORT = 8240
 
