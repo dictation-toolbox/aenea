@@ -85,15 +85,16 @@ def make_grammar_commands(module_name, mapping, config_key='commands'):
        no mapping is generated for that phrase."""
     conf = load_grammar_config(module_name).get(config_key, {})
     commands = mapping.copy()
+
+    # Nuke the default if the user sets one or more aliases.
+    for default_phrase in set(conf.itervalues()):
+        del commands[str(default_phrase)]
+
     for (user_phrase, default_phrase) in conf.iteritems():
         # Dragonfly chokes on unicode, JSON's default.
         user_phrase = str(user_phrase)
         default_phrase = str(default_phrase)
-        assert default_phrase in mapping
-
-        # Nuke the default if the user sets one or more aliases.
-        if default_phrase in commands:
-            del commands[default_phrase]
+        assert default_phrase in mapping, ("Invalid mapping value in module %s config_key %s: %s" % (module_name, config_key, default_phrase))
 
         # Allow users to nuke a command with !
         if not user_phrase.startswith('!'):
