@@ -14,8 +14,8 @@ class TestActions(unittest.TestCase):
         comm.execute_batch.assert_called_with([('key_press', (), {'key': 'H', 'count': 1, 'modifiers': []}),
                                                ('key_press', (), {'key': 'e', 'count': 1, 'modifiers': []})])
 
-        ProxyKey('Super_X').execute()
-        comm.execute_batch.assert_called_with([('key_press', (), {'count': 1, 'modifiers': [], 'key': 'Super_X'})])
+        ProxyKey('Super_R').execute()
+        comm.execute_batch.assert_called_with([('key_press', (), {'count': 1, 'modifiers': [], 'key': 'Super_R'})])
 
         ProxyKey('c-home').execute()
         comm.execute_batch.assert_called_with([('key_press', (), {'count': 1, 'modifiers': ['control'], 'key': 'home'})])

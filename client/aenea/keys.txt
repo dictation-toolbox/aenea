@@ -127,6 +127,7 @@ Hiragana_Katakana
 home
 Home
 Hyper_L
+Hyper_R
 hyphen
 i
 I

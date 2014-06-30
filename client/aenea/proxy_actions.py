@@ -39,7 +39,13 @@ _modifier_keys = {
     's': 'shift',
     'w': 'super',
     'h': 'hyper',
-    'm': 'meta'
+    'm': 'meta',
+    'A': 'Alt_R',
+    'C': 'Control_R',
+    'S': 'Shift_R',
+    'W': 'Super_R',
+    'H': 'Hyper_R',
+    'M': 'Meta_R'
     }
 
 
