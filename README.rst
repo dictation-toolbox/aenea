@@ -93,9 +93,9 @@ Operating system, Dragon, Natlink, and Dragonfly
 
 4) Now when you start Dragon, a second small window with the title "Messages from NatLink" should pop up. If you have issues with this, take a look at the various forums that discuss using NatLink/Dragonfly on Windows.
 
-5) You should now be able to run Natlink and Dragonfly grammars in the VM. Grammars are, by default, located in C:\NatLink\NatLink\MacroSystem. NatLink will load any file named _*.py. If your grammars depend on libraries, you can place them (not starting with an _) here. Your grammars will be able to import them, but NatLink will not attempt to load them directly.
+5) You should now be able to run Natlink and Dragonfly grammars in the VM. Grammars are, by default, located in C:\\NatLink\\NatLink\\MacroSystem. NatLink will load any file named _*.py. If your grammars depend on libraries, you can place them (not starting with an _) here. Your grammars will be able to import them, but NatLink will not attempt to load them directly.
 
-6) Test that NatLink is working correctly. Copy aenea/client/_hello_world_natlink.py to C:\NatLink\NatLink\MacroSystem and restart Dragon. In the "Messages from NatLink" window, you should see 'NatLink hello world module successfully loaded. All it does is print this message:-)' printed. This means that NatLink successfully loaded your grammar.
+6) Test that NatLink is working correctly. Copy aenea/client/_hello_world_natlink.py to C:\\NatLink\\NatLink\\MacroSystem and restart Dragon. In the "Messages from NatLink" window, you should see 'NatLink hello world module successfully loaded. All it does is print this message:-)' printed. This means that NatLink successfully loaded your grammar.
 
 8) Copy aenea/client/_hello_world_dragonfly.py into the MacroSystem folder, and turn your microphone off and on again. Now open Notepad (or similar) and say "test hello world grammar". The phrase 'Hello world grammar: recognition successful!' should be typed into the active window. If this doesn't work, try switching Dragon to command mode first. If it still doesn't work, try restarting Dragon. If it still doesn't work, then there is an issue with Dragon/NatLink/Dragonfly.
 
@@ -106,11 +106,11 @@ Aenea Client
 
 These instructions are for a manual install. If you would like to have your MacroSystem directory on the VM managed from the host, see https://github.com/dictation-toolbox/gladstone. If you're not sure, you should use Gladstone.
 
-0) Copy aenea/client/aenea to C:\NatLink\NatLink\MacroSystem.
+0) Copy aenea/client/aenea to C:\\NatLink\\NatLink\\MacroSystem.
 
 1) Copy config.py.example to config.py and edit if desired (the default config assumes the VM is using a host-only adapter which is NOT the default in VirtualBox.).
 
-2) Copy aenea/client/_aenea_status.py to C:\NatLink\NatLink\MacroSystem. While optional, this module will print information to the NatLink window when you start Dragon that can be useful for troubleshooting.
+2) Copy aenea/client/_aenea_status.py to C:\\NatLink\\NatLink\\MacroSystem. While optional, this module will print information to the NatLink window when you start Dragon that can be useful for troubleshooting.
 
 3) Turn microphone off and back on. You should see in the NatLink window 'Aenea client-side modules loaded successfully.' along with config information. If not, try restarting Dragon. It will also say it was unable to connect to the server, since we have not set that up yet.
 
@@ -166,7 +166,7 @@ Please remember that the server simply accepts any connection made to it and wil
 Using Aenea-Aware Modules
 -------------------------
 
-Use Gladstone, or drop them in C:\NatLink\NatLink\MacroSystem\ along with anything they depend on. Restart Dragon. You MAY be able to just turn the mic off and on again, but this doesn't always work due to how NatLink decides when to reload a module.
+Use Gladstone, or drop them in C:\\NatLink\\NatLink\\MacroSystem\\ along with anything they depend on. Restart Dragon. You MAY be able to just turn the mic off and on again, but this doesn't always work due to how NatLink decides when to reload a module.
 
 Using Dragonfly Modules
 --------------------------
