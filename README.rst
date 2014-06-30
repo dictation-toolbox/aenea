@@ -142,6 +142,7 @@ Installation:
 - Run the command ``cabal update``.
 - Run ``cabal install`` in the folder ...aenea\\WindowsServer\\aenea-windows-server to install aenea.exe for the current user.
 - aenea takes optional arguments specifying the IP address and port. These should match those on the server config.
+- Set USE_MULTIPLE_ACTIONS to False in the client config file.
 
 Server (OS X)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
