@@ -3,10 +3,10 @@
 import re
 import time
 
-import communications
-import config
+import aenea.communications
+import aenea.config
 
-communication = communications.Proxy(config.HOST, config.PORT)
+communication = aenea.communications.Proxy(aenea.config.HOST, aenea.config.PORT)
 
 try:
     import dragonfly

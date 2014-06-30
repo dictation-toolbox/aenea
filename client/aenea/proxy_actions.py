@@ -3,10 +3,10 @@
 
 import os
 
-import communications
-import config
+import aenea.communications
+import aenea.config
 
-communication = communications.Proxy(config.HOST, config.PORT)
+communication = aenea.communications.Proxy(aenea.config.HOST, aenea.config.PORT)
 KEYS_FILE = 'C:\\NatLink\\NatLink\\MacroSystem\\keys.txt'
 
 try:
@@ -94,7 +94,7 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
     _parser = _make_key_parser()
 
     def _parse_spec(self, spec):
-        proxy = communications.BatchProxy()
+        proxy = aenea.communications.BatchProxy()
         for key in spec.split(','):
             modifier_part, key_part, command_part, outer_pause_part = \
                 self._parser.parseString(key.strip())
@@ -150,7 +150,7 @@ class ProxyText(ProxyBase, dragonfly.DynStrActionBase):
 
 class ProxyMouse(ProxyBase, dragonfly.DynStrActionBase):
     def _parse_spec(self, spec):
-        proxy = communications.BatchProxy()
+        proxy = aenea.communications.BatchProxy()
         list_parser = _make_mouse_parser()
         for item in list_parser.parseString(spec):
             if item[0] in '[<(':

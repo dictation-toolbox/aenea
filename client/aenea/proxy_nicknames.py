@@ -1,5 +1,5 @@
-import proxy_actions
-import proxy_contexts
+import aenea.proxy_actions
+import aenea.proxy_contexts
 
 import dragonfly
 
@@ -43,17 +43,17 @@ Context = dragonfly.Context
 AppContext = dragonfly.AppContext
 
 # Redefine Aenea objects that shadow.
-Key = proxy_actions.ProxyKey
-Text = proxy_actions.ProxyText
-Mouse = proxy_actions.ProxyMouse
-NoAction = proxy_actions.NoAction
-MousePhantomClick = proxy_actions.ProxyMousePhantomClick
-ContextAction = proxy_actions.ProxyContextAction
+Key = aenea.proxy_actions.ProxyKey
+Text = aenea.proxy_actions.ProxyText
+Mouse = aenea.proxy_actions.ProxyMouse
+NoAction = aenea.proxy_actions.NoAction
+MousePhantomClick = aenea.proxy_actions.ProxyMousePhantomClick
+ContextAction = aenea.proxy_actions.ProxyContextAction
 
-AppContext = proxy_contexts.ProxyAppContext
-CustomAppContext = proxy_contexts.ProxyCustomAppContext
-AlwaysContext = proxy_contexts.AlwaysContext
-NeverContext = proxy_contexts.NeverContext
+AppContext = aenea.proxy_contexts.ProxyAppContext
+CustomAppContext = aenea.proxy_contexts.ProxyCustomAppContext
+AlwaysContext = aenea.proxy_contexts.AlwaysContext
+NeverContext = aenea.proxy_contexts.NeverContext
 
 __all__ = [
     # Classes not present in Dragonfly.
@@ -101,3 +101,4 @@ __all__ = [
     'Context',
     'AppContext',
     ]
+

@@ -1,7 +1,7 @@
 import unittest
 import mock
 
-from proxy_contexts import *
+from aenea.proxy_contexts import *
 
 
 def match(ctx):

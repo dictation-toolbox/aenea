@@ -1,6 +1,6 @@
 import jsonrpclib
 
-import config
+import aenea.config
 
 
 class Proxy(object):
@@ -8,7 +8,7 @@ class Proxy(object):
         self.server = jsonrpclib.Server('http://%s:%i' % (host, port))
 
     def execute_batch(self, batch):
-        if config.USE_MULTIPLE_ACTIONS:
+        if aenea.config.USE_MULTIPLE_ACTIONS:
             self.server.multiple_actions(batch)
         else:
             for (command, args, kwargs) in batch:

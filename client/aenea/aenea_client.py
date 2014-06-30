@@ -5,8 +5,8 @@ import sys
 import threading
 import ttk
 
-import communications
-import config
+import aenea.communications
+import aenea.config
 
 # Keys that should be translated from a TK name to the name expected by
 # the server.
@@ -119,8 +119,8 @@ class AeneaClient(tk.Tk):
         note.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.YES)
 
         try:
-            self.client = communications.Proxy(ip, int(port))
-            self.client_proxy = communications.BatchProxy()
+            self.client = aenea.communications.Proxy(ip, int(port))
+            self.client_proxy = aenea.communications.BatchProxy()
         except Exception as e:
             self.log(str(e))
 
@@ -183,7 +183,7 @@ class AeneaClient(tk.Tk):
 
             # Flush the buffer
             self.aenea_buffer = []
-            self.client_proxy = communications.BatchProxy()
+            self.client_proxy = aenea.communications.BatchProxy()
 
             self.buffer_lock.release()
 
@@ -200,8 +200,8 @@ if __name__ == '__main__':
         ip = sys.argv[1]
         port = sys.argv[2]
     except IndexError:
-        ip = config.HOST
-        port = config.PORT
+        ip = aenea.config.HOST
+        port = aenea.config.PORT
 
     root = AeneaClient(ip, port)
     root.mainloop()

@@ -147,6 +147,7 @@ update_key_translation(_KEY_TRANSLATION)
 
 def run_command(command, executable='xdotool'):
     command_string = '%s %s' % (executable, command)
+    print command_string
     os.system(command_string)
 
 
@@ -216,7 +217,7 @@ def get_context(_xdotool=None):
                 property_value = value[1:-1] if '(STRING)' in rawkey else value
                 properties[_XPROP_PROPERTIES[rawkey]] = property_value
             elif rawkey == 'WM_CLASS(STRING)':
-                window_class_name, window_class = value.split('', '')
+                window_class_name, window_class = value.split('", "')
                 properties['cls_name'] = window_class_name[1:]
                 properties['cls'] = window_class[:-1]
 

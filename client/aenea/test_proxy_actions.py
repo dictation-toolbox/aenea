@@ -1,7 +1,7 @@
 import unittest
 import mock
 
-from proxy_actions import *
+from aenea.proxy_actions import *
 
 
 class TestActions(unittest.TestCase):
