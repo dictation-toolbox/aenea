@@ -1,8 +1,9 @@
 import json
 import os
 
-from dragonfly import Choice, AppContext, Repetition
-from aenea.proxy_nicknames import Text, Key
+from dragonfly import Choice, AppContext, Repetition, Pause, Mimic
+import dragonfly
+from aenea.proxy_nicknames import Text, Key, MousePhantomClick, NoAction, ContextAction
 import aenea.config
 
 def SelfChoice(name, ch):
@@ -35,6 +36,8 @@ global_context = (AppContext(executable='python',
                              title='Aenea client - Dictation capturing') |
                   AppContext(executable='notepad'))
 
+dynamic_vocabulary = {}
+static_vocabulary = {}
 
 class DigitalInteger(Repetition):
     digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
@@ -66,7 +69,8 @@ def load_grammar_config(module_name, defaults=None):
         configuration = defaults.copy()
 
     # Load the configuration if it exists. If anything goes wrong, we print
-    # an error and fallback to defaults.
+    # an error and fallback to defaults. An empty or missing file is not
+    # an error.
     try:
         if os.path.exists(conf_path):
             with open(conf_path, "r") as fd:
@@ -75,6 +79,100 @@ def load_grammar_config(module_name, defaults=None):
         print("Could not load config file for grammar %s: %s" %
               (module_name, str(e)))
     return configuration
+
+
+def build_action(action):
+    actions = {'Text': Text, 'Key': Key, 'Pause': Pause, 'Mimic': Mimic,
+               'MousePhantomClick': MousePhantomClick,
+               'ContextAction': ContextAction, 'NoAction': NoAction}
+    return actions[str(action['type'])](*map(str, action['args']))
+
+
+def build_action_list(command):
+    if len(command) == 0:
+        return Text('') # Nop
+    else:
+        agg = build_action(command[0])
+        for action in command[1:]:
+            agg += build_action(action)
+        return agg
+
+
+def update_vocabulary(vocabulary, name, tags, vocab, shortcuts):
+    global dynamic_vocabulary
+    global static_vocabulary
+    if vocabulary == 'dynamic':
+        vocabulary_global = dynamic_vocabulary
+        container = lambda tag_name: dragonfly.DictList('dynamic %s' % str(tag_name))
+    elif vocabulary == 'static':
+        vocabulary_global = static_vocabulary
+        container = lambda tag_name: dict()
+    else:
+        assert 0
+
+    this_file = {}
+    for (dataset, default) in ((vocab, Text), (shortcuts, Key)):
+        for phrase, command in dataset.iteritems():
+            if isinstance(command, basestring):
+                this_file[str(phrase)] = default(str(command))
+            else:
+                this_file[str(phrase)] = build_action_list(command)
+
+    # Each DictList can only belong to a single grammar, so each module gets
+    # its own DictList containing all its vocab.
+    for t in tags:
+        if str(t) not in vocabulary_global:
+            vocabulary_global[str(t)] = container(name)
+        vocabulary_global[str(t)].update(this_file)
+
+
+def load_vocabulary(vocabulary):
+    global dynamic_vocabulary
+    global static_vocabulary
+    if vocabulary == 'dynamic':
+        vocabulary_global = dynamic_vocabulary
+    elif vocabulary == 'static':
+        vocabulary_global = static_vocabulary
+    else:
+        assert 0
+
+    for dlist in vocabulary_global.itervalues():
+        dlist.clear()
+
+    vocab_dir = os.path.join(aenea.config.PROJECT_ROOT, 'vocabulary_config', vocabulary)
+    for fn in os.listdir(vocab_dir):
+        if fn.endswith('.json'):
+            try:
+                with open(os.path.join(vocab_dir, fn)) as fd:
+                    v = json.load(fd)
+                    update_vocabulary(
+                        vocabulary,
+                        v['name'],
+                        v['tags'],
+                        v.get('vocabulary', {}),
+                        v.get('shortcuts', {})
+                        )
+            except Exception:
+                print 'Error loading dynamic vocabulary file %s.' % fn
+                raise
+
+
+def get_static_vocabulary(tag):
+    global static_vocabulary
+    load_vocabulary('static')
+    if tag not in static_vocabulary:
+        # Dragonfly chokes on unicode.
+        static_vocabulary[str(tag)] = {}
+    return static_vocabulary[tag]
+
+
+def get_dynamic_vocabulary(tag):
+    global dynamic_vocabulary
+    load_vocabulary('dynamic')
+    if tag not in dynamic_vocabulary:
+        # Dragonfly chokes on unicode.
+        dynamic_vocabulary[str(tag)] = dragonfly.DictList('dynamic %s' % str(tag))
+    return dynamic_vocabulary[tag]
 
 
 def make_grammar_commands(module_name, mapping, config_key='commands'):
