@@ -5,7 +5,7 @@ from aenea.proxy_actions import *
 
 
 class TestActions(unittest.TestCase):
-    @mock.patch('proxy_actions.communication')
+    @mock.patch('aenea.proxy_actions.communication')
     def test_key(self, comm):
         ProxyKey('H').execute()
         comm.execute_batch.assert_called_with([('key_press', (), {'key': 'H', 'count': 1, 'modifiers': []})])
@@ -13,6 +13,9 @@ class TestActions(unittest.TestCase):
         ProxyKey('H, e').execute()
         comm.execute_batch.assert_called_with([('key_press', (), {'key': 'H', 'count': 1, 'modifiers': []}),
                                                ('key_press', (), {'key': 'e', 'count': 1, 'modifiers': []})])
+
+        ProxyKey('Super_X').execute()
+        comm.execute_batch.assert_called_with([('key_press', (), {'count': 1, 'modifiers': [], 'key': 'Super_X'})])
 
         ProxyKey('c-home').execute()
         comm.execute_batch.assert_called_with([('key_press', (), {'count': 1, 'modifiers': ['control'], 'key': 'home'})])
@@ -37,22 +40,22 @@ class TestActions(unittest.TestCase):
         ProxyKey('home:0').execute()
         comm.execute_batch.assert_called_with([])
 
-    @mock.patch('proxy_actions.communication')
+    @mock.patch('aenea.proxy_actions.communication')
     def test_key_multiple_modifiers(self, comm):
         ProxyKey('scawh-H').execute()
         comm.execute_batch.assert_called_with([('key_press', (), {'key': 'H', 'count': 1, 'modifiers': ['shift', 'control', 'alt', 'super', 'hyper']})])
 
-    @mock.patch('proxy_actions.communication')
+    @mock.patch('aenea.proxy_actions.communication')
     def test_key_manual(self, comm):
         ProxyKey('a:up').execute()
         comm.execute_batch.assert_called_with([('key_press', (), {'key': 'a', 'direction': 'up', 'modifiers': []})])
 
-    @mock.patch('proxy_actions.communication')
+    @mock.patch('aenea.proxy_actions.communication')
     def test_text(self, comm):
         ProxyText('Hello world!').execute()
         comm.server.write_text.assert_called_with(text='Hello world!')
 
-    @mock.patch('proxy_actions.communication')
+    @mock.patch('aenea.proxy_actions.communication')
     def test_mouse_move(self, comm):
         ProxyMouse('[3, 5]').execute()
         comm.execute_batch.assert_called_with([('move_mouse', (), {'x': 3.0, 'y': 5.0, 'proportional': False, 'reference': 'absolute'})])
@@ -68,7 +71,7 @@ class TestActions(unittest.TestCase):
                                                ('move_mouse', (), {'x': 3.0, 'y': 5.0, 'proportional': False, 'reference': 'absolute'}),
                                                ('move_mouse', (), {'x': 3.0, 'y': 5.0, 'proportional': False, 'reference': 'absolute'})])
 
-    @mock.patch('proxy_actions.communication')
+    @mock.patch('aenea.proxy_actions.communication')
     def test_mouse_click(self, comm):
         ProxyMouse('left').execute()
         comm.execute_batch.assert_called_with([('click_mouse', (), {'button': 'left', 'count': 1, 'count_delay': None, 'direction': 'click'})])
@@ -82,12 +85,12 @@ class TestActions(unittest.TestCase):
         ProxyMouse('wheeldown:5/9').execute()
         comm.execute_batch.assert_called_with([('click_mouse', (), {'button': 'wheeldown', 'count': 5, 'direction': 'click', 'count_delay': 0.09})])
 
-    @mock.patch('proxy_actions.communication')
+    @mock.patch('aenea.proxy_actions.communication')
     def test_drag(self, comm):
         ProxyMouse('middle:up/5').execute()
         comm.execute_batch.assert_called_with([('click_mouse', (), {'button': 'middle', 'direction': 'up', 'count_delay': 0.05, 'count': 1})])
 
-    @mock.patch('proxy_actions.communication')
+    @mock.patch('aenea.proxy_actions.communication')
     def test_phantom_click(self, comm):
         ProxyMousePhantomClick('(78, 114), left').execute()
         comm.execute_batch.assert_called_with([('move_mouse', (), {'y': 114.0, 'x': 78.0, 'phantom': 'left', 'reference': 'relative_active', 'proportional': False})])
