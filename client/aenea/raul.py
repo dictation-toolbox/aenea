@@ -39,6 +39,11 @@ global_context = (AppContext(executable='python',
 dynamic_vocabulary = {}
 static_vocabulary = {}
 
+# Hack because Dragonfly is weird about when you can clear a DictList. We have
+# native dicts store the data, and sync to whichever DictList most recently
+# was registered. This is necessary so grammars can be reloaded with mic off/on.
+dynamic_lists = {}
+
 class DigitalInteger(Repetition):
     digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     child = Choice('digit', dict(zip(digits, digits)))
@@ -103,10 +108,8 @@ def update_vocabulary(vocabulary, name, tags, vocab, shortcuts):
     global static_vocabulary
     if vocabulary == 'dynamic':
         vocabulary_global = dynamic_vocabulary
-        container = lambda tag_name: dragonfly.DictList('dynamic %s' % str(tag_name))
     elif vocabulary == 'static':
         vocabulary_global = static_vocabulary
-        container = lambda tag_name: dict()
     else:
         assert 0
 
@@ -118,12 +121,13 @@ def update_vocabulary(vocabulary, name, tags, vocab, shortcuts):
             else:
                 this_file[str(phrase)] = build_action_list(command)
 
-    # Each DictList can only belong to a single grammar, so each module gets
-    # its own DictList containing all its vocab.
     for t in tags:
         if str(t) not in vocabulary_global:
-            vocabulary_global[str(t)] = container(name)
+            vocabulary_global[str(t)] = {}
         vocabulary_global[str(t)].update(this_file)
+        if vocabulary == 'dynamic':
+            if dynamic_lists.get(t, None) is not None:
+                dynamic_lists[t].update(this_file)
 
 
 def load_vocabulary(vocabulary):
@@ -139,21 +143,30 @@ def load_vocabulary(vocabulary):
     for dlist in vocabulary_global.itervalues():
         dlist.clear()
 
+    if vocabulary == 'dynamic':
+        for t, dlist in dynamic_lists.iteritems():
+            if dlist:
+                dlist.clear()
+                dlist.update(vocabulary_global[t])
+
     vocab_dir = os.path.join(aenea.config.PROJECT_ROOT, 'vocabulary_config', vocabulary)
     for fn in os.listdir(vocab_dir):
         if fn.endswith('.json'):
             try:
                 with open(os.path.join(vocab_dir, fn)) as fd:
-                    v = json.load(fd)
-                    update_vocabulary(
-                        vocabulary,
-                        v['name'],
-                        v['tags'],
-                        v.get('vocabulary', {}),
-                        v.get('shortcuts', {})
-                        )
+                    vox = json.load(fd)
+                    if isinstance(vox, dict):
+                        vox = [vox]
+                    for v in vox:
+                        update_vocabulary(
+                            vocabulary,
+                            v['name'],
+                            v['tags'],
+                            v.get('vocabulary', {}),
+                            v.get('shortcuts', {})
+                            )
             except Exception:
-                print 'Error loading dynamic vocabulary file %s.' % fn
+                print 'Error loading %s vocabulary file %s.' % (vocabulary, fn)
                 raise
 
 
@@ -166,13 +179,24 @@ def get_static_vocabulary(tag):
     return static_vocabulary[tag]
 
 
-def get_dynamic_vocabulary(tag):
+def unregister_dynamic_vocabulary(tag):
+    global dynamic_lists
+    dynamic_lists.pop(str(tag), None)
+
+
+def register_dynamic_vocabulary(tag):
     global dynamic_vocabulary
+
+    dynamic_lists.pop(str(tag), None)
+
     load_vocabulary('dynamic')
-    if tag not in dynamic_vocabulary:
-        # Dragonfly chokes on unicode.
-        dynamic_vocabulary[str(tag)] = dragonfly.DictList('dynamic %s' % str(tag))
-    return dynamic_vocabulary[tag]
+
+    # Intentionally overwrite old one with new one every time this fxn is
+    # called. Necessary for reloading grammars not to die.
+    dynamic_lists[str(tag)] = dragonfly.DictList('dynamic %s' % str(tag))
+    dynamic_lists[str(tag)].update(dynamic_vocabulary[str(tag)])
+
+    return dynamic_lists[str(tag)]
 
 
 def make_grammar_commands(module_name, mapping, config_key='commands'):
