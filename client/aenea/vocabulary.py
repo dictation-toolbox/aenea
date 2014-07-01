@@ -8,28 +8,59 @@ The module also provides functionality to parse per-grammar config files.'''
 import json
 import os
 
-import dragonfly
+try:
+    import dragonfly
+    from aenea.proxy_nicknames import (
+        Text,
+        Key,
+        Pause,
+        Mimic,
+        MousePhantomClick,
+        NoAction
+        )
+except ImportError:
+    import dragonfly_mock as dragonfly
+    print 'Unable to import Dragonfly (safe to ignore if running tests)'
+    # TODO: mock this better
+
+    class ActionMock(object):
+        def __init__(self, *a, **kw):
+            pass
+
+        def __add__(self, other):
+            return self
+
+    class Text(ActionMock):
+        pass
+
+    class Pause(ActionMock):
+        pass
+
+    class Mimic(ActionMock):
+        pass
+
+    class MousePhantomClick(ActionMock):
+        pass
+
+    class NoAction(ActionMock):
+        pass
+
+    class Key(ActionMock):
+        pass
 
 import aenea.config
 
-from aenea.proxy_nicknames import (
-    Text,
-    Key,
-    Pause,
-    Mimic,
-    MousePhantomClick,
-    NoAction
-    )
 
+_vocabulary = {'static': {}, 'dynamic': {}}
 
-_dynamic_vocabulary = {}
-_static_vocabulary = {}
+# dynamic only
+_disabled_vocabularies = set()
 
 # Hack because Dragonfly is weird about when you can clear a DictList.
 # We have native dicts store the data, and sync to whichever DictList
 # most recently was registered. This is necessary so grammars can be
-# reloaded with mic off/on.
-_dynamic_lists = {}
+# reloaded with mic off/on. We store static the same way for simplicity.
+_lists = {'static': {}, 'dynamic': {}}
 
 _last_vocabulary_mtime = 0
 
@@ -96,72 +127,71 @@ def refresh_vocabulary():
        since they were last read. Note that changes to a static file will not
        be active until the grammar is reloaded (in practice, Dragon restarted
        unless you change the grammar file and turn mic off then on).'''
-    if not _need_reload:
-        return
+    global _vocabulary
+    global _lists
+    global _last_vocabulary_mtime
+    global _disabled_vocabularies
+    if _need_reload:  # TODO: add (); _need_reload is a function.
+        for vocabulary in 'static', 'dynamic':
+            for kind in _vocabulary.itervalues():
+                kind.clear()
 
-    for vocabulary in 'static', 'dynamic':
-        global _dynamic_vocabulary
-        global _static_vocabulary
-        global _last_vocabulary_mtime
-        if vocabulary == 'dynamic':
-            vocabulary_global = _dynamic_vocabulary
-        elif vocabulary == 'static':
-            vocabulary_global = _static_vocabulary
-        else:
-            assert 0
+            vocab_dir = os.path.join(
+                aenea.config.PROJECT_ROOT,
+                'vocabulary_config',
+                vocabulary
+                )
 
-        for dlist in vocabulary_global.itervalues():
-            dlist.clear()
+            if not os.path.exists(vocab_dir):
+                continue
 
-        if vocabulary == 'dynamic':
-            for t, dlist in _dynamic_lists.iteritems():
+            for fn in os.listdir(vocab_dir):
+                if fn.endswith('.json'):
+                    try:
+                        with open(os.path.join(vocab_dir, fn)) as fd:
+                            vox = json.load(fd)
+                            if isinstance(vox, dict):
+                                vox = [vox]
+                            for v in vox:
+                                _update_one_vocabulary(
+                                    vocabulary,
+                                    v['name'],
+                                    v['tags'],
+                                    v.get('vocabulary', {}),
+                                    v.get('shortcuts', {})
+                                    )
+                    except Exception:
+                        print 'Error loading %s vocabulary file %s.' % (vocabulary, fn)
+                        raise
+
+            for t, dlist in _lists[vocabulary].iteritems():
                 if dlist:
                     dlist.clear()
-                    dlist.update(vocabulary_global[t])
-
-        vocab_dir = os.path.join(
-            aenea.config.PROJECT_ROOT,
-            'vocabulary_config',
-            vocabulary
-            )
-
-        if not os.path.exists(vocab_dir):
-            continue
-
-        for fn in os.listdir(vocab_dir):
-            if fn.endswith('.json'):
-                try:
-                    with open(os.path.join(vocab_dir, fn)) as fd:
-                        vox = json.load(fd)
-                        if isinstance(vox, dict):
-                            vox = [vox]
-                        for v in vox:
-                            _update_one_vocabulary(
-                                vocabulary,
-                                v['name'],
-                                v['tags'],
-                                v.get('vocabulary', {}),
-                                v.get('shortcuts', {})
-                                )
-                except Exception:
-                    print 'Error loading %s vocabulary file %s.' % (vocabulary, fn)
-                    raise
+            for name, vocabs in _vocabulary[vocabulary].iteritems():
+                for (tags, vocab) in vocabs:
+                    if name not in _disabled_vocabularies:
+                        for tag in tags:
+                            if vocabulary == 'static':
+                                _lists[vocabulary].setdefault(tag, {})
+                            # If it's dynamic, we'll build the list on demand when
+                            # someone registers it, so do nothing here.
+                            if tag in _lists[vocabulary]:
+                                _lists[vocabulary][tag].update(vocab)
 
 
 def get_static_vocabulary(tag):
     '''Returns a dict of string to dragonfly.ActionBase-derived.'''
-    global _static_vocabulary
     refresh_vocabulary()
-    if tag not in _static_vocabulary:
+    if tag not in _lists['static']:
         # Dragonfly chokes on unicode.
-        _static_vocabulary[str(tag)] = {}
-    return _static_vocabulary[tag]
+        _lists['static'][str(tag)] = {}
+    return _lists['static'][str(tag)]
 
 
 def unregister_dynamic_vocabulary(tag):
     '''Call this to unregister a dynamic vocabulary in the unload.'''
-    global _dynamic_lists
-    _dynamic_lists.pop(str(tag), None)
+    global _lists
+    _lists['dynamic'].pop(str(tag), None)
 
 
 def register_dynamic_vocabulary(tag):
@@ -170,18 +200,26 @@ def register_dynamic_vocabulary(tag):
        kept up to date with user updates. You need to call unregister when
        the grammar is unloaded or your module won't successfully reload without
        restarting Dragon.'''
-    global _dynamic_vocabulary
+    global _lists
+    _lists['dynamic'][str(tag)] = dragonfly.DictList('dynamic %s' % str(tag))
+    refresh_vocabulary()
+    return _lists['dynamic'][str(tag)]
 
-    _dynamic_lists.pop(str(tag), None)
 
+def disable_dynamic_vocabulary(name):
+    '''Disables all dynamic vocabularies with the specified name immediately.
+       No reload or mic off/on is necessary.'''
+    _disabled_vocabularies.add(name)
     refresh_vocabulary()
 
-    # Intentionally overwrite old one with new one every time this fxn is
-    # called. Necessary for reloading grammars not to die.
-    _dynamic_lists[str(tag)] = dragonfly.DictList('dynamic %s' % str(tag))
-    _dynamic_lists[str(tag)].update(_dynamic_vocabulary[str(tag)])
 
-    return _dynamic_lists[str(tag)]
+def enable_dynamic_vocabulary(name):
+    '''Enables all dynamic vocabularies with the specified name immediately.
+       No reload or mic off/on is necessary.'''
+    if name in _disabled_vocabularies:
+        _disabled_vocabularies.remove(name)
+    #TODO this is really inefficient.
+    refresh_vocabulary()
 
 
 def _build_action(action):
@@ -199,35 +237,22 @@ def _build_action_list(command):
     else:
         agg = _build_action(command[0])
         for action in command[1:]:
-            agg += _build_action(action)
+            agg = agg + _build_action(action)
         return agg
 
 
 def _update_one_vocabulary(vocabulary, name, tags, vocab, shortcuts):
-    global _dynamic_vocabulary
-    global _static_vocabulary
-    if vocabulary == 'dynamic':
-        vocabulary_global = _dynamic_vocabulary
-    elif vocabulary == 'static':
-        vocabulary_global = _static_vocabulary
-    else:
-        assert 0
+    global _vocabulary
 
-    this_file = {}
+    this_chunk = {}
     for (dataset, default) in ((vocab, Text), (shortcuts, Key)):
         for phrase, command in dataset.iteritems():
             if isinstance(command, basestring):
-                this_file[str(phrase)] = default(str(command))
+                this_chunk[str(phrase)] = default(str(command))
             else:
-                this_file[str(phrase)] = _build_action_list(command)
-
-    for t in tags:
-        if str(t) not in vocabulary_global:
-            vocabulary_global[str(t)] = {}
-        vocabulary_global[str(t)].update(this_file)
-        if vocabulary == 'dynamic':
-            if _dynamic_lists.get(t, None) is not None:
-                _dynamic_lists[t].update(this_file)
+                this_chunk[str(phrase)] = _build_action_list(command)
+    _vocabulary[vocabulary].setdefault(str(name), [])
+    _vocabulary[vocabulary][str(name)].append((map(str, tags), this_chunk))
 
 
 def _need_reload():

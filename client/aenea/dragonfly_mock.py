@@ -12,3 +12,6 @@ class DynStrActionBase(ActionBase):
 
 class Context(object):
     pass
+
+DictList = lambda name: dict()
+List = lambda name: list()

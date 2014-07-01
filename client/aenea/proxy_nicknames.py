@@ -1,7 +1,11 @@
 import aenea.proxy_actions
 import aenea.proxy_contexts
 
-import dragonfly
+try:
+    import dragonfly
+except ImportError:
+    import dragonfly_mock as dragonfly
+
 
 # Dragonfly builtins
 Grammar = dragonfly.Grammar
