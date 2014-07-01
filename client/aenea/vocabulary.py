@@ -64,6 +64,11 @@ _lists = {'static': {}, 'dynamic': {}}
 
 _last_vocabulary_mtime = 0
 
+# mapping from inhibited_vocab_name to list of (inhibit_context, inhibiting_grammar)
+_vocabulary_inhibitions = {}
+
+# global DictList that takes inhibitions into account
+_global_list = None
 
 def load_grammar_config(module_name, defaults=None):
     '''Loads the configuration for the specified grammar name. A missing file
@@ -126,12 +131,13 @@ def refresh_vocabulary():
     '''Reloads all static and dynamic vocabulary files, if any have changed
        since they were last read. Note that changes to a static file will not
        be active until the grammar is reloaded (in practice, Dragon restarted
-       unless you change the grammar file and turn mic off then on).'''
+       unless you change the grammar file and turn mic off then on).
+
+       Also updates the active lists, so you'll need to call this whenever the
+       context changes if you want the global inhibitions to update.'''
     global _vocabulary
-    global _lists
-    global _last_vocabulary_mtime
-    global _disabled_vocabularies
-    if _need_reload:  # TODO: add (); _need_reload is a function.
+
+    if _need_reload():
         for vocabulary in 'static', 'dynamic':
             for kind in _vocabulary.itervalues():
                 kind.clear()
@@ -163,25 +169,44 @@ def refresh_vocabulary():
                     except Exception:
                         print 'Error loading %s vocabulary file %s.' % (vocabulary, fn)
                         raise
+            if vocabulary == 'static':
+                _rebuild_lists('static')
 
-            for t, dlist in _lists[vocabulary].iteritems():
-                if dlist:
-                    dlist.clear()
-            for name, vocabs in _vocabulary[vocabulary].iteritems():
-                for (tags, vocab) in vocabs:
-                    if name not in _disabled_vocabularies:
-                        for tag in tags:
-                            if vocabulary == 'static':
-                                _lists[vocabulary].setdefault(tag, {})
-                            # If it's dynamic, we'll build the list on demand when
-                            # someone registers it, so do nothing here.
-                            if tag in _lists[vocabulary]:
-                                _lists[vocabulary][tag].update(vocab)
+    _rebuild_lists('dynamic')
+
+
+def _rebuild_lists(vocabulary):
+    global _disabled_vocabularies
+    global _global_list
+    global _lists
+    global _vocabulary_inhibitions
+    if vocabulary == 'dynamic':
+        if _global_list is not None:
+            _global_list.clear()
+
+    for t, dlist in _lists[vocabulary].iteritems():
+        if dlist:
+            dlist.clear()
+    for name, vocabs in _vocabulary[vocabulary].iteritems():
+        for (tags, vocab) in vocabs:
+            if name not in _disabled_vocabularies:
+                if ('global' in tags and vocabulary == 'dynamic' and _global_list is not None):
+                    if not any(c is None or c.matches(None, None, None)
+                               for (c, _) in _vocabulary_inhibitions.get(name, [])):
+                        _global_list.update(vocab)
+
+                for tag in tags:
+                    if vocabulary == 'static':
+                        _lists[vocabulary].setdefault(tag, {})
+                    # If it's dynamic, we'll build the list on
+                    # demand when someone registers it, so do
+                    # nothing here.
+                    if tag in _lists[vocabulary]:
+                        _lists[vocabulary][tag].update(vocab)
 
 
 def get_static_vocabulary(tag):
     '''Returns a dict of string to dragonfly.ActionBase-derived.'''
-    refresh_vocabulary()
     if tag not in _lists['static']:
         # Dragonfly chokes on unicode.
         _lists['static'][str(tag)] = {}
@@ -210,7 +235,7 @@ def disable_dynamic_vocabulary(name):
     '''Disables all dynamic vocabularies with the specified name immediately.
        No reload or mic off/on is necessary.'''
     _disabled_vocabularies.add(name)
-    refresh_vocabulary()
+    _rebuild_lists('dynamic')
 
 
 def enable_dynamic_vocabulary(name):
@@ -218,8 +243,50 @@ def enable_dynamic_vocabulary(name):
        No reload or mic off/on is necessary.'''
     if name in _disabled_vocabularies:
         _disabled_vocabularies.remove(name)
-    #TODO this is really inefficient.
+    _rebuild_lists('dynamic')
+
+
+def register_global_dynamic_vocabulary():
+    '''Returns a DictList of the global vocabulary. This is like all vocabs
+       tagged 'global', EXCEPT grammars may inhibit a name from being here by
+       calling inhibit_name_globally when a given context is active. This is
+       intended to allow more complex editing grammars (eg, multiedit), which
+       have their own custom hooks for vocabs which enable advanced features
+       to avoid conflicting with the global grammar.
+
+       Note that this is NOT the same as calling
+       register_dynamic_vocabulary('global'); which will ignore inhibited
+       vocabularies.'''
+    global _global_list
+    _global_list = dragonfly.DictList(name='global inhibited')
     refresh_vocabulary()
+    return _global_list
+
+
+def unregister_global_dynamic_vocabulary():
+    '''Unregisters the global dynamic vocabulary. You need to call this in
+       any grammar that registers it at unload if you want it to be reloadable
+       without restarting Dragon.'''
+    global _global_list
+    _global_list = None
+
+
+def inhibit_global_dynamic_vocabulary(grammar_name, vocabulary_name, context=None):
+    '''Ensures that whenever the specified context is active, the specified
+       vocabulary will not be active in the global dynamic vocabulary.'''
+    global _vocabulary_inhibitions
+    _vocabulary_inhibitions.setdefault(vocabulary_name, [])
+    _vocabulary_inhibitions[vocabulary_name].append((context, grammar_name))
+
+
+def uninhibit_global_dynamic_vocabulary(grammar_name, vocabulary_name, context=None):
+    '''Remove all inhibitions by grammar_name on vocabulary_name.'''
+    global _vocabulary_inhibitions
+    _vocabulary_inhibitions.setdefault(vocabulary_name, [])
+    _vocabulary_inhibitions[vocabulary_name] = [
+        (c, g) for (c, g) in _vocabulary_inhibitions[vocabulary_name]
+        if g != grammar_name
+        ]
 
 
 def _build_action(action):
@@ -274,4 +341,4 @@ def _need_reload():
                     dirty = True
                     # don't early abort because we want latest mtime.
 
-        return dirty
+    return dirty

@@ -161,7 +161,7 @@ class TestMakeRefreshVocabulary(unittest.TestCase):
     @mock.patch('os.listdir')
     @mock.patch('aenea.vocabulary._need_reload')
     @mock.patch('os.path.exists')
-    def test_no_static_config_no_problem(self, exists, need_reload, listdir,
+    def test(self, exists, need_reload, listdir,
                                          fopen):
         fopen.side_effect = mock_open({self.dfoobar: self.boring})
         aenea.vocabulary._vocabulary['static']['clear'] = {}
@@ -214,6 +214,40 @@ class TestMakeRefreshVocabulary(unittest.TestCase):
         self.assertEquals(aenea.vocabulary._vocabulary['dynamic'], {})
         self.assertEquals(aenea.vocabulary._vocabulary['static'], {})
 
+
+class TestGlobalVocabulary(unittest.TestCase):
+    def setUp(self):
+        aenea.vocabulary._vocabulary = {'static': {}, 'dynamic': {
+            'foo': [(['global', 'multiedit'], {'baz': 'bazaz'})],
+            'bar': [(['global', 'vim', 'multiedit'], {'bar': 'barbar'})]
+            }}
+        aenea.vocabulary._disabled_vocabularies = set()
+        aenea.vocabulary._lists = {'static': {}, 'dynamic': {}}
+
+    @mock.patch('aenea.vocabulary._need_reload')
+    def test(self, need_reload):
+        need_reload.return_value = False
+
+        v = aenea.vocabulary.register_global_dynamic_vocabulary()
+        self.assertEqual(v, {'baz': 'bazaz', 'bar': 'barbar'})
+
+        aenea.vocabulary.disable_dynamic_vocabulary('bar')
+        self.assertEqual(v, {'baz': 'bazaz'})
+
+        m = mock.MagicMock()
+        m.matches.return_value = True
+        aenea.vocabulary.inhibit_global_dynamic_vocabulary('test', 'bar', m)
+
+        self.assertEqual(v, {'baz': 'bazaz'})
+
+        aenea.vocabulary.enable_dynamic_vocabulary('bar')
+
+        self.assertEqual(v, {'baz': 'bazaz'})
+
+        m.matches.return_value = False
+        aenea.vocabulary.refresh_vocabulary()
+
+        self.assertEqual(v, {'baz': 'bazaz', 'bar': 'barbar'})
 
 if __name__ == '__main__':
     unittest.main()
