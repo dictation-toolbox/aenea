@@ -63,12 +63,16 @@ _disabled_vocabularies = set()
 _lists = {'static': {}, 'dynamic': {}}
 
 _last_vocabulary_mtime = 0
+_last_vocabulary_filenames = set(), set()
 
 # mapping from inhibited_vocab_name to list of (inhibit_context, inhibiting_grammar)
 _vocabulary_inhibitions = {}
 
-# global DictList that takes inhibitions into account
+# global DictList that takes inhibitions into account. Reserved for _vocabulary.
 _global_list = None
+
+# global List that lists all dynamic vocabularies. Reserved for _vocabulary.
+_list_of_dynamic_vocabularies = None
 
 def load_grammar_config(module_name, defaults=None):
     '''Loads the configuration for the specified grammar name. A missing file
@@ -127,17 +131,20 @@ def make_grammar_commands(module_name, mapping, config_key='commands'):
     return commands
 
 
-def refresh_vocabulary():
+def refresh_vocabulary(force_reload=False):
     '''Reloads all static and dynamic vocabulary files, if any have changed
        since they were last read. Note that changes to a static file will not
        be active until the grammar is reloaded (in practice, Dragon restarted
        unless you change the grammar file and turn mic off then on).
 
        Also updates the active lists, so you'll need to call this whenever the
-       context changes if you want the global inhibitions to update.'''
+       context changes if you want the global inhibitions to update.
+
+       The module _vocabulary.py includes a rule to call this whenever the user
+       starts to say anything.'''
     global _vocabulary
 
-    if _need_reload():
+    if force_reload or _need_reload():
         for vocabulary in 'static', 'dynamic':
             for kind in _vocabulary.itervalues():
                 kind.clear()
@@ -180,6 +187,8 @@ def _rebuild_lists(vocabulary):
     global _global_list
     global _lists
     global _vocabulary_inhibitions
+    global _list_of_dynamic_vocabularies
+
     if vocabulary == 'dynamic':
         if _global_list is not None:
             _global_list.clear()
@@ -203,6 +212,9 @@ def _rebuild_lists(vocabulary):
                     # nothing here.
                     if tag in _lists[vocabulary]:
                         _lists[vocabulary][tag].update(vocab)
+
+    if _list_of_dynamic_vocabularies is not None:
+        _list_of_dynamic_vocabularies.set(_vocabulary['dynamic'])
 
 
 def get_static_vocabulary(tag):
@@ -289,6 +301,17 @@ def uninhibit_global_dynamic_vocabulary(grammar_name, vocabulary_name, context=N
         ]
 
 
+def register_list_of_dynamic_vocabularies():
+    global _list_of_dynamic_vocabularies
+    _list_of_dynamic_vocabularies = dragonfly.List('list of vocabularies')
+    return _list_of_dynamic_vocabularies
+
+
+def unregister_list_of_dynamic_vocabularies():
+    global _list_of_dynamic_vocabularies
+    _list_of_dynamic_vocabularies = None
+
+
 def _build_action(action):
     '''Processes a single custom dynamic grammar action.'''
     actions = {'Text': Text, 'Key': Key, 'Pause': Pause, 'Mimic': Mimic,
@@ -324,17 +347,25 @@ def _update_one_vocabulary(vocabulary, name, tags, vocab, shortcuts):
 
 def _need_reload():
     global _last_vocabulary_mtime
-    for vocabulary in 'static', 'dynamic':
+    for vocabulary, last_seen in zip(('static', 'dynamic'), _last_vocabulary_filenames):
         vocab_dir = os.path.join(
             aenea.config.PROJECT_ROOT,
             'vocabulary_config',
             vocabulary
             )
 
+        if os.path.exists(vocab_dir) != bool(last_seen):
+            dirty = True
+
         # Have any been modified since we last read them?
         dirty = False
         if os.path.exists(vocab_dir):
-            for fn in os.listdir(vocab_dir):
+            files = os.listdir(vocab_dir)
+            if set(files) != last_seen:
+                dirty = True
+            last_seen.clear()
+            last_seen.update(files)
+            for fn in files:
                 mtime = os.stat(os.path.join(vocab_dir, fn)).st_mtime
                 if mtime > _last_vocabulary_mtime:
                     _last_vocabulary_mtime = mtime
