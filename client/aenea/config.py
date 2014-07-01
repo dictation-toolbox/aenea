@@ -1,20 +1,27 @@
+import json
+import os
+
+_tried = set()
+_configuration = {'project_root': 'C:\\NatLink\\NatLink\\MacroSystem'}
+
+# Recursively load the config file until we hit a self loop.
+while _configuration['project_root'] not in _tried:
+    _tried.add(_configuration['project_root'])
+    _configuration.update(json.load(open(os.path.join(_configuration['project_root'], 'aenea.json'))))
+
+PROJECT_ROOT = _configuration['project_root']
+
 # Client-side config (Windows running Dragon sending commands)
-HOST = "192.168.56.1"
-PORT = 8240
+HOST = _configuration['host']
+PORT = _configuration['port']
 
 # Whether to use proxy or native (not all modules support native.)
-PLATFORM = "proxy"
-#PLATFORM = "windows"
+PLATFORM = _configuration['platform']
 
 # Whether to use the server's multiple_actions RPC method.
-USE_MULTIPLE_ACTIONS = True
+USE_MULTIPLE_ACTIONS = _configuration['use_multiple_actions']
 
-SCREEN_RESOLUTION = (1920 * 2 + 2560), 1440
+SCREEN_RESOLUTION = _configuration['screen_resolution']
 
-PROJECT_ROOT = "E:\\aenea"
-
-# If this is enabled, reloading the configuration will not copy over the
-# client-side configuration file at util/config.py (ie this file). this is useful
-# if you wish to keep the master copy of your configuration files in the Natlink
-# directory.
-DONT_UPDATE_CONFIG = False
+KEYS = _configuration.get('keys', [])
+MODIFIERS = _configuration.get('modifiers', {})

@@ -1,0 +1,12 @@
+{
+    "letters.lower": {
+        "yoinkers": "yankee"
+    },
+    "letters.upper": {
+        "upper charlie": "upper charlie",
+        "charleston": "upper charlie"
+    },
+    "digits": {
+        "nil": "zero"
+    }
+}

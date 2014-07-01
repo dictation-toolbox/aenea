@@ -1,13 +1,13 @@
 '''performs black magic on the dragonfly actions objects to force them to
    forward their actions to a remote server.'''
 
-import os
-
 import aenea.communications
 import aenea.config
 
-communication = aenea.communications.Proxy(aenea.config.HOST, aenea.config.PORT)
-KEYS_FILE = 'C:\\NatLink\\NatLink\\MacroSystem\\keys.txt'
+communication = aenea.communications.Proxy(
+    aenea.config.HOST,
+    aenea.config.PORT
+    )
 
 try:
     import dragonfly
@@ -19,42 +19,12 @@ class ProxyBase(object):
     pass
 
 
-def _get_key_symbols():
-    try:
-        with open('keys.txt') as keyfile:
-            return [line.strip() for line in keyfile]
-    except Exception:
-        try:
-            path = os.path.dirname(os.path.abspath(__file__))
-            path = os.path.join(path, 'keys.txt')
-            with open(path) as keyfile:
-                return [line.strip() for line in keyfile]
-        except Exception:
-            with open(KEYS_FILE) as keyfile:
-                return [line.strip() for line in keyfile]
-
-_modifier_keys = {
-    'a': 'alt',
-    'c': 'control',
-    's': 'shift',
-    'w': 'super',
-    'h': 'hyper',
-    'm': 'meta',
-    'A': 'Alt_R',
-    'C': 'Control_R',
-    'S': 'Shift_R',
-    'W': 'Super_R',
-    'H': 'Hyper_R',
-    'M': 'Meta_R'
-    }
-
-
 def _make_key_parser():
     from pyparsing import (Optional, Literal, Word, Group, Keyword,
                            StringStart, StringEnd, Or)
     digits = '0123456789'
-    modifier_keywords = Word(''.join(_modifier_keys))
-    key_symbols = Or([Keyword(symbol) for symbol in _get_key_symbols()])
+    modifier_keywords = Word(''.join(aenea.config.MODIFIERS))
+    key_symbols = Or([Keyword(symbol) for symbol in aenea.config.KEYS])
     pause_clause = Optional(Literal('/') + Word('.' + digits))
     modifier_clause = Optional(modifier_keywords + Literal('-'))
     key_hold_clause = Literal(':') + Or([Keyword(d) for d in ('up', 'down')])
@@ -105,7 +75,7 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
             modifier_part, key_part, command_part, outer_pause_part = \
                 self._parser.parseString(key.strip())
 
-            modifiers = ([_modifier_keys[c] for c in modifier_part[0]]
+            modifiers = ([aenea.config.MODIFIERS[c] for c in modifier_part[0]]
                          if modifier_part else [])
             key = key_part[0]
 

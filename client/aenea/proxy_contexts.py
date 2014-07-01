@@ -6,7 +6,10 @@ import time
 import aenea.communications
 import aenea.config
 
-communication = aenea.communications.Proxy(aenea.config.HOST, aenea.config.PORT)
+communication = aenea.communications.Proxy(
+    aenea.config.HOST,
+    aenea.config.PORT
+    )
 
 try:
     import dragonfly

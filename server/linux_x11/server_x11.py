@@ -152,12 +152,14 @@ def run_command(command, executable='xdotool'):
 
 
 def read_command(command, executable='xdotool'):
+    print '%s %s | <server>' % (executable, command)
     with os.popen('%s %s' % (executable, command), 'r') as fd:
         rval = fd.read()
     return rval
 
 
 def write_command(message, arguments='type --file -', executable='xdotool'):
+    print 'echo \'%s\' | %s %s' % (message, executable, arguments)
     with os.popen('%s %s' % (executable, arguments), 'w') as fd:
         fd.write(message)
 
