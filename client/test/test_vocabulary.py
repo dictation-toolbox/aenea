@@ -236,7 +236,7 @@ class TestGlobalVocabulary(unittest.TestCase):
 
         m = mock.MagicMock()
         m.matches.return_value = True
-        aenea.vocabulary.inhibit_global_dynamic_vocabulary('test', 'bar', m)
+        aenea.vocabulary.inhibit_global_dynamic_vocabulary('test', 'vim', m)
 
         self.assertEqual(v, {'baz': 'bazaz'})
 

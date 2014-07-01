@@ -200,8 +200,13 @@ def _rebuild_lists(vocabulary):
         for (tags, vocab) in vocabs:
             if name not in _disabled_vocabularies:
                 if ('global' in tags and vocabulary == 'dynamic' and _global_list is not None):
-                    if not any(c is None or c.matches(None, None, None)
-                               for (c, _) in _vocabulary_inhibitions.get(name, [])):
+                    global_inhibited = False
+                    for tag in tags:
+                        if any(c is None or c.matches(None, None, None)
+                                for (c, _) in _vocabulary_inhibitions.get(tag, [])):
+                            global_inhibited = True
+                            break
+                    if not global_inhibited:
                         _global_list.update(vocab)
 
                 for tag in tags:
@@ -283,20 +288,21 @@ def unregister_global_dynamic_vocabulary():
     _global_list = None
 
 
-def inhibit_global_dynamic_vocabulary(grammar_name, vocabulary_name, context=None):
-    '''Ensures that whenever the specified context is active, the specified
-       vocabulary will not be active in the global dynamic vocabulary.'''
+def inhibit_global_dynamic_vocabulary(grammar_name, tag, context=None):
+    '''Ensures that whenever the specified context is active, all vocabularies
+       with the specified tag will not be active in the global dynamic
+       vocabulary.'''
     global _vocabulary_inhibitions
-    _vocabulary_inhibitions.setdefault(vocabulary_name, [])
-    _vocabulary_inhibitions[vocabulary_name].append((context, grammar_name))
+    _vocabulary_inhibitions.setdefault(tag, [])
+    _vocabulary_inhibitions[tag].append((context, grammar_name))
 
 
-def uninhibit_global_dynamic_vocabulary(grammar_name, vocabulary_name, context=None):
+def uninhibit_global_dynamic_vocabulary(grammar_name, tag, context=None):
     '''Remove all inhibitions by grammar_name on vocabulary_name.'''
     global _vocabulary_inhibitions
-    _vocabulary_inhibitions.setdefault(vocabulary_name, [])
-    _vocabulary_inhibitions[vocabulary_name] = [
-        (c, g) for (c, g) in _vocabulary_inhibitions[vocabulary_name]
+    _vocabulary_inhibitions.setdefault(tag, [])
+    _vocabulary_inhibitions[tag] = [
+        (c, g) for (c, g) in _vocabulary_inhibitions[tag]
         if g != grammar_name
         ]
 
