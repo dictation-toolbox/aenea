@@ -200,7 +200,6 @@ class NoAction(dragonfly.ActionBase):
 
 ###############################################################################
 # take a different action depending on which context is currently active.
-# only works with proxy contexts.
 
 
 class ProxyContextAction(dragonfly.ActionBase):
@@ -213,7 +212,8 @@ class ProxyContextAction(dragonfly.ActionBase):
 
     def execute(self):
         for (context, action) in self.actions:
-            if context.matches(None, None, None):
+            win = dragonfly.Window.get_foreground()
+            if context.matches(win.executable, win.title, win.handle):
                 return action.execute()
         else:
             return self.default.execute()

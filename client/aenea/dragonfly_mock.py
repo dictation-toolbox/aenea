@@ -15,3 +15,15 @@ class Context(object):
 
 DictList = lambda name: dict()
 List = lambda name: list()
+
+
+class _WindowInfo(object):
+    executable = None
+    title = None
+    handle = None
+
+
+class Window(object):
+    @staticmethod
+    def get_foreground():
+        return _WindowInfo

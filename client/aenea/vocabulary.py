@@ -226,13 +226,14 @@ def _rebuild_lists(vocabulary):
     for t, dlist in _lists[vocabulary].iteritems():
         if dlist:
             dlist.clear()
+    win = dragonfly.Window.get_foreground()
     for name, vocabs in _vocabulary[vocabulary].iteritems():
         for (tags, vocab) in vocabs:
             if name not in _disabled_vocabularies:
                 if ('global' in tags and vocabulary == 'dynamic' and _global_list is not None):
                     global_inhibited = False
                     for tag in tags:
-                        if any(c is None or c.matches(None, None, None)
+                        if any(c is None or c.matches(win.executable, win.title, win.handle)
                                 for (c, _) in _vocabulary_inhibitions.get(tag, [])):
                             global_inhibited = True
                             break
