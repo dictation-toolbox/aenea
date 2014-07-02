@@ -5,11 +5,6 @@ import aenea.communications
 import aenea.config
 import aenea.proxy_contexts
 
-communication = aenea.communications.Proxy(
-    aenea.config.HOST,
-    aenea.config.PORT
-    )
-
 try:
     import dragonfly
 except ImportError:
@@ -115,7 +110,7 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
         return proxy._commands
 
     def _execute_events(self, commands):
-        communication.execute_batch(commands)
+        aenea.communications.server.execute_batch(commands)
 
 ###############################################################################
 # Text
@@ -126,7 +121,7 @@ class ProxyText(ProxyBase, dragonfly.DynStrActionBase):
         return spec
 
     def _execute_events(self, events):
-        communication.server.write_text(text=events)
+        aenea.communications.server.write_text(text=events)
 
 ###############################################################################
 # Mouse
@@ -177,7 +172,7 @@ class ProxyMouse(ProxyBase, dragonfly.DynStrActionBase):
         return proxy._commands
 
     def _execute_events(self, commands):
-        communication.execute_batch(commands)
+        aenea.communications.server.execute_batch(commands)
 
 ###############################################################################
 # click without moving mouse

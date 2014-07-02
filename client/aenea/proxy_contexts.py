@@ -6,11 +6,6 @@ import time
 import aenea.communications
 import aenea.config
 
-communication = aenea.communications.Proxy(
-    aenea.config.HOST,
-    aenea.config.PORT
-    )
-
 try:
     import dragonfly
 except ImportError:
@@ -49,15 +44,15 @@ def _refresh_server():
     if (
             _last_context_time is None or
             _last_context_time + _STALE_CONTEXT_DELTA < time.time()):
-        try:
-            _last_context = communication.server.get_context()
-            _last_server_info = communication.server.server_info()
-        except Exception as e:
-            print e
+        _last_context = aenea.communications.server.get_context()
+        _last_server_info = aenea.communications.server.server_info()
+        _last_context_time = time.time()
+
+        # If the RPC call fails for whatever reason, we return an empty dict.
+        if _last_context is None:
             _last_context = {}
+        if _last_server_info is None:
             _last_server_info = {}
-        else:
-            _last_context_time = time.time()
 
 
 def _get_context():

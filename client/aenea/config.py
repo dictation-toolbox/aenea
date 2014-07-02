@@ -39,3 +39,5 @@ SCREEN_RESOLUTION = _configuration['screen_resolution']
 
 KEYS = _configuration.get('keys', [])
 MODIFIERS = _configuration.get('modifiers', {})
+
+CONNECT_RETRY_COOLDOWN = _configuration.get('connect_retry_cooldown', 5)
