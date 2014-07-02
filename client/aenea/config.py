@@ -98,3 +98,15 @@ def proxy_active(active_window=None):
         active_window = dragonfly.Window.get_foreground()
     return (proxy_enable_context.matches(*active_window) and
             PLATFORM == 'proxy')
+
+
+def enable_proxy():
+    '''Dynamically enables proxy.'''
+    global PLATFORM
+    PLATFORM = 'proxy'
+
+
+def disable_proxy():
+    '''Dynamically disables proxy.'''
+    global PLATFORM
+    PLATFORM = 'local'

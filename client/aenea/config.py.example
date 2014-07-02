@@ -4,7 +4,7 @@ PORT = 8240
 
 # Whether to use proxy or native (not all modules support native.)
 PLATFORM = "proxy"
-#PLATFORM = "windows"
+#PLATFORM = "local"
 
 # Whether to use the server's multiple_actions RPC method.
 USE_MULTIPLE_ACTIONS = True

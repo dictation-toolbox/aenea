@@ -1,0 +1,12 @@
+{
+    "commands": {
+        "set proxy server to <proxy>": "set proxy server to <proxy>",
+        "disable proxy server": "disable proxy server",
+        "enable proxy server": "enable proxy server",
+        "force natlink to reload all grammars": "force natlink to reload all grammars"
+    },
+    "servers": {
+        "windows box": {"host": "192.168.1.101", "port": 8240},
+        "linux": {"host": "192.168.56.1", "port": 8240}
+    }
+}
