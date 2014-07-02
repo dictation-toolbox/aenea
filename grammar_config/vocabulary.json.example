@@ -1,0 +1,9 @@
+{
+    "commands": {
+        "[refresh|reload] dynamic [vocabulary|vocabularies]": "[refresh|reload] dynamic [vocabulary|vocabularies]",
+        "enable vocabulary <vocabulary>": "enable vocabulary <vocabulary>",
+        "disable vocabulary <vocabulary>": "disable vocabulary <vocabulary>",
+        "<static>": "<static>",
+        "<dynamic>": "<dynamic>"
+    }
+}

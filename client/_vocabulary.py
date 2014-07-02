@@ -9,6 +9,19 @@ import dragonfly
 
 vocabulary_list = aenea.vocabulary.register_list_of_dynamic_vocabularies()
 
+# Commands that can be rebound.
+command_table = [
+    '[refresh|reload] dynamic [vocabulary|vocabularies]',
+    'enable vocabulary <vocabulary>',
+    'disable vocabulary <vocabulary>',
+    '<static>',
+    '<dynamic>'
+    ]
+command_table = aenea.vocabulary.make_grammar_commands(
+    'vocabulary',
+    dict(zip(command_table, command_table))
+    )
+
 
 class RefreshRule(dragonfly.CompoundRule):
     spec = '[refresh|reload] dynamic [vocabulary|vocabularies]'
@@ -24,7 +37,7 @@ class RefreshRule(dragonfly.CompoundRule):
 
 
 class EnableRule(dragonfly.CompoundRule):
-    spec = 'enable vocabulary <vocabulary>'
+    spec = command_table['enable vocabulary <vocabulary>']
     extras = [dragonfly.ListRef('vocabulary', vocabulary_list)]
 
     def _process_recognition(self, node, extras):
@@ -32,7 +45,7 @@ class EnableRule(dragonfly.CompoundRule):
 
 
 class DisableRule(dragonfly.CompoundRule):
-    spec = 'disable vocabulary <vocabulary>'
+    spec = command_table['disable vocabulary <vocabulary>']
     extras = [dragonfly.ListRef('vocabulary', vocabulary_list)]
 
     def _process_recognition(self, node, extras):
@@ -40,7 +53,7 @@ class DisableRule(dragonfly.CompoundRule):
 
 
 class StaticRule(dragonfly.CompoundRule):
-    spec = '<static>'
+    spec = command_table['<static>']
 
     extras = [dragonfly.DictListRef(
         'static',
@@ -52,7 +65,7 @@ class StaticRule(dragonfly.CompoundRule):
 
 
 class DynamicRule(dragonfly.CompoundRule):
-    spec = '<dynamic>'
+    spec = command_table['<dynamic>']
 
     extras = [dragonfly.DictListRef(
         'dynamic',
