@@ -39,21 +39,25 @@ class DisableRule(dragonfly.CompoundRule):
         aenea.vocabulary.disable_dynamic_vocabulary(extras['vocabulary'])
 
 
-class DynamicRule(dragonfly.Rule):
-    element = dragonfly.DictListRef(
-        'dynamic global',
-        aenea.vocabulary.register_global_dynamic_vocabulary()
-        )
+class StaticRule(dragonfly.CompoundRule):
+    spec = '<static>'
 
-
-class StaticRule(dragonfly.Rule):
-    element = dragonfly.DictListRef(
-        'static global',
+    extras = [dragonfly.DictListRef(
+        'static',
         dragonfly.DictList(
             'static global',
             aenea.vocabulary.get_static_vocabulary('global')
             )
-        )
+        )]
+
+
+class DynamicRule(dragonfly.CompoundRule):
+    spec = '<dynamic>'
+
+    extras = [dragonfly.DictListRef(
+        'dynamic',
+        aenea.vocabulary.register_global_dynamic_vocabulary()
+        )]
 
 
 grammar = dragonfly.Grammar('vocabulary')

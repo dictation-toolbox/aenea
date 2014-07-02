@@ -290,21 +290,31 @@ def unregister_global_dynamic_vocabulary():
 
 def inhibit_global_dynamic_vocabulary(grammar_name, tag, context=None):
     '''Ensures that whenever the specified context is active, all vocabularies
-       with the specified tag will not be active in the global dynamic
+       with the specified tag(s) will not be active in the global dynamic
        vocabulary.'''
     global _vocabulary_inhibitions
-    _vocabulary_inhibitions.setdefault(tag, [])
-    _vocabulary_inhibitions[tag].append((context, grammar_name))
+    if isinstance(tag, basestring):
+        _vocabulary_inhibitions.setdefault(tag, [])
+        _vocabulary_inhibitions[tag].append((context, grammar_name))
+        _rebuild_lists('dynamic')
+    else:
+        for t in tag:
+            inhibit_global_dynamic_vocabulary(grammar_name, t, context)
 
 
-def uninhibit_global_dynamic_vocabulary(grammar_name, tag, context=None):
-    '''Remove all inhibitions by grammar_name on vocabulary_name.'''
+def uninhibit_global_dynamic_vocabulary(grammar_name, tag):
+    '''Remove all inhibitions by grammar_name on specified tags.'''
     global _vocabulary_inhibitions
-    _vocabulary_inhibitions.setdefault(tag, [])
-    _vocabulary_inhibitions[tag] = [
-        (c, g) for (c, g) in _vocabulary_inhibitions[tag]
-        if g != grammar_name
-        ]
+    if isinstance(tag, basestring):
+        _vocabulary_inhibitions.setdefault(tag, [])
+        _vocabulary_inhibitions[tag] = [
+            (c, g) for (c, g) in _vocabulary_inhibitions[tag]
+            if g != grammar_name
+            ]
+        _rebuild_lists('dynamic')
+    else:
+        for t in tag:
+            uninhibit_global_dynamic_vocabulary(grammar_name, t)
 
 
 def register_list_of_dynamic_vocabularies():
