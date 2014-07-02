@@ -22,25 +22,25 @@ def _spec(klass, a, kw):
         return _WarnUserUnsupportedAction()
 
 
-class Key(aenea.wrappers.common.PlatformAction):
+class Key(aenea.wrappers.common.AeneaAction):
     def __init__(self, *a, **kw):
         proxy = _spec(aenea.proxy_actions.ProxyKey, a, kw)
         local = _spec(dragonfly.Key, a, kw)
-        aenea.wrappers.common.PlatformAction.__init__(self, proxy, local)
+        aenea.wrappers.common.AeneaAction.__init__(self, proxy, local)
 
 
-class Text(aenea.wrappers.common.PlatformAction):
+class Text(aenea.wrappers.common.AeneaAction):
     def __init__(self, *a, **kw):
         proxy = _spec(aenea.proxy_actions.ProxyText, a, kw)
         local = _spec(dragonfly.Text, a, kw)
-        aenea.wrappers.common.PlatformAction.__init__(self, proxy, local)
+        aenea.wrappers.common.AeneaAction.__init__(self, proxy, local)
 
 
-class Mouse(aenea.wrappers.common.PlatformAction):
+class Mouse(aenea.wrappers.common.AeneaAction):
     def __init__(self, *a, **kw):
         proxy = _spec(aenea.proxy_actions.ProxyMouse, a, kw)
         local = _spec(dragonfly.Mouse, a, kw)
-        aenea.wrappers.common.PlatformAction.__init__(self, proxy, local)
+        aenea.wrappers.common.AeneaAction.__init__(self, proxy, local)
 
 __all__ = [
     'Key',

@@ -10,14 +10,27 @@ import aenea.config
 
 
 class NoAction(dragonfly.ActionBase):
-    '''Does nothing. Can be composed with +, etc and other actions.'''
+    '''Does nothing. Useful for constructing compound actions.'''
     def execute(self):
         pass
 
 
-class PlatformContext(dragonfly.Context):
+class AlwaysContext(dragonfly.Context):
+    '''Always matches. Useful for constructing compound contexts.'''
+    def matches(self, windows_executable, windows_title, windows_handle):
+        return True
+
+
+class NeverContext(dragonfly.Context):
+    '''Never matches. Useful for constructing compound contexts.'''
+    def matches(self, windows_executable, windows_title, windows_handle):
+        return False
+
+
+class AeneaContext(dragonfly.Context):
     '''A context that delegates to either a local or proxy context object
-       as appropriate.'''
+       as appropriate. See also ProxyPlatformContext; which matches one of
+       several contexts via proxy based on the OS on the other end.'''
 
     def __init__(self, proxy_context, local_context):
         '''proxy_context and remote_context may be dragonfly.Context
@@ -41,10 +54,11 @@ class PlatformContext(dragonfly.Context):
             return context(executable, title, handle)
 
 
-class PlatformAction(dragonfly.ActionBase):
+class AeneaAction(dragonfly.ActionBase):
     '''Performs one action when config.PLATFORM is proxy, another for local.
        Useful for things that need to break out of the grammar system (eg,
-       to query the filesystem to provide shell autocomplete).'''
+       to query the filesystem to provide shell autocomplete), as well as
+       providing grammars that work both on the VM and remote.'''
 
     def __init__(self, proxy_action, local_action):
         '''proxy_action and remote_action may be dragonfly.ActionBase
