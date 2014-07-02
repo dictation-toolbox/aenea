@@ -63,6 +63,9 @@ class StaticRule(dragonfly.CompoundRule):
             )
         )]
 
+    def _process_recognition(self, node, extras):
+        extras['static'].execute(extras)
+
 
 class DynamicRule(dragonfly.CompoundRule):
     spec = command_table['<dynamic>']
@@ -71,6 +74,9 @@ class DynamicRule(dragonfly.CompoundRule):
         'dynamic',
         aenea.vocabulary.register_global_dynamic_vocabulary()
         )]
+
+    def _process_recognition(self, node, extras):
+        extras['dynamic'].execute(extras)
 
 
 grammar = dragonfly.Grammar('vocabulary')
