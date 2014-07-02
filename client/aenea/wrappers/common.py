@@ -22,10 +22,10 @@ class PlatformContext(dragonfly.Context):
     def __init__(self, proxy_context, local_context):
         '''proxy_context and remote_context may be dragonfly.Context
            subclasses or callables.'''
-        assert(isinstance(proxy_context, dragonfly.Context) or
+        assert(hasattr(proxy_context, 'matches') or
                hasattr(proxy_context, '__call__'))
-        assert(isinstance(local_context, dragonfly.Context) or
-               hasattr(proxy_context, '__call__'))
+        assert(hasattr(local_context, 'matches') or
+               hasattr(local_context, '__call__'))
         self._proxy_context = proxy_context
         self._local_context = local_context
         dragonfly.Context.__init__(self)
@@ -35,7 +35,7 @@ class PlatformContext(dragonfly.Context):
             context = self._proxy_context
         else:
             context = self._local_context
-        if isinstance(context, dragonfly.ActionBase):
+        if hasattr(context, 'matches'):
             return context.matches(executable, title, handle)
         else:
             return context(executable, title, handle)
@@ -49,10 +49,10 @@ class PlatformAction(dragonfly.ActionBase):
     def __init__(self, proxy_action, local_action):
         '''proxy_action and remote_action may be dragonfly.ActionBase
             subclasses or callables.'''
-        assert(isinstance(proxy_action, dragonfly.ActionBase) or
+        assert(hasattr(proxy_action, 'execute') or
                hasattr(proxy_action, '__call__'))
-        assert(isinstance(local_action, dragonfly.ActionBase) or
-               hasattr(proxy_action, '__call__'))
+        assert(hasattr(local_action, 'execute') or
+               hasattr(local_action, '__call__'))
         self._proxy_action = proxy_action
         self._local_action = local_action
         dragonfly.ActionBase.__init__(self)
@@ -62,7 +62,7 @@ class PlatformAction(dragonfly.ActionBase):
             action = self._proxy_action
         else:
             action = self._local_action
-        if isinstance(action, dragonfly.ActionBase):
+        if hasattr(action, 'execute'):
             action.execute()
         else:
             action()
