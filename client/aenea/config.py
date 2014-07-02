@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 try:
     import dragonfly
@@ -31,9 +32,37 @@ else:
 
 PROJECT_ROOT = _configuration['project_root']
 
-# Client-side config (Windows running Dragon sending commands)
-HOST = _configuration['host']
-PORT = _configuration['port']
+SERVER_STATE_FILE = _configuration.get('server_state_file', os.path.join(PROJECT_ROOT, 'server_state.json'))
+
+_server = _configuration['host'], _configuration['port']
+_server_mtime = 0
+
+
+def get_server_address():
+    '''Returns tuple of (host, port).'''
+    global _server
+    global _server_mtime
+    if not os.path.exists(SERVER_STATE_FILE):
+        set_server_address(_server)
+    else:
+        mtime = os.stat(SERVER_STATE_FILE).st_mtime
+        if mtime > _server_mtime:
+            try:
+                _server_mtime = mtime
+                conf = json.load(open(SERVER_STATE_FILE))
+                _server = conf['host'], conf['port']
+            except Exception as e:
+                print('Could not load server state file: %s' % str(e))
+    return _server
+
+
+def set_server_address(addr):
+    try:
+        with open(SERVER_STATE_FILE, 'w') as fd:
+            json.dump({'host': addr[0], 'port': addr[1]}, fd)
+    except Exception as e:
+        print('Could not save server state file: %s' % str(e))
+
 
 # Whether to use proxy or native (not all modules support native.)
 PLATFORM = _configuration['platform']
