@@ -1,3 +1,4 @@
-import aenea.wrappers.strict as strict
-import aenea.wrappers.lax as lax
-from aenea.wrappers.lax import *
+import strict as strict
+import lax as lax
+from lax import *
+from common import *

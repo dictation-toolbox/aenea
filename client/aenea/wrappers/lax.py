@@ -5,9 +5,15 @@
    printed to the Natlink window. If you want your grammar to work the same
    way on all platforms, use aenea.wrappers.strict instead.'''
 
-import dragonfly
+import aenea.proxy_actions
 
-import aenea.wrappers.common
+try:
+    import dragonfly
+except ImportError:
+    import aenea.dragonfly_mock as dragonfly
+
+
+import common
 
 
 class _WarnUserUnsupportedAction(dragonfly.ActionBase):
@@ -22,25 +28,25 @@ def _spec(klass, a, kw):
         return _WarnUserUnsupportedAction()
 
 
-class Key(aenea.wrappers.common.AeneaAction):
+class Key(common.AeneaAction):
     def __init__(self, *a, **kw):
         proxy = _spec(aenea.proxy_actions.ProxyKey, a, kw)
         local = _spec(dragonfly.Key, a, kw)
-        aenea.wrappers.common.AeneaAction.__init__(self, proxy, local)
+        common.AeneaAction.__init__(self, proxy, local)
 
 
-class Text(aenea.wrappers.common.AeneaAction):
+class Text(common.AeneaAction):
     def __init__(self, *a, **kw):
         proxy = _spec(aenea.proxy_actions.ProxyText, a, kw)
         local = _spec(dragonfly.Text, a, kw)
-        aenea.wrappers.common.AeneaAction.__init__(self, proxy, local)
+        common.AeneaAction.__init__(self, proxy, local)
 
 
-class Mouse(aenea.wrappers.common.AeneaAction):
+class Mouse(common.AeneaAction):
     def __init__(self, *a, **kw):
         proxy = _spec(aenea.proxy_actions.ProxyMouse, a, kw)
         local = _spec(dragonfly.Mouse, a, kw)
-        aenea.wrappers.common.AeneaAction.__init__(self, proxy, local)
+        common.AeneaAction.__init__(self, proxy, local)
 
 __all__ = [
     'Key',

@@ -1,8 +1,13 @@
+'''Mock module to allow importing aenea on linux (mostly so you can run tests
+   locally.'''
+
+print 'Unable to import Dragonfly (safe to ignore if running tests).'
+
 class ActionBase(object):
     def __init__(self, spec):
         self.actions = self._parse_spec(spec)
 
-    def execute(self):
+    def execute(self, data=None):
         self._execute_events(self.actions)
 
 

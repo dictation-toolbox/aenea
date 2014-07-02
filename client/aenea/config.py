@@ -1,6 +1,12 @@
 import json
 import os
 
+try:
+    import dragonfly
+except ImportError:
+    import dragonfly_mock as dragonfly
+
+
 STARTING_PROJECT_POOT = 'C:\\NatLink\\NatLink\\MacroSystem'
 
 if os.path.exists(os.path.join(STARTING_PROJECT_POOT, 'aenea.json')):
@@ -41,3 +47,25 @@ KEYS = _configuration.get('keys', [])
 MODIFIERS = _configuration.get('modifiers', {})
 
 CONNECT_RETRY_COOLDOWN = _configuration.get('connect_retry_cooldown', 5)
+
+if _configuration.get('restrict_proxy_to_aenea_client', False):
+    proxy_enable_context = dragonfly.AppContext(
+        executable="python",
+        title="Aenea client - Dictation capturing"
+        )
+else:
+    def _scoped():
+        class AlwaysContext(dragonfly.Context):
+            def matches(self, windows_executable, windows_title, windows_handle):
+                return True
+        return AlwaysContext()
+    proxy_enable_context = _scoped()
+
+
+def proxy_active(active_window=None):
+    '''Returns whether the proxy is enabled, based on context and file
+       settings.'''
+    if active_window is None:
+        active_window = dragonfly.Window.get_foreground()
+    return (proxy_enable_context.matches(*active_window) and
+            PLATFORM == 'proxy')

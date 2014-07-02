@@ -20,7 +20,6 @@ try:
         )
 except ImportError:
     import dragonfly_mock as dragonfly
-    print 'Unable to import Dragonfly (safe to ignore if running tests)'
     # TODO: mock this better
 
     class ActionMock(object):

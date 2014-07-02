@@ -12,7 +12,7 @@ except ImportError:
 
 
 class _Warn(dragonfly.ActionBase):
-    def execute(self):
+    def execute(self, data=None):
         pf = aenea.proxy_contexts._server_info().get('platform', None)
         print 'Warning: grammar can\'t handle server platform %s' % pf
         return False
@@ -198,7 +198,7 @@ class ProxyMousePhantomClick(ProxyMouse):
 
 
 class NoAction(dragonfly.ActionBase):
-    def execute(self):
+    def execute(self, data=None):
         pass
 
 ###############################################################################
@@ -213,13 +213,13 @@ class ProxyContextAction(dragonfly.ActionBase):
     def add_context(self, context, action):
         self.actions.append((context, action))
 
-    def execute(self):
+    def execute(self, data=None):
         for (context, action) in self.actions:
             win = dragonfly.Window.get_foreground()
             if context.matches(win.executable, win.title, win.handle):
-                return action.execute()
+                return action.execute(data)
         else:
-            return self.default.execute()
+            return self.default.execute(data)
 
 
 class ProxyPlatformContext(dragonfly.Context):

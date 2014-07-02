@@ -2,30 +2,35 @@
    platforms. This is preferred if you want your grammar to work identically
    on both platforms.'''
 
-import dragonfly
+try:
+    import dragonfly
+except ImportError:
+    import aenea.dragonfly_mock as dragonfly
 
-import aenea.wrappers.common
 
 
-class Key(aenea.wrappers.common.AeneaAction):
+import common
+
+
+class Key(common.AeneaAction):
     def __init__(self, *a, **kw):
         proxy = aenea.proxy_actions.ProxyKey(*a, **kw)
         local = dragonfly.Key(*a, **kw)
-        aenea.wrappers.common.AeneaAction.__init__(self, proxy, local)
+        common.AeneaAction.__init__(self, proxy, local)
 
 
-class Text(aenea.wrappers.common.AeneaAction):
+class Text(common.AeneaAction):
     def __init__(self, *a, **kw):
         proxy = aenea.proxy_actions.ProxyText(*a, **kw)
         local = dragonfly.Text(*a, **kw)
-        aenea.wrappers.common.AeneaAction.__init__(self, proxy, local)
+        common.AeneaAction.__init__(self, proxy, local)
 
 
-class Mouse(aenea.wrappers.common.AeneaAction):
+class Mouse(common.AeneaAction):
     def __init__(self, *a, **kw):
         proxy = aenea.proxy_actions.ProxyMouse(*a, **kw)
         local = dragonfly.Mouse(*a, **kw)
-        aenea.wrappers.common.AeneaAction.__init__(self, proxy, local)
+        common.AeneaAction.__init__(self, proxy, local)
 
 
 __all__ = [

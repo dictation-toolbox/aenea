@@ -4,14 +4,18 @@
    action.execute() or context.matches() is called  is what determines what
    happens.'''
 
-import dragonfly
+try:
+    import dragonfly
+except ImportError:
+    import aenea.dragonfly_mock as dragonfly
+
 
 import aenea.config
 
 
 class NoAction(dragonfly.ActionBase):
     '''Does nothing. Useful for constructing compound actions.'''
-    def execute(self):
+    def execute(self, data=None):
         pass
 
 
@@ -71,12 +75,12 @@ class AeneaAction(dragonfly.ActionBase):
         self._local_action = local_action
         dragonfly.ActionBase.__init__(self)
 
-    def execute(self):
+    def execute(self, data=None):
         if aenea.config.PLATFORM == 'proxy':
             action = self._proxy_action
         else:
             action = self._local_action
         if hasattr(action, 'execute'):
-            action.execute()
+            action.execute(data)
         else:
-            action()
+            action(data)

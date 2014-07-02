@@ -20,13 +20,19 @@ class Proxy(object):
                 else:
                     for (command, args, kwargs) in batch:
                         getattr(self._server, command)(*args, **kwargs)
-            except socket.error as e:
+            except socket.error:
                 _last_failed_connect = time.time()
                 print 'Failed to connect to aenea server. To avoid slowing dictation, we won\'t try again for %i seconds.' % aenea.config.CONNECT_RETRY_COOLDOWN
 
     def __getattr__(self, meth):
         def call(*a, **kw):
-            return self.execute_batch([(meth, a, kw)])
+            global _last_failed_connect
+            if time.time() - _last_failed_connect > aenea.config.CONNECT_RETRY_COOLDOWN:
+                try:
+                    return getattr(self._server, meth)(*a, **kw)
+                except socket.error:
+                    _last_failed_connect = time.time()
+                    print 'Failed to connect to aenea server. To avoid slowing dictation, we won\'t try again for %i seconds.' % aenea.config.CONNECT_RETRY_COOLDOWN
         return call
 
 

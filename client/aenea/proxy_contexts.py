@@ -162,6 +162,26 @@ def ProxyAppContext(
 
 
 class ProxyPlatformContext(dragonfly.Context):
+    '''Class that matches based on the platform the server reports. None will
+       match the server not sending platform or it being set to None.
+       If running locally (aenea's global context does not match or it is
+       disabled), this context never matches.'''
+
+    def __init__(self, platform):
+        '''mapping is mapping from platform as string to Context.'''
+        self._platform = platform
+
+    def matches(self, windows_executable, windows_title, windows_handle):
+        enabled = aenea.config.proxy_active((
+            windows_executable,
+            windows_title,
+            windows_handle
+            ))
+        return (enabled and
+                (_server_info().get('platform', None) == self._platform))
+
+
+class ProxyCrossPlatformContext(dragonfly.Context):
     '''Class to choose between several contexts based on what the server says
        platform is. None key may be used for none of the above.'''
 
@@ -185,6 +205,7 @@ __all__ = [
     'ProxyCustomAppContext',
     'AlwaysContext',
     'ProxyPlatformContext',
+    'ProxyCrossPlatformContext',
     'NeverContext',
     'VALUE_NOT_SET',
     'VALUE_SET',
