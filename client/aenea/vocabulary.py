@@ -50,6 +50,12 @@ except ImportError:
 
 import aenea.config
 
+_ENABLED_JSON_PATH = os.path.join(
+    aenea.config.PROJECT_ROOT,
+    'vocabulary_config',
+    'enabled.json'
+    )
+
 
 _vocabulary = {'static': {}, 'dynamic': {}}
 
@@ -180,6 +186,30 @@ def refresh_vocabulary(force_reload=False):
                 _rebuild_lists('static')
 
     _rebuild_lists('dynamic')
+    _load_enabled_from_disk()
+
+def _load_enabled_from_disk():
+    '''Sets the set of enabled grammars from the disk file.'''
+    if not os.path.exists(_ENABLED_JSON_PATH):
+        _save_enabled_to_disk()
+    else:
+        try:
+            disabled = set()
+            for (name, status) in json.load(open(_ENABLED_JSON_PATH)).items():
+                if not status:
+                    disabled.add(name)
+            _disabled_vocabularies.clear()
+            _disabled_vocabularies.update(disabled)
+        except Exception:
+            print 'Error loading vocabulary state file ' + _ENABLED_JSON_PATH
+
+def _save_enabled_to_disk():
+    if os.path.exists(os.path.split(_ENABLED_JSON_PATH)[0]):
+        conf = {}
+        for name in _vocabulary['dynamic']:
+            conf[name] = name not in _disabled_vocabularies
+        with open(_ENABLED_JSON_PATH, 'w') as fd:
+            json.dump(conf, fd)
 
 
 def _rebuild_lists(vocabulary):
@@ -253,6 +283,7 @@ def disable_dynamic_vocabulary(name):
        No reload or mic off/on is necessary.'''
     _disabled_vocabularies.add(name)
     _rebuild_lists('dynamic')
+    _save_enabled_to_disk()
 
 
 def enable_dynamic_vocabulary(name):
@@ -261,6 +292,7 @@ def enable_dynamic_vocabulary(name):
     if name in _disabled_vocabularies:
         _disabled_vocabularies.remove(name)
     _rebuild_lists('dynamic')
+    _save_enabled_to_disk()
 
 
 def register_global_dynamic_vocabulary():
@@ -363,6 +395,13 @@ def _update_one_vocabulary(vocabulary, name, tags, vocab, shortcuts):
 
 def _need_reload():
     global _last_vocabulary_mtime
+    global _last_vocabulary_filenames
+    dirty = False
+    if not os.path.exists(_ENABLED_JSON_PATH):
+        dirty = True
+    elif os.stat(_ENABLED_JSON_PATH).st_mtime > _last_vocabulary_mtime:
+        _last_vocabulary_mtime = os.stat(_ENABLED_JSON_PATH).st_mtime
+        dirty = True
     for vocabulary, last_seen in zip(('static', 'dynamic'), _last_vocabulary_filenames):
         vocab_dir = os.path.join(
             aenea.config.PROJECT_ROOT,
@@ -374,7 +413,6 @@ def _need_reload():
             dirty = True
 
         # Have any been modified since we last read them?
-        dirty = False
         if os.path.exists(vocab_dir):
             files = os.listdir(vocab_dir)
             if set(files) != last_seen:
