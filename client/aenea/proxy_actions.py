@@ -3,6 +3,7 @@
 
 import aenea.communications
 import aenea.config
+import aenea.proxy_contexts
 
 communication = aenea.communications.Proxy(
     aenea.config.HOST,
@@ -13,6 +14,13 @@ try:
     import dragonfly
 except ImportError:
     import dragonfly_mock as dragonfly
+
+
+class _Warn(dragonfly.ActionBase):
+    def execute(self):
+        pf = aenea.proxy_contexts._server_info().get('platform', None)
+        print 'Warning: grammar can\'t handle server platform %s' % pf
+        return False
 
 
 class ProxyBase(object):
@@ -217,6 +225,26 @@ class ProxyContextAction(dragonfly.ActionBase):
                 return action.execute()
         else:
             return self.default.execute()
+
+
+class ProxyPlatformContext(dragonfly.Context):
+    '''Class to choose between several contexts based on what the server says
+       platform is. None key may be used for none of the above.'''
+
+    def __init__(self, mapping):
+        '''mapping is mapping from platform as string to Context.'''
+        assert all(hasattr(x, 'matches') for x in mapping)
+        self._mapping = mapping
+
+    def matches(self, windows_executable, windows_title, windows_handle):
+        platform = aenea.proxy_contexts._server_info().get('platform', None)
+        chosen = self._mapping.get(platform, self._mapping.get(None, _Warn()))
+        return chosen.matches(
+            windows_executable,
+            windows_title,
+            windows_handle
+            )
+
 
 __all__ = [
     'ProxyKey',

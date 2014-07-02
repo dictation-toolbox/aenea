@@ -42,6 +42,7 @@ _MOUSE_MOVE_COMMANDS = {
 _SERVER_INFO = {
     'window_manager': 'awesome',
     'operating_system': 'linux',
+    'platform': 'linux',
     'display': 'X11',
     'server': 'aenea_reference',
     'server_version': 1

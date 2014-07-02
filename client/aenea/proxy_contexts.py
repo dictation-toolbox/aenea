@@ -30,19 +30,46 @@ VALUE_DONT_CARE = object()
 # could propagate state through Dragonfly contexts, but that would involve
 # deep surgery or re-implementation.
 _last_context = None
+_last_server_info = None
 _last_context_time = 0
 _STALE_CONTEXT_DELTA = 0.01
 
 
-def get_context():
+class _Warn(dragonfly.Context):
+    def matches(self, windows_executable, windows_title, windows_handle):
+        pf = _server_info().get('platform', None)
+        print 'Warning: grammar can\'t handle server platform %s' % pf
+        return False
+
+
+def _refresh_server():
     global _last_context
     global _last_context_time
+    global _last_server_info
     if (
             _last_context_time is None or
             _last_context_time + _STALE_CONTEXT_DELTA < time.time()):
-        _last_context = communication.server.get_context()
-        _last_context_time = time.time()
+        try:
+            _last_context = communication.server.get_context()
+            _last_server_info = communication.server.server_info()
+        except Exception as e:
+            print e
+            _last_context = {}
+            _last_server_info = {}
+        else:
+            _last_context_time = time.time()
+
+
+def _get_context():
+    global _last_context
+    _refresh_server()
     return _last_context
+
+
+def _server_info():
+    global _last_server_info
+    _refresh_server()
+    return _last_server_info
 
 
 class AlwaysContext(dragonfly.Context):
@@ -76,7 +103,7 @@ class ProxyCustomAppContext(dragonfly.Context):
             assert int(logic) >= 0 and int(logic) <= len(query)
 
     def _check_properties(self):
-        properties = get_context()
+        properties = _get_context()
         matches = {}
         for (key, value) in self.arguments.iteritems():
             if value == VALUE_DONT_CARE:
@@ -127,10 +154,6 @@ def ProxyAppContext(
         logic='and',
         case_sensitive=False
         ):
-    '''tries to do the right thing depending on the server on the other
-       end. prefer using this when possible, as cls and cls_name will
-       be automatically dropped on platforms that do not define them.'''
-    properties = get_context()
 
     query = {
         'title': title,
@@ -139,17 +162,34 @@ def ProxyAppContext(
         'executable': executable
         }
 
-    if 'cls' not in properties or 'cls_name' not in properties:
-        del query['cls']
-        del query['cls_name']
-
     return ProxyCustomAppContext(match=match, logic=logic, query=query,
                                  case_sensitive=case_sensitive)
+
+
+class ProxyPlatformContext(dragonfly.Context):
+    '''Class to choose between several contexts based on what the server says
+       platform is. None key may be used for none of the above.'''
+
+    def __init__(self, mapping):
+        '''mapping is mapping from platform as string to Context.'''
+        assert all(hasattr(x, 'matches') for x in mapping)
+        self._mapping = mapping
+
+    def matches(self, windows_executable, windows_title, windows_handle):
+        platform = _server_info().get('platform', None)
+        chosen = self._mapping.get(platform, self._mapping.get(None, _Warn()))
+        return chosen.matches(
+            windows_executable,
+            windows_title,
+            windows_handle
+            )
+
 
 __all__ = [
     'ProxyAppContext',
     'ProxyCustomAppContext',
     'AlwaysContext',
+    'ProxyPlatformContext',
     'NeverContext',
     'VALUE_NOT_SET',
     'VALUE_SET',
