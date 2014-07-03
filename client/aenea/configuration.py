@@ -122,6 +122,33 @@ class ConfigDirWatcher(object):
 
         for fn in files:
             if fn not in self.files:
-                self.files[fn] = ConfigWatcher((self._rawpath, fn), self._default)
+                self.files[fn] = ConfigWatcher(
+                    (self._rawpath, fn), self._default)
             else:
                 self.files[fn].refresh()
+
+
+def make_grammar_commands(module_name, mapping, config_key='commands'):
+    '''Given the command map from default spoken phrase to actions in mapping,
+       constructs a mapping that takes user config, if specified, into account.
+       config_key may be a key in the JSON to use (for modules with multiple
+       mapping rules.) If a user phrase starts with !,
+       no mapping is generated for that phrase.'''
+    conf_path = ('grammar_config', module_name)
+    conf = ConfigWatcher(conf_path).conf.get(config_key, {})
+    commands = mapping.copy()
+
+    # Nuke the default if the user sets one or more aliases.
+    for default_phrase in set(conf.itervalues()):
+        del commands[str(default_phrase)]
+
+    for (user_phrase, default_phrase) in conf.iteritems():
+        # Dragonfly chokes on unicode, JSON's default.
+        user_phrase = str(user_phrase)
+        default_phrase = str(default_phrase)
+        assert default_phrase in mapping, ('Invalid mapping value in module %s config_key %s: %s' % (module_name, config_key, default_phrase))
+
+        # Allow users to nuke a command with !
+        if not user_phrase.startswith('!'):
+            commands[user_phrase] = mapping[default_phrase]
+    return commands

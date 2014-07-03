@@ -9,7 +9,7 @@ import dragonfly
 try:
     import aenea
     import aenea.proxy_contexts
-    import aenea.vocabulary
+    import aenea.configuration
     import aenea.communications
     import aenea.config
     import aenea.configuration
@@ -39,7 +39,7 @@ command_table = [
     'enable proxy server',
     'force natlink to reload all grammars'
     ]
-command_table = aenea.vocabulary.make_grammar_commands(
+command_table = aenea.configuration.make_grammar_commands(
     'aenea',
     dict(zip(command_table, command_table))
     )
@@ -103,7 +103,6 @@ grammar.load()
 
 # Unload function which will be called at unload time.
 def unload():
-    aenea.vocabulary.unregister_list_of_dynamic_vocabularies()
     global grammar
     if grammar:
         grammar.unload()

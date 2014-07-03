@@ -2,9 +2,9 @@
 
 import dragonfly
 
-import aenea.vocabulary
+import aenea.configuration
 
-LOWERCASE_LETTERS = aenea.vocabulary.make_grammar_commands('misc', {
+LOWERCASE_LETTERS = aenea.configuration.make_grammar_commands('misc', {
     'alpha': 'a',
     'bravo': 'b',
     'charlie': 'c',
@@ -33,7 +33,7 @@ LOWERCASE_LETTERS = aenea.vocabulary.make_grammar_commands('misc', {
     'zulu': 'z'
     }, 'letters.lower')
 
-UPPERCASE_LETTERS = aenea.vocabulary.make_grammar_commands('misc', {
+UPPERCASE_LETTERS = aenea.configuration.make_grammar_commands('misc', {
     'upper alpha': 'A',
     'upper bravo': 'B',
     'upper charlie': 'C',
@@ -62,7 +62,7 @@ UPPERCASE_LETTERS = aenea.vocabulary.make_grammar_commands('misc', {
     'upper zulu': 'Z'
     }, 'letters.upper')
 
-DIGITS = aenea.vocabulary.make_grammar_commands('misc', {
+DIGITS = aenea.configuration.make_grammar_commands('misc', {
     'zero': '0',
     'one': '1',
     'two': '2',

@@ -1,9 +1,7 @@
 '''The vocabulary module provides control of dynamic and static
 vocabulary.  These are user-configurable mappings of phrases to
 actions that can be dynamically updated and en/dis-abled on demand,
-and shared across modules.
-
-The module also provides functionality to parse per-grammar config files.'''
+and shared across modules.'''
 
 import json
 import os
@@ -78,62 +76,6 @@ _global_list = None
 
 # global List that lists all dynamic vocabularies. Reserved for _vocabulary.
 _list_of_dynamic_vocabularies = None
-
-def load_grammar_config(module_name, defaults=None):
-    '''Loads the configuration for the specified grammar name. A missing file
-       is interpreted as an empty one. defaults may be a dict of defaults.
-       See also make_grammar_commands.'''
-    grammar_config_path = os.path.join(
-        aenea.config.PROJECT_ROOT,
-        'grammar_config'
-        )
-
-    module_name += '.json'
-
-    conf_path = os.path.join(grammar_config_path, module_name)
-
-    # Handle defaults.
-    if defaults is None:
-        configuration = {}
-    else:
-        configuration = defaults.copy()
-
-    # Load the configuration if it exists. If anything goes wrong, we print
-    # an error and fallback to defaults. An empty or missing file is not
-    # an error.
-    try:
-        if os.path.exists(conf_path):
-            with open(conf_path, 'r') as fd:
-                configuration.update(json.load(fd))
-    except Exception as e:
-        print('Could not load config file for grammar %s: %s' %
-              (module_name, str(e)))
-    return configuration
-
-
-def make_grammar_commands(module_name, mapping, config_key='commands'):
-    '''Given the command map from default spoken phrase to actions in mapping,
-       constructs a mapping that takes user config, if specified, into account.
-       config_key may be a key in the JSON to use (for modules with multiple
-       mapping rules.) If a user phrase starts with !,
-       no mapping is generated for that phrase.'''
-    conf = load_grammar_config(module_name).get(config_key, {})
-    commands = mapping.copy()
-
-    # Nuke the default if the user sets one or more aliases.
-    for default_phrase in set(conf.itervalues()):
-        del commands[str(default_phrase)]
-
-    for (user_phrase, default_phrase) in conf.iteritems():
-        # Dragonfly chokes on unicode, JSON's default.
-        user_phrase = str(user_phrase)
-        default_phrase = str(default_phrase)
-        assert default_phrase in mapping, ('Invalid mapping value in module %s config_key %s: %s' % (module_name, config_key, default_phrase))
-
-        # Allow users to nuke a command with !
-        if not user_phrase.startswith('!'):
-            commands[user_phrase] = mapping[default_phrase]
-    return commands
 
 
 def refresh_vocabulary(force_reload=False):

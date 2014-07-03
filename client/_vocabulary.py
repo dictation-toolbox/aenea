@@ -4,6 +4,7 @@
    fly rather than restarting Dragon.'''
 
 import aenea.vocabulary
+import aenea.configuration
 
 import dragonfly
 
@@ -17,7 +18,7 @@ command_table = [
     '<static>',
     '<dynamic>'
     ]
-command_table = aenea.vocabulary.make_grammar_commands(
+command_table = aenea.configuration.make_grammar_commands(
     'vocabulary',
     dict(zip(command_table, command_table))
     )
