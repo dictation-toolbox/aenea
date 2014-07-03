@@ -96,6 +96,11 @@ def proxy_active(active_window=None):
        settings.'''
     if active_window is None:
         active_window = dragonfly.Window.get_foreground()
+        active_window = (
+            active_window.executable,
+            active_window.title,
+            active_window.handle
+            )
     return (proxy_enable_context.matches(*active_window) and
             PLATFORM == 'proxy')
 
