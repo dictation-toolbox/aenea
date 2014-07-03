@@ -60,6 +60,7 @@ class AeneaClient(tk.Tk):
         self.wm_title('Aenea client - Dictation capturing')
         self.geometry('400x600+400+0')
         self.wait_visibility(self)
+        self.sending = False
         note = ttk.Notebook(self)
         self.tab1 = tk.Frame(note)
         self.tab2 = tk.Frame(note)
@@ -140,7 +141,10 @@ class AeneaClient(tk.Tk):
 
     def start_capture(self):
         # Release VirtualBox keyboard capture.
-        # Doesn't seem to help though... :(
+        with self.buffer_lock:
+            while self.sending:
+                self.buffer_ready.wait()
+            self.ProxyKey('Control_R').execute()
         self.log('Starting capture')
         self.bind('<Any KeyPress>', lambda event: self.send_key(event.keysym))
         self.button1.config(state=tk.DISABLED)
@@ -180,7 +184,9 @@ class AeneaClient(tk.Tk):
             with self.buffer_lock:
                 # Wait until buffer is non-empty.
                 while not self.aenea_buffer and not self.to_send:
+                    self.sending = False
                     self.buffer_ready.wait()
+                    self.sending = True
 
                 # Add buffered text and flush buffer
                 if self.aenea_buffer:
