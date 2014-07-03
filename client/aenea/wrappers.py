@@ -9,6 +9,74 @@ try:
 except ImportError:
     import aenea.dragonfly_mock as dragonfly
 
+try:
+   from dragonfly import (
+      Grammar,
+      ActionBase,
+      ActionError,
+      Alternative,
+      AppContext,
+      Choice,
+      Clipboard,
+      Compound,
+      CompoundRule,
+      Config,
+      ConnectionGrammar,
+      Context,
+      DictList,
+      DictListRef,
+      Dictation,
+      Digits,
+      DigitsRef,
+      DynStrActionBase,
+      ElementBase,
+      Empty,
+      FocusWindow,
+      FormatState,
+      Function,
+      HardwareInput,
+      Integer,
+      IntegerRef,
+      Item,
+      Key,
+      Keyboard,
+      KeyboardInput,
+      List,
+      ListBase,
+      ListRef,
+      Literal,
+      MappingRule,
+      Mimic,
+      Monitor,
+      Mouse,
+      MouseInput,
+      Number,
+      NumberRef,
+      Optional,
+      Paste,
+      Pause,
+      Playback,
+      PlaybackHistory,
+      Point,
+      RecognitionHistory,
+      RecognitionObserver,
+      Rectangle,
+      Repeat,
+      Repetition,
+      Rule,
+      RuleRef,
+      Section,
+      Sequence,
+      Text,
+      Typeable,
+      WaitWindow,
+      Window,
+      Word
+      )
+except ImportError:
+   # Suppress so we can import on Linux.
+   pass
+
 
 import aenea.config
 
@@ -102,4 +170,24 @@ class AeneaDynStrActionBase(dragonfly.DynStrActionBase):
             return self._proxy._execute_events(commands[0])
         else:
             return self._local._execute_events(commands[1])
+
+
+class ContextAction(dragonfly.ActionBase):
+    '''Take a different action depending on which context is currently
+       active.'''
+    def __init__(self, default=None, actions=[]):
+        self.actions = actions
+        self.default = default
+
+    def add_context(self, context, action):
+        self.actions.append((context, action))
+
+    def execute(self, data=None):
+        for (context, action) in self.actions:
+            win = dragonfly.Window.get_foreground()
+            if context.matches(win.executable, win.title, win.handle):
+                return action.execute(data)
+        else:
+            return self.default.execute(data)
+
 

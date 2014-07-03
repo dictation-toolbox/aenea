@@ -10,11 +10,12 @@ import aenea.proxy_actions
 try:
     import dragonfly
 except ImportError:
-    import aenea.dragonfly_mock as dragonfly
+    import dragonfly_mock as dragonfly
 
 
-import common
 import traceback
+
+from aenea.wrappers import *
 
 
 def _spec(call, a, kw):
@@ -40,7 +41,7 @@ class _WarnUserUnsupportedAction(dragonfly.ActionBase):
         pass
 
 
-class AeneaLaxDynStrActionBase(common.AeneaDynStrActionBase):
+class AeneaLaxDynStrActionBase(AeneaDynStrActionBase):
     def _parse_spec(self, spec):
         proxy = None
         local = None
@@ -63,7 +64,7 @@ class AeneaLaxDynStrActionBase(common.AeneaDynStrActionBase):
         else:
             if self._local_exception is not None:
                 traceback.print_tb(self._local_exception)
-        common.AeneaDynStrActionBase._execute_events(self, commands)
+        AeneaDynStrActionBase._execute_events(self, commands)
 
 
 class Key(AeneaLaxDynStrActionBase):

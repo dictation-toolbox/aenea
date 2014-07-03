@@ -3,12 +3,12 @@ vocabulary.  These are user-configurable mappings of phrases to
 actions that can be dynamically updated and en/dis-abled on demand,
 and shared across modules.'''
 
-from aenea.wrappers.lax import (
+from aenea.lax import (
     Text,
     Key
     )
 
-from aenea import NoAction
+from wrappers import NoAction
 
 from aenea.proxy_actions import ProxyMousePhantomClick as MousePhantomClick
 

@@ -32,3 +32,13 @@ class Window(object):
     @staticmethod
     def get_foreground():
         return _WindowInfo
+
+
+class Repetition(object):
+    def __init__(self, child, min=1, max=None, name=None, default=None):
+        pass
+
+
+class Choice(object):
+    def __init__(self, name, choices, extras=None, default=None):
+        pass

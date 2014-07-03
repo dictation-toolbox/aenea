@@ -1,10 +1,13 @@
 '''Contains generic utility data and functions useful when writing grammars.'''
 
-import dragonfly
+try:
+    import dragonfly
+except ImportError:
+    import dragonfly_mock as dragonfly
 
-import aenea.configuration
+import configuration
 
-LOWERCASE_LETTERS = aenea.configuration.make_grammar_commands('misc', {
+LOWERCASE_LETTERS = configuration.make_grammar_commands('misc', {
     'alpha': 'a',
     'bravo': 'b',
     'charlie': 'c',
@@ -33,7 +36,7 @@ LOWERCASE_LETTERS = aenea.configuration.make_grammar_commands('misc', {
     'zulu': 'z'
     }, 'letters.lower')
 
-UPPERCASE_LETTERS = aenea.configuration.make_grammar_commands('misc', {
+UPPERCASE_LETTERS = configuration.make_grammar_commands('misc', {
     'upper alpha': 'A',
     'upper bravo': 'B',
     'upper charlie': 'C',
@@ -62,7 +65,7 @@ UPPERCASE_LETTERS = aenea.configuration.make_grammar_commands('misc', {
     'upper zulu': 'Z'
     }, 'letters.upper')
 
-DIGITS = aenea.configuration.make_grammar_commands('misc', {
+DIGITS = configuration.make_grammar_commands('misc', {
     'zero': '0',
     'one': '1',
     'two': '2',

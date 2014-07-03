@@ -67,16 +67,6 @@ def _server_info():
     return _last_server_info
 
 
-class AlwaysContext(dragonfly.Context):
-    def matches(self, windows_executable, windows_title, windows_handle):
-        return True
-
-
-class NeverContext(dragonfly.Context):
-    def matches(self, windows_executable, windows_title, windows_handle):
-        return False
-
-
 class ProxyCustomAppContext(dragonfly.Context):
     '''matches based on the properties of the currently active window.
        Match may be 'substring', 'exact', or 'regex'. logic may be 'and',
@@ -183,7 +173,7 @@ class ProxyPlatformContext(dragonfly.Context):
 
 class ProxyCrossPlatformContext(dragonfly.Context):
     '''Class to choose between several contexts based on what the server says
-       platform is. None key may be used for none of the above.'''
+       platform is. None key may be used for none of the above as a defaualt.'''
 
     def __init__(self, mapping):
         '''mapping is mapping from platform as string to Context.'''
@@ -203,10 +193,8 @@ class ProxyCrossPlatformContext(dragonfly.Context):
 __all__ = [
     'ProxyAppContext',
     'ProxyCustomAppContext',
-    'AlwaysContext',
     'ProxyPlatformContext',
     'ProxyCrossPlatformContext',
-    'NeverContext',
     'VALUE_NOT_SET',
     'VALUE_SET',
     'VALUE_DONT_CARE'

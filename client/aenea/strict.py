@@ -9,15 +9,16 @@ except ImportError:
 
 
 import aenea.config
+import aenea.proxy_actions
 
-import common
+from aenea.wrappers import *
 
 
-class Key(common.AeneaDynStrActionBase):
+class Key(AeneaDynStrActionBase):
     def __init__(self, spec):
         proxy = aenea.proxy_actions.ProxyKey(spec)
         local = dragonfly.Key(spec)
-        common.AeneaDynStrActionBase.__init__(
+        AeneaDynStrActionBase.__init__(
             self,
             proxy,
             local,
@@ -26,7 +27,7 @@ class Key(common.AeneaDynStrActionBase):
             )
 
 
-class Text(common.AeneaDynStrActionBase):
+class Text(AeneaDynStrActionBase):
     def __init__(self, *a, **kw):
         if len(a) == 2:
             kw['spec'], kw['static'] = a
@@ -35,7 +36,7 @@ class Text(common.AeneaDynStrActionBase):
         a = []
         proxy = aenea.proxy_actions.ProxyText(a, kw)
         local = dragonfly.Text(a, kw)
-        common.AeneaDynStrActionBase.__init__(
+        AeneaDynStrActionBase.__init__(
             self,
             proxy,
             local,
@@ -44,11 +45,11 @@ class Text(common.AeneaDynStrActionBase):
             )
 
 
-class Mouse(common.AeneaDynStrActionBase):
+class Mouse(AeneaDynStrActionBase):
     def __init__(self, *a, **kw):
         proxy = aenea.proxy_actions.ProxyMouse(*a, **kw)
         local = dragonfly.Mouse(*a, **kw)
-        common.AeneaDynStrActionBase.__init__(
+        AeneaDynStrActionBase.__init__(
             self,
             proxy,
             local,

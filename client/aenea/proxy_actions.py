@@ -193,59 +193,10 @@ class ProxyMousePhantomClick(ProxyMouse):
         move[2]['phantom'] = click[2]['button']
         return [move]
 
-###############################################################################
-# do nothing
-
-
-class NoAction(dragonfly.ActionBase):
-    def execute(self, data=None):
-        pass
-
-###############################################################################
-# take a different action depending on which context is currently active.
-
-
-class ProxyContextAction(dragonfly.ActionBase):
-    def __init__(self, default=None, actions=[]):
-        self.actions = actions
-        self.default = default
-
-    def add_context(self, context, action):
-        self.actions.append((context, action))
-
-    def execute(self, data=None):
-        for (context, action) in self.actions:
-            win = dragonfly.Window.get_foreground()
-            if context.matches(win.executable, win.title, win.handle):
-                return action.execute(data)
-        else:
-            return self.default.execute(data)
-
-
-class ProxyPlatformContext(dragonfly.Context):
-    '''Class to choose between several contexts based on what the server says
-       platform is. None key may be used for none of the above.'''
-
-    def __init__(self, mapping):
-        '''mapping is mapping from platform as string to Context.'''
-        assert all(hasattr(x, 'matches') for x in mapping)
-        self._mapping = mapping
-
-    def matches(self, windows_executable, windows_title, windows_handle):
-        platform = aenea.proxy_contexts._server_info().get('platform', None)
-        chosen = self._mapping.get(platform, self._mapping.get(None, _Warn()))
-        return chosen.matches(
-            windows_executable,
-            windows_title,
-            windows_handle
-            )
-
 
 __all__ = [
     'ProxyKey',
     'ProxyText',
     'ProxyMouse',
-    'NoAction',
-    'ProxyMousePhantomClick',
-    'ProxyContextAction'
+    'ProxyMousePhantomClick'
     ]

@@ -1,4 +1,4 @@
-from aenea.proxy_nicknames import Grammar, MappingRule, Text
+from aenea import Grammar, MappingRule, Text
 
 grammar = Grammar('hello world aenea')
 

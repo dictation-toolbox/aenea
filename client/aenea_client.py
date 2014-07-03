@@ -1,12 +1,10 @@
 import Tkinter as tk
 import tkFont
 import datetime
-import sys
 import threading
 import ttk
 
-import aenea.communications
-import aenea.config
+import aenea
 
 # Keys that should be translated from a TK name to the name expected by
 # the server.
@@ -38,11 +36,12 @@ IGNORED_KEYS = ('Shift_L', 'Control_L', 'Alt_L', '??')
 
 class AeneaClient(tk.Tk):
 
-    def __init__(self, ip, port):
+    def __init__(self):
         tk.Tk.__init__(self)
         self.aenea_buffer = []
         self.buffer_lock = threading.Lock()
         self.buffer_ready = threading.Condition(self.buffer_lock)
+        self.to_send = []
         self.aenea_worker_active = False
         self.wm_title('Aenea client - Dictation capturing')
         self.geometry('400x600+400+0')
@@ -118,12 +117,6 @@ class AeneaClient(tk.Tk):
         note.add(self.tab2, text='Configuration')
         note.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.YES)
 
-        try:
-            self.client = aenea.communications.Proxy(ip, int(port))
-            self.client_proxy = aenea.communications.BatchProxy()
-        except Exception as e:
-            self.log(str(e))
-
         threading.Thread(target=self.worker_thread).start()
 
     def log(self, message):
@@ -134,7 +127,6 @@ class AeneaClient(tk.Tk):
     def start_capture(self):
         # Release VirtualBox keyboard capture.
         # Doesn't seem to help though... :(
-        self.client.server.key_press(key='Control_R')
         self.log('Starting capture')
         self.bind('<Any KeyPress>', lambda event: self.send_key(event.keysym))
         self.button1.config(state=tk.DISABLED)
@@ -161,8 +153,8 @@ class AeneaClient(tk.Tk):
             if key in LITERAL_KEYS:
                 self.aenea_buffer.append(key)
             else:
-                self.client_proxy.write_text(''.join(self.aenea_buffer))
-                self.client_proxy.key_press(key=key)
+                self.to_send.append(aenea.ProxyText(''.join(self.aenea_buffer)))
+                self.to_send.append(aenea.ProxyKey(key))
                 self.aenea_buffer = []
             self.buffer_ready.notify()
 
@@ -171,37 +163,23 @@ class AeneaClient(tk.Tk):
 
     def worker_thread(self):
         while 1:
-            self.buffer_lock.acquire()
+            with self.buffer_lock:
+                # Wait until buffer is non-empty.
+                while not self.aenea_buffer and not self.to_send:
+                    self.buffer_ready.wait()
 
-            # Wait until buffer is non-empty.
-            while not self.aenea_buffer and not self.client_proxy._commands:
-                self.buffer_ready.wait()
+                # Add buffered text and flush buffer
+                if self.aenea_buffer:
+                    self.to_send.append(
+                        aenea.ProxyText(''.join(self.aenea_buffer)))
+                    self.aenea_buffer = []
 
-            # Grab the buffer
-            text = self.aenea_buffer
-            commands = self.client_proxy
+                todo, self.to_send = self.to_send, []
 
-            # Flush the buffer
-            self.aenea_buffer = []
-            self.client_proxy = aenea.communications.BatchProxy()
-
-            self.buffer_lock.release()
-
-            # Add text to batch buffer
-            if text:
-                commands.write_text(''.join(text))
-
-            # Flush buffer. Note that RPC calls block.
-            self.client.execute_batch(commands._commands)
-
+            if todo:
+                for action in todo:
+                    action.execute()
 
 if __name__ == '__main__':
-    try:
-        ip = sys.argv[1]
-        port = sys.argv[2]
-    except IndexError:
-        ip = aenea.config.HOST
-        port = aenea.config.PORT
-
-    root = AeneaClient(ip, port)
+    root = AeneaClient()
     root.mainloop()
