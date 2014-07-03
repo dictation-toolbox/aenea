@@ -110,8 +110,8 @@ def refresh_vocabulary(force_reload=False):
 
     if force_reload or any(w.refresh() for w in _watchers.itervalues()):
         for vocabulary in 'static', 'dynamic':
-            for kind in _vocabulary.itervalues():
-                kind.clear()
+            for kind in _vocabulary[vocabulary].itervalues():
+                del kind[:]
 
             for (fn, watcher) in _watchers[vocabulary].files.iteritems():
                 vox = watcher.conf
@@ -125,8 +125,7 @@ def refresh_vocabulary(force_reload=False):
                         v.get('vocabulary', {}),
                         v.get('shortcuts', {})
                         )
-            if vocabulary == 'static':
-                _rebuild_lists('static')
+            _rebuild_lists('static')
 
     _load_enabled_from_disk()
     _rebuild_lists('dynamic')
