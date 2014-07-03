@@ -17,8 +17,8 @@ except ImportError:
 
 print 'Aenea client-side modules loaded successfully'
 print 'Settings:'
-print '\tHOST:', aenea.config.get_server_address()[0]
-print '\tPORT:', aenea.config.get_server_address()[1]
+print '\tHOST:', aenea.config.DEFAULT_SERVER_ADDRESS[0]
+print '\tPORT:', aenea.config.DEFAULT_SERVER_ADDRESS[1]
 print '\tPLATFORM:', aenea.config.PLATFORM
 print '\tUSE_MULTIPLE_ACTIONS:', aenea.config.USE_MULTIPLE_ACTIONS
 print '\tSCREEN_RESOLUTION:', aenea.config.SCREEN_RESOLUTION

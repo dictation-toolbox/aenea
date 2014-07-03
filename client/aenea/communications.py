@@ -3,9 +3,16 @@ import socket
 import time
 
 import aenea.config
+import aenea.configuration
 
 _last_failed_connect = 0
 
+
+_server_config = aenea.configuration.ConfigWatcher(
+    aenea.config.SERVER_STATE_FILE,
+    {'host': aenea.config.DEFAULT_SERVER_ADDRESS[0],
+     'port': aenea.config.DEFAULT_SERVER_ADDRESS[1]})
+_server_config.write()
 
 class Proxy(object):
     def __init__(self):
@@ -26,9 +33,9 @@ class Proxy(object):
                 print 'Failed to connect to aenea server. To avoid slowing dictation, we won\'t try again for %i seconds.' % aenea.config.CONNECT_RETRY_COOLDOWN
 
     def __getattr__(self, meth):
-        self._refresh_server()
         def call(*a, **kw):
             global _last_failed_connect
+            self._refresh_server()
             if time.time() - _last_failed_connect > aenea.config.CONNECT_RETRY_COOLDOWN:
                 try:
                     return getattr(self._server, meth)(*a, **kw)
@@ -38,10 +45,11 @@ class Proxy(object):
         return call
 
     def _refresh_server(self):
-        conf = aenea.config.get_server_address()
-        if self._address != conf:
-            self._address = conf
-            self._server = jsonrpclib.Server('http://%s:%i' % conf)
+        _server_config.refresh()
+        address = _server_config.conf['host'], _server_config.conf['port']
+        if self._address != address:
+            self._address = address
+            self._server = jsonrpclib.Server('http://%s:%i' % address)
 
 
 class BatchProxy(object):
