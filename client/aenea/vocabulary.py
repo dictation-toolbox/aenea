@@ -3,7 +3,6 @@ vocabulary.  These are user-configurable mappings of phrases to
 actions that can be dynamically updated and en/dis-abled on demand,
 and shared across modules.'''
 
-import json
 import os
 
 try:
@@ -46,13 +45,7 @@ except ImportError:
         pass
 
 import aenea.config
-
-_ENABLED_JSON_PATH = os.path.join(
-    aenea.config.PROJECT_ROOT,
-    'vocabulary_config',
-    'enabled.json'
-    )
-
+import aenea.configuration
 
 _vocabulary = {'static': {}, 'dynamic': {}}
 
@@ -65,9 +58,6 @@ _disabled_vocabularies = set()
 # reloaded with mic off/on. We store static the same way for simplicity.
 _lists = {'static': {}, 'dynamic': {}}
 
-_last_vocabulary_mtime = 0
-_last_vocabulary_filenames = set(), set()
-
 # mapping from inhibited_vocab_name to list of (inhibit_context, inhibiting_grammar)
 _vocabulary_inhibitions = {}
 
@@ -76,6 +66,13 @@ _global_list = None
 
 # global List that lists all dynamic vocabularies. Reserved for _vocabulary.
 _list_of_dynamic_vocabularies = None
+
+_watchers = {
+    'dynamic': aenea.configuration.ConfigDirWatcher(('vocabulary_config', 'dynamic')),
+    'static': aenea.configuration.ConfigDirWatcher(('vocabulary_config', 'static'))
+    }
+
+_enabled_watcher = aenea.configuration.ConfigWatcher(('vocabulary_config', 'enabled'))
 
 
 def refresh_vocabulary(force_reload=False):
@@ -91,66 +88,47 @@ def refresh_vocabulary(force_reload=False):
        starts to say anything.'''
     global _vocabulary
 
-    if force_reload or _need_reload():
+    if force_reload or any(w.refresh() for w in _watchers.itervalues()):
         for vocabulary in 'static', 'dynamic':
             for kind in _vocabulary.itervalues():
                 kind.clear()
 
-            vocab_dir = os.path.join(
-                aenea.config.PROJECT_ROOT,
-                'vocabulary_config',
-                vocabulary
-                )
-
-            if not os.path.exists(vocab_dir):
-                continue
-
-            for fn in os.listdir(vocab_dir):
-                if fn.endswith('.json'):
-                    try:
-                        with open(os.path.join(vocab_dir, fn)) as fd:
-                            vox = json.load(fd)
-                            if isinstance(vox, dict):
-                                vox = [vox]
-                            for v in vox:
-                                _update_one_vocabulary(
-                                    vocabulary,
-                                    v['name'],
-                                    v['tags'],
-                                    v.get('vocabulary', {}),
-                                    v.get('shortcuts', {})
-                                    )
-                    except Exception:
-                        print 'Error loading %s vocabulary file %s.' % (vocabulary, fn)
-                        raise
+            for (fn, watcher) in _watchers[vocabulary].files.iteritems():
+                vox = watcher.conf
+                if isinstance(vox, dict):
+                    vox = [vox]
+                for v in vox:
+                    _update_one_vocabulary(
+                        vocabulary,
+                        v['name'],
+                        v['tags'],
+                        v.get('vocabulary', {}),
+                        v.get('shortcuts', {})
+                        )
             if vocabulary == 'static':
                 _rebuild_lists('static')
 
     _rebuild_lists('dynamic')
     _load_enabled_from_disk()
 
+
 def _load_enabled_from_disk():
     '''Sets the set of enabled grammars from the disk file.'''
-    if not os.path.exists(_ENABLED_JSON_PATH):
-        _save_enabled_to_disk()
-    else:
-        try:
-            disabled = set()
-            for (name, status) in json.load(open(_ENABLED_JSON_PATH)).items():
-                if not status:
-                    disabled.add(name)
-            _disabled_vocabularies.clear()
-            _disabled_vocabularies.update(disabled)
-        except Exception:
-            print 'Error loading vocabulary state file ' + _ENABLED_JSON_PATH
+    if _enabled_watcher.refresh():
+        disabled = set()
+        for (name, status) in _enabled_watcher.conf.iteritems():
+            if not status:
+                disabled.add(name)
+        _disabled_vocabularies.clear()
+        _disabled_vocabularies.update(disabled)
+        _enabled_watcher.write()
+
 
 def _save_enabled_to_disk():
-    if os.path.exists(os.path.split(_ENABLED_JSON_PATH)[0]):
-        conf = {}
-        for name in _vocabulary['dynamic']:
-            conf[name] = name not in _disabled_vocabularies
-        with open(_ENABLED_JSON_PATH, 'w') as fd:
-            json.dump(conf, fd)
+    _enabled_watcher.conf.clear()
+    for name in _vocabulary['dynamic']:
+        _enabled_watcher.conf[name] = name not in _disabled_vocabularies
+    _enabled_watcher.write()
 
 
 def _rebuild_lists(vocabulary):
@@ -333,39 +311,3 @@ def _update_one_vocabulary(vocabulary, name, tags, vocab, shortcuts):
                 this_chunk[str(phrase)] = _build_action_list(command)
     _vocabulary[vocabulary].setdefault(str(name), [])
     _vocabulary[vocabulary][str(name)].append((map(str, tags), this_chunk))
-
-
-def _need_reload():
-    global _last_vocabulary_mtime
-    global _last_vocabulary_filenames
-    dirty = False
-    if not os.path.exists(_ENABLED_JSON_PATH):
-        dirty = True
-    elif os.stat(_ENABLED_JSON_PATH).st_mtime > _last_vocabulary_mtime:
-        _last_vocabulary_mtime = os.stat(_ENABLED_JSON_PATH).st_mtime
-        dirty = True
-    for vocabulary, last_seen in zip(('static', 'dynamic'), _last_vocabulary_filenames):
-        vocab_dir = os.path.join(
-            aenea.config.PROJECT_ROOT,
-            'vocabulary_config',
-            vocabulary
-            )
-
-        if os.path.exists(vocab_dir) != bool(last_seen):
-            dirty = True
-
-        # Have any been modified since we last read them?
-        if os.path.exists(vocab_dir):
-            files = os.listdir(vocab_dir)
-            if set(files) != last_seen:
-                dirty = True
-            last_seen.clear()
-            last_seen.update(files)
-            for fn in files:
-                mtime = os.stat(os.path.join(vocab_dir, fn)).st_mtime
-                if mtime > _last_vocabulary_mtime:
-                    _last_vocabulary_mtime = mtime
-                    dirty = True
-                    # don't early abort because we want latest mtime.
-
-    return dirty

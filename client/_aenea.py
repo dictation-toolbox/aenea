@@ -74,8 +74,6 @@ class ReloadGrammarsRule(dragonfly.CompoundRule):
 server_list = dragonfly.DictList('aenea servers')
 server_list_watcher = aenea.configuration.ConfigWatcher(
     ('grammar_config', 'aenea'))
-for k, v in server_list_watcher.conf.get('servers', {}).iteritems():
-    server_list[str(k)] = v
 
 
 class ChangeServer(dragonfly.CompoundRule):

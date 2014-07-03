@@ -18,6 +18,7 @@ class ConfigWatcher(object):
         self.conf = default
         self._exists = False
         self._default = default
+        self._first = True
 
         self.read()
 
@@ -53,24 +54,25 @@ class ConfigWatcher(object):
             print 'Error reading config file %s: %s.' % (self._path, str(e))
 
     def refresh(self):
-        '''Rereads the file if it has changed. Returns True if it changed.'''
+        '''Rereads the file if it has changed. Returns True if it changed. As a
+           special case, always returns True on the first call.'''
+        first = self._first
+        self._first = False
         if os.path.exists(self._path) != self._exists:
             self.read()
             return True
 
-        if not os.path.exists(self._path):
-            return False
-
-        try:
-            stat = os.stat(self._path)
-            mtime = stat.st_mtime, stat.st_size
-        except OSError:
-            self.read()
-            return True
-        if mtime != self._mtime_size:
-            self.read()
-            return True
-        return False
+        if os.path.exists(self._path):
+            try:
+                stat = os.stat(self._path)
+                mtime = stat.st_mtime, stat.st_size
+            except OSError:
+                self.read()
+                return True
+            if mtime != self._mtime_size:
+                self.read()
+                return True
+        return first
 
 
 class ConfigDirWatcher(object):
@@ -80,33 +82,37 @@ class ConfigDirWatcher(object):
        not existing is never an error.'''
 
     def __init__(self, path, default={}):
-        self._rawpath = path
         if not isinstance(path, basestring):
             path = os.path.join(*path)
+        self._rawpath = path
         self._path = path = os.path.join(aenea.config.PROJECT_ROOT, path)
         self.files = {}
         self._exists = False
         self._default = default
+        self._first = True
 
         self.read()
 
     def refresh(self):
         '''Rereads the directory if it has changed. Returns True if any files
-           have changed.'''
+           have changed. As a special case, always returns True on the first
+           call.'''
+        first = self._first
+        self._first = False
         if os.path.exists(self._path) != self._exists:
             self.read()
             return True
 
-        if not os.path.exists(self._path):
-            return False
+        if os.path.exists(self._path):
+            files = set(x[:-5] for x in os.listdir(self._path)
+                        if x.endswith('.json'))
+            if set(files) != set(self.files):
+                self.read()
+                return True
+            elif any(c.refresh() for c in self.files.itervalues()):
+                return True
 
-        files = set(x[:-5] for x in os.listdir(self._path)
-                    if x.endswith('.json'))
-        if set(files) != set(self.files):
-            self.read()
-            return True
-        else:
-            return any(c.refresh() for c in self.files.itervalues())
+        return first
 
     def read(self):
         self._exists = os.path.exists(self._path)
