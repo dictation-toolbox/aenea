@@ -1,3 +1,20 @@
+# This file is part of Aenea
+#
+# Aenea is free software: you can redistribute it and/or modify it under
+# the terms of version 3 of the GNU Lesser General Public License as
+# published by the Free Software Foundation.
+#
+# Aenea is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+# License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with Aenea.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright (2014) Alex Roper
+# Alex Roper <alex@aroper.net>
+
 '''Wrappers provide classes that respect the current value of config.PLATFORM.
    When Aenea server is enabled, we will dispatch all requests and actions
    there. When it is not, we execute locally. The value of PLATFORM when the
