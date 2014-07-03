@@ -14,39 +14,101 @@ except ImportError:
 
 
 import common
+import traceback
+
+
+def _spec(call, a, kw):
+    try:
+        return call(*a, **kw)
+    except Exception as e:
+        return _WarnUserUnsupportedAction(e)
 
 
 class _WarnUserUnsupportedAction(dragonfly.ActionBase):
-    def execute(self):
-        print 'Warning: Current platform cannot handle this action.'
+    def __init__(self, exception):
+        self._exception = exception
+
+    def execute(self, data=None):
+        print ('Warning: Current platform cannot handle this action. This '
+               'exception was thrown at grammar load time.')
+        traceback.print_tb(self._exception)
+
+    def _parse_spec(self, spec):
+        pass
+
+    def _execute_events(self, commands):
+        pass
 
 
-def _spec(klass, a, kw):
-    try:
-        return klass(*a, **kw)
-    except Exception:
-        return _WarnUserUnsupportedAction()
+class AeneaLaxDynStrActionBase(common.AeneaDynStrActionBase):
+    def _parse_spec(self, spec):
+        proxy = None
+        local = None
+        self._proxy_exception = None
+        self._local_exception = None
+        try:
+            proxy = self._proxy._parse_spec(spec)
+        except Exception as e:
+            self._proxy_exception = e
+        try:
+            local = self._local._parse_spec(spec)
+        except Exception as e:
+            self._local_exception = e
+        return (proxy, local)
+
+    def _execute_events(self, commands):
+        if aenea.config.proxy_active():
+            if self._proxy_exception is not None:
+                traceback.print_tb(self._proxy_exception)
+        else:
+            if self._local_exception is not None:
+                traceback.print_tb(self._local_exception)
+        common.AeneaDynStrActionBase._execute_events(self, commands)
 
 
-class Key(common.AeneaAction):
+class Key(AeneaLaxDynStrActionBase):
+    def __init__(self, spec):
+        proxy = _spec(aenea.proxy_actions.ProxyKey, [spec], {})
+        local = _spec(dragonfly.Key, [spec], {})
+        AeneaLaxDynStrActionBase.__init__(
+            self,
+            proxy,
+            local,
+            spec,
+            '%' not in spec
+            )
+
+
+class Text(AeneaLaxDynStrActionBase):
     def __init__(self, *a, **kw):
-        proxy = _spec(aenea.proxy_actions.ProxyKey, a, kw)
-        local = _spec(dragonfly.Key, a, kw)
-        common.AeneaAction.__init__(self, proxy, local)
-
-
-class Text(common.AeneaAction):
-    def __init__(self, *a, **kw):
+        if len(a) == 2:
+            kw['spec'], kw['static'] = a
+        elif len(a) == 1:
+            kw['spec'] = a[0]
+        a = []
         proxy = _spec(aenea.proxy_actions.ProxyText, a, kw)
         local = _spec(dragonfly.Text, a, kw)
-        common.AeneaAction.__init__(self, proxy, local)
+        AeneaLaxDynStrActionBase.__init__(
+            self,
+            proxy,
+            local,
+            spec=kw.get('spec', None),
+            static=kw.get('static', False)
+            )
 
 
-class Mouse(common.AeneaAction):
+class Mouse(AeneaLaxDynStrActionBase):
     def __init__(self, *a, **kw):
         proxy = _spec(aenea.proxy_actions.ProxyMouse, a, kw)
         local = _spec(dragonfly.Mouse, a, kw)
-        common.AeneaAction.__init__(self, proxy, local)
+        AeneaLaxDynStrActionBase.__init__(
+            self,
+            proxy,
+            local,
+            spec=kw.get('spec', None),
+            static=kw.get('static', False)
+            )
+
 
 __all__ = [
     'Key',

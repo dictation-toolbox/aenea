@@ -84,3 +84,22 @@ class AeneaAction(dragonfly.ActionBase):
             action.execute(data)
         else:
             action(data)
+
+
+class AeneaDynStrActionBase(dragonfly.DynStrActionBase):
+    def __init__(self, proxy, local, spec=None, static=False):
+        self._proxy = proxy
+        self._local = local
+        dragonfly.DynStrActionBase.__init__(self, spec=spec, static=static)
+
+    def _parse_spec(self, spec):
+        proxy = self._proxy._parse_spec(spec)
+        local = self._local._parse_spec(spec)
+        return (proxy, local)
+
+    def _execute_events(self, commands):
+        if aenea.config.proxy_active():
+            return self._proxy._execute_events(commands[0])
+        else:
+            return self._local._execute_events(commands[1])
+

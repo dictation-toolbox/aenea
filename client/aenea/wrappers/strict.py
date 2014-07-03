@@ -8,29 +8,53 @@ except ImportError:
     import aenea.dragonfly_mock as dragonfly
 
 
+import aenea.config
 
 import common
 
 
-class Key(common.AeneaAction):
+class Key(common.AeneaDynStrActionBase):
+    def __init__(self, spec):
+        proxy = aenea.proxy_actions.ProxyKey(spec)
+        local = dragonfly.Key(spec)
+        common.AeneaDynStrActionBase.__init__(
+            self,
+            proxy,
+            local,
+            spec,
+            '%' not in spec
+            )
+
+
+class Text(common.AeneaDynStrActionBase):
     def __init__(self, *a, **kw):
-        proxy = aenea.proxy_actions.ProxyKey(*a, **kw)
-        local = dragonfly.Key(*a, **kw)
-        common.AeneaAction.__init__(self, proxy, local)
+        if len(a) == 2:
+            kw['spec'], kw['static'] = a
+        elif len(a) == 1:
+            kw['spec'] = a[0]
+        a = []
+        proxy = aenea.proxy_actions.ProxyText(a, kw)
+        local = dragonfly.Text(a, kw)
+        common.AeneaDynStrActionBase.__init__(
+            self,
+            proxy,
+            local,
+            spec=kw.get('spec', None),
+            static=kw.get('static', False)
+            )
 
 
-class Text(common.AeneaAction):
-    def __init__(self, *a, **kw):
-        proxy = aenea.proxy_actions.ProxyText(*a, **kw)
-        local = dragonfly.Text(*a, **kw)
-        common.AeneaAction.__init__(self, proxy, local)
-
-
-class Mouse(common.AeneaAction):
+class Mouse(common.AeneaDynStrActionBase):
     def __init__(self, *a, **kw):
         proxy = aenea.proxy_actions.ProxyMouse(*a, **kw)
         local = dragonfly.Mouse(*a, **kw)
-        common.AeneaAction.__init__(self, proxy, local)
+        common.AeneaDynStrActionBase.__init__(
+            self,
+            proxy,
+            local,
+            spec=kw.get('spec', None),
+            static=kw.get('static', False)
+            )
 
 
 __all__ = [
