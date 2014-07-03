@@ -184,7 +184,7 @@ class ContextAction(dragonfly.ActionBase):
 
     def execute(self, data=None):
         for (context, action) in self.actions:
-            win = dragonfly.Window.get_foreground()
+            win = aenea.config.get_window_foreground()
             if context.matches(win.executable, win.title, win.handle):
                 return action.execute(data)
         else:

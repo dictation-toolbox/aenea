@@ -49,6 +49,8 @@ MODIFIERS = _configuration.get('modifiers', {})
 
 CONNECT_RETRY_COOLDOWN = _configuration.get('connect_retry_cooldown', 5)
 
+STALE_CONTEXT_DELTA = _configuration.get('stale_context_delta', 0.025)
+
 if _configuration.get('restrict_proxy_to_aenea_client', False):
     proxy_enable_context = dragonfly.AppContext(
         executable="python",
@@ -63,11 +65,29 @@ else:
     proxy_enable_context = _scoped()
 
 
+_last_foreground_time = 0
+_last_foreground = None
+
+
+def get_window_foreground():
+    '''Compound actions can hammer this. 0.005 seconds per call * 100 actions
+       = no longer insignificant. We thus cache it for a very short time as a
+       crude hack, so that when executing a single action it isn't called too
+       many times. Until we get an optimizer into Dragonfly, this will have
+       to do.'''
+    global _last_foreground_time
+    global _last_foreground
+    if (_last_foreground is None or time.time() - _last_foreground_time > STALE_CONTEXT_DELTA):
+        _last_foreground_time = time.time()
+        _last_foreground = dragonfly.Window.get_foreground()
+    return _last_foreground
+
+
 def proxy_active(active_window=None):
     '''Returns whether the proxy is enabled, based on context and file
        settings.'''
     if active_window is None:
-        active_window = dragonfly.Window.get_foreground()
+        active_window = get_window_foreground()
         active_window = (
             active_window.executable,
             active_window.title,

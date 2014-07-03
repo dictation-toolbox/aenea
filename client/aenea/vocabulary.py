@@ -148,7 +148,7 @@ def _rebuild_lists(vocabulary):
     for t, dlist in _lists[vocabulary].iteritems():
         if dlist:
             dlist.clear()
-    win = dragonfly.Window.get_foreground()
+    win = aenea.config.get_window_foreground()
     for name, vocabs in _vocabulary[vocabulary].iteritems():
         for (tags, vocab) in vocabs:
             if name not in _disabled_vocabularies:

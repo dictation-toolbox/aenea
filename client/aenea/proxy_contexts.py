@@ -27,7 +27,6 @@ VALUE_DONT_CARE = object()
 _last_context = None
 _last_server_info = None
 _last_context_time = 0
-_STALE_CONTEXT_DELTA = 0.01
 
 
 class _Warn(dragonfly.Context):
@@ -43,7 +42,7 @@ def _refresh_server():
     global _last_server_info
     if (
             _last_context_time is None or
-            _last_context_time + _STALE_CONTEXT_DELTA < time.time()):
+            _last_context_time + aenea.config.STALE_CONTEXT_DELTA < time.time()):
         _last_context = aenea.communications.server.get_context()
         _last_server_info = aenea.communications.server.server_info()
         _last_context_time = time.time()
