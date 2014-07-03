@@ -116,7 +116,7 @@ class ConfigDirWatcher(object):
 
     def read(self):
         self._exists = os.path.exists(self._path)
-        if not os.path.exists:
+        if not self._exists:
             self.files.clear()
             return
 

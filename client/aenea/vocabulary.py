@@ -3,11 +3,9 @@ vocabulary.  These are user-configurable mappings of phrases to
 actions that can be dynamically updated and en/dis-abled on demand,
 and shared across modules.'''
 
-import os
-
 try:
     import dragonfly
-    from aenea.proxy_nicknames import (
+    from aenea.wrappers.lax import (
         Text,
         Key,
         Pause,
@@ -108,8 +106,8 @@ def refresh_vocabulary(force_reload=False):
             if vocabulary == 'static':
                 _rebuild_lists('static')
 
-    _rebuild_lists('dynamic')
     _load_enabled_from_disk()
+    _rebuild_lists('dynamic')
 
 
 def _load_enabled_from_disk():
@@ -184,6 +182,7 @@ def unregister_dynamic_vocabulary(tag):
     '''Call this to unregister a dynamic vocabulary in the unload.'''
     global _lists
     _lists['dynamic'].pop(str(tag), None)
+    _save_enabled_to_disk()
 
 
 def register_dynamic_vocabulary(tag):
@@ -195,6 +194,8 @@ def register_dynamic_vocabulary(tag):
     global _lists
     _lists['dynamic'][str(tag)] = dragonfly.DictList('dynamic %s' % str(tag))
     refresh_vocabulary()
+    _load_enabled_from_disk()
+    _save_enabled_to_disk()
     return _lists['dynamic'][str(tag)]
 
 
@@ -203,6 +204,7 @@ def disable_dynamic_vocabulary(name):
        No reload or mic off/on is necessary.'''
     _disabled_vocabularies.add(name)
     _rebuild_lists('dynamic')
+    _load_enabled_from_disk()
     _save_enabled_to_disk()
 
 

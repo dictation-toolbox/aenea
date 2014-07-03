@@ -6,133 +6,7 @@ import StringIO
 import aenea.config
 import aenea.vocabulary
 
-
-VOCABULARY_CONFIG_PATH = os.path.join(
-    aenea.config.PROJECT_ROOT,
-    'vocabulary_config'
-    )
-
-GRAMMAR_CONFIG_PATH = os.path.join(
-    aenea.config.PROJECT_ROOT,
-    'grammar_config'
-    )
-
-
-def mock_open(files):
-    def opener(fn, mode='r'):
-        if fn not in files:
-            raise IOError('file %s not mocked.' % fn)
-        else:
-            contents = StringIO.StringIO(files[fn])
-        fd = mock.MagicMock()
-        fd.__exit__.return_value = None
-        fd.__enter__.return_value = contents
-        fd.read.side_effect = contents.read
-        return fd
-    return opener
-
-
-class TestLoadGrammar(unittest.TestCase):
-    def setUp(self):
-        self.foobar = os.path.join(GRAMMAR_CONFIG_PATH, 'foobar.json')
-
-    @mock.patch('os.path.exists')
-    def test_noexist(self, exists):
-        exists.return_value = False
-        self.assertEqual(
-            aenea.vocabulary.load_grammar_config('foobar', {'foo': 'bar'}),
-            {'foo': 'bar'}
-            )
-
-    @mock.patch('os.path.exists')
-    @mock.patch('__builtin__.open')
-    def test_empty(self, fopen, exists):
-        exists.return_value = True
-        fopen.side_effect = mock_open({self.foobar: '{"foo": "bar"}'})
-        self.assertEqual(
-            aenea.vocabulary.load_grammar_config('foobar', {'foo': 'bar'}),
-            {'foo': 'bar'}
-            )
-
-    @mock.patch('os.path.exists')
-    @mock.patch('__builtin__.open')
-    def test_additional(self, fopen, exists):
-        exists.return_value = True
-        fopen.side_effect = mock_open({self.foobar: '{"baz": 3}'})
-        self.assertEqual(
-            aenea.vocabulary.load_grammar_config('foobar', {'foo': 'bar'}),
-            {'foo': 'bar', 'baz': 3}
-            )
-
-    @mock.patch('os.path.exists')
-    @mock.patch('__builtin__.open')
-    def test_override(self, fopen, exists):
-        exists.return_value = True
-        fopen.side_effect = mock_open({self.foobar: '{"baz": 3, "boo": true}'})
-        self.assertEqual(
-            aenea.vocabulary.load_grammar_config('foobar', {'foo': 'bar', 'baz': 4}),
-            {'foo': 'bar', 'baz': 3, 'boo': True}
-            )
-
-    @mock.patch('os.path.exists')
-    @mock.patch('__builtin__.open')
-    def test_defaults_not_mutated(self, fopen, exists):
-        exists.return_value = True
-        fopen.side_effect = mock_open({self.foobar: '{"baz": 3, "boo": true}'})
-        defaults = {'foo': 'bar', 'baz': 4}
-        d_pre = defaults.copy()
-        self.assertEqual(
-            aenea.vocabulary.load_grammar_config('foobar', defaults),
-            {'foo': 'bar', 'baz': 3, 'boo': True}
-            )
-        self.assertEqual(d_pre, defaults)
-
-
-class TestMakeGrammarCommands(unittest.TestCase):
-    @mock.patch('aenea.vocabulary.load_grammar_config')
-    def test_simple(self, lgc):
-        lgc.return_value = {}
-        self.assertEquals(
-            aenea.vocabulary.make_grammar_commands('foo', {'sting': '10k bees'}),
-            {'sting': '10k bees'}
-            )
-
-    @mock.patch('aenea.vocabulary.load_grammar_config')
-    def test_multiple(self, lgc):
-        lgc.return_value = {'commands': {'ouch': 'sting', 'pain': 'sting', 'sting': 'sting'}}
-        self.assertEquals(
-            aenea.vocabulary.make_grammar_commands('foo', {'sting': '10k bees'}),
-            {'ouch': '10k bees', 'pain': '10k bees', 'sting': '10k bees'}
-            )
-
-    @mock.patch('aenea.vocabulary.load_grammar_config')
-    def test_multiple_undef(self, lgc):
-        lgc.return_value = {'commands': {'ouch': 'sting', 'pain': 'sting'}}
-        self.assertEquals(
-            aenea.vocabulary.make_grammar_commands('foo', {'sting': '10k bees'}),
-            {'ouch': '10k bees', 'pain': '10k bees'}
-            )
-
-    @mock.patch('aenea.vocabulary.load_grammar_config')
-    def test_explicit_undefine(self, lgc):
-        lgc.return_value = {'commands': {'!anythinggoeshere': 'sting'}}
-        self.assertEquals(
-            aenea.vocabulary.make_grammar_commands('foo', {'sting': '10k bees'}), {})
-
-    @mock.patch('aenea.vocabulary.load_grammar_config')
-    def test_implicit_undefine(self, lgc):
-        lgc.return_value = {'commands': {'honey': 'sting'}}
-        self.assertEquals(
-            aenea.vocabulary.make_grammar_commands('foo', {'sting': '10k bees'}), {'honey': '10k bees'})
-
-    @mock.patch('aenea.vocabulary.load_grammar_config')
-    def test_illegal_command(self, lgc):
-        lgc.return_value = {'commands': {'wasp': 'nest'}}
-        self.assertRaises(
-            KeyError,
-            aenea.vocabulary.make_grammar_commands,
-            'foo', {'sting': '10k bees'}
-            )
+from configuration_mock import make_mock_conf, make_mock_dir
 
 
 class TestMakeRefreshVocabulary(unittest.TestCase):
@@ -140,114 +14,235 @@ class TestMakeRefreshVocabulary(unittest.TestCase):
         aenea.vocabulary._vocabulary = {'static': {}, 'dynamic': {}}
         aenea.vocabulary._disabled_vocabularies = set()
         aenea.vocabulary._lists = {'static': {}, 'dynamic': {}}
-        aenea.vocabulary._last_vocabulary_mtime = 0
+        aenea.vocabulary._watchers = {
+            'static': make_mock_dir({}),
+            'dynamic': make_mock_dir({})
+            }
+        aenea.vocabulary._enabled_watcher = make_mock_conf({})
 
-        self.sfoobar = os.path.join(VOCABULARY_CONFIG_PATH, 'static', 'foobar.json')
-        self.dfoobar = os.path.join(VOCABULARY_CONFIG_PATH, 'dynamic', 'foobar.json')
-        self.boring = '{"name": "foo", "tags": ["bar"], "shortcuts": {"baz": "bazaz"}}'
+        aenea.vocabulary._watchers['static'].files['barbaz'] = self.simple1()
+        aenea.vocabulary._watchers['dynamic'].files['foobaz'] = self.simple2()
+        aenea.vocabulary._watchers['dynamic'].files['foobar'] = self.simple3()
 
-    def tearDown(self):
-        self.setUp()
+        self.foo_foobar = {
+            'plus': 'Text("+ ")',
+            'literal entry': 'Key("c-v")'
+            }
 
-    # @mock.patch('aenea.vocabulary._need_reload')
-    # def test_clean_does_not_modify(self, need_reload):
-    #     aenea.vocabulary._vocabulary['dynamic']['clear'] = {}
-    #     need_reload.return_value = False
-    #     aenea.vocabulary.refresh_vocabulary()
-    #     self.assertEquals(aenea.vocabulary._vocabulary['dynamic'], {})
+        self.foo_foobaz = {
+            'bit ore': 'Text("| ")',
+            'kill': 'Key("c-backslash")'
+            }
 
-    # Overly complex, but we need to test different flows.
-    @mock.patch('__builtin__.open')
-    @mock.patch('os.listdir')
-    @mock.patch('aenea.vocabulary._need_reload')
-    @mock.patch('os.path.exists')
-    def test(self, exists, need_reload, listdir,
-                                         fopen):
-        fopen.side_effect = mock_open({self.dfoobar: self.boring})
-        aenea.vocabulary._vocabulary['static']['clear'] = {}
-        need_reload.return_value = True
-        exists.side_effect = lambda x: x.endswith('dynamic')
-        listdir.return_value = ['foobar.json']
+        self.foo = self.foo_foobar.copy()
+        self.foo.update(self.foo_foobaz)
+
+        self.bar = {
+            'plus': 'Text("+ ")',
+            'literal entry': 'Key("c-v")'
+            }
+
+        self.baz = {
+            'bit ore': 'Text("| ")',
+            'kill': 'Key("c-backslash")'
+            }
+
+        self.s_foo = {}
+        self.s_bar = self.s_baz = {
+            'compare eek': 'Text("== ")',
+            'interrupt': 'Key("c-c")'
+            }
+
+    def simple1(self):
+        return make_mock_conf({
+            'name': 'barbaz',
+            'tags': ['bar', 'baz'],
+            'vocabulary': {
+                'compare eek': '== '
+                },
+            'shortcuts': {
+                'interrupt': 'c-c'
+                }
+            })
+
+    def simple2(self):
+        return make_mock_conf({
+            'name': 'foobaz',
+            'tags': ['foo', 'baz', 'global'],
+            'vocabulary': {
+                'bit ore': '| '
+                },
+            'shortcuts': {
+                'kill': 'c-backslash'
+                }
+            })
+
+    def simple3(self):
+        return make_mock_conf({
+            'name': 'foobar',
+            'tags': ['foo', 'bar'],
+            'vocabulary': {
+                'plus': '+ '
+                },
+            'shortcuts': {
+                'literal entry': 'c-v'
+                }
+            })
+
+    def mocker(self, key):
+        return lambda n: '%s("%s")' % (key, n)
+
+    @mock.patch('aenea.vocabulary.Text')
+    @mock.patch('aenea.vocabulary.Key')
+    def test_load(self, key, text):
+        text.side_effect = self.mocker('Text')
+        key.side_effect = self.mocker('Key')
+        foo = aenea.vocabulary.register_dynamic_vocabulary('foo')
+        bar = aenea.vocabulary.register_dynamic_vocabulary('bar')
+        baz = aenea.vocabulary.register_dynamic_vocabulary('baz')
+        s_foo = aenea.vocabulary.get_static_vocabulary('foo')
+        s_bar = aenea.vocabulary.get_static_vocabulary('bar')
+        s_baz = aenea.vocabulary.get_static_vocabulary('baz')
+        self.assertEquals(foo, self.foo)
+        self.assertEquals(bar, self.bar)
+        self.assertEquals(baz, self.baz)
+        self.assertEquals(s_foo, self.s_foo)
+        self.assertEquals(s_bar, self.s_bar)
+        self.assertEquals(s_baz, self.s_baz)
+
+        aenea.vocabulary.unregister_dynamic_vocabulary('foo')
+        aenea.vocabulary.unregister_dynamic_vocabulary('bar')
+        aenea.vocabulary.unregister_dynamic_vocabulary('baz')
+
+    @mock.patch('aenea.vocabulary.Text')
+    @mock.patch('aenea.vocabulary.Key')
+    def test_enable_disable_simple(self, key, text):
+        text.side_effect = self.mocker('Text')
+        key.side_effect = self.mocker('Key')
+        foo = aenea.vocabulary.register_dynamic_vocabulary('foo')
+        self.assertEquals(foo, self.foo)
+        aenea.vocabulary.disable_dynamic_vocabulary('foobar')
+        self.assertEquals(foo, self.foo_foobaz)
+        aenea.vocabulary.disable_dynamic_vocabulary('foobaz')
+        self.assertEquals(foo, {})
+        aenea.vocabulary.enable_dynamic_vocabulary('foobar')
+        self.assertEquals(foo, self.foo_foobar)
+        aenea.vocabulary.enable_dynamic_vocabulary('foobaz')
+        self.assertEquals(foo, self.foo)
+
+        aenea.vocabulary.unregister_dynamic_vocabulary('foo')
+
+    @mock.patch('aenea.vocabulary.Text')
+    @mock.patch('aenea.vocabulary.Key')
+    def test_inhibitions(self, key, text):
+        text.side_effect = self.mocker('Text')
+        key.side_effect = self.mocker('Key')
+
+        g = aenea.vocabulary.register_global_dynamic_vocabulary()
+        foo = aenea.vocabulary.register_dynamic_vocabulary('foo')
+
+        self.assertEquals(g, self.foo_foobaz)
+        self.assertEquals(foo, self.foo)
+
+        gall = aenea.vocabulary.register_dynamic_vocabulary('global')
+
+        self.assertEquals(gall, self.foo_foobaz)
+
+        aenea.vocabulary.inhibit_global_dynamic_vocabulary('test', 'foo')
+
+        self.assertEquals(g, {})
+        self.assertEquals(foo, self.foo)
+        self.assertEquals(gall, self.foo_foobaz)
+
+        aenea.vocabulary.disable_dynamic_vocabulary('foobaz')
+
+        self.assertEquals(g, {})
+        self.assertEquals(foo, self.foo_foobar)
+        self.assertEquals(gall, {})
+
+        aenea.vocabulary.uninhibit_global_dynamic_vocabulary('test', 'foo')
+
+        self.assertEquals(g, {})
+        self.assertEquals(foo, self.foo_foobar)
+        self.assertEquals(gall, {})
+
+        aenea.vocabulary.enable_dynamic_vocabulary('foobaz')
+
+        self.assertEquals(g, self.foo_foobaz)
+        self.assertEquals(foo, self.foo)
+        self.assertEquals(gall, self.foo_foobaz)
+
+        aenea.vocabulary.unregister_global_dynamic_vocabulary()
+        aenea.vocabulary.unregister_dynamic_vocabulary('foo')
+        aenea.vocabulary.unregister_dynamic_vocabulary('global')
+
+    @mock.patch('aenea.vocabulary.Text')
+    @mock.patch('aenea.vocabulary.Key')
+    def test_enable_synched_to_conf(self, key, text):
+        text.side_effect = self.mocker('Text')
+        key.side_effect = self.mocker('Key')
+
+        foo = aenea.vocabulary.register_dynamic_vocabulary('foo')
+
+        self.assertTrue(aenea.vocabulary._enabled_watcher['foobar'])
+        self.assertEquals(foo, self.foo)
+
+        aenea.vocabulary._enabled_watcher.dirty = True
+        aenea.vocabulary._enabled_watcher['foobar'] = False
+
         aenea.vocabulary.refresh_vocabulary()
 
-        dy = aenea.vocabulary._vocabulary['dynamic']
-        self.assertEqual(dy.keys(), ['foo'])
-        self.assertEqual(len(dy['foo']), 1)
-        tags, vocab = dy['foo'][0]
-        self.assertEqual(tags, ['bar'])
-        self.assertEqual(vocab.keys(), ['baz'])
-        self.assertIsInstance(vocab['baz'], aenea.vocabulary.Key)
-        self.assertEquals(aenea.vocabulary._vocabulary['static'], {})
+        self.assertEquals(foo, self.foo_foobaz)
 
-        for i in xrange(3):
-            aenea.vocabulary.enable_dynamic_vocabulary('foo')
+        aenea.vocabulary.unregister_dynamic_vocabulary('foo')
 
-            full = aenea.vocabulary.register_dynamic_vocabulary('bar')
-            empty = aenea.vocabulary.register_dynamic_vocabulary('foo')
+    @mock.patch('aenea.vocabulary.Text')
+    @mock.patch('aenea.vocabulary.Key')
+    def test_change_vocabulary_online(self, key, text):
+        text.side_effect = self.mocker('Text')
+        key.side_effect = self.mocker('Key')
 
-            self.assertEqual(empty, {})
-            self.assertEqual(full.keys(), ['baz'])
-            self.assertIsInstance(full['baz'], aenea.vocabulary.Key)
+        foo = aenea.vocabulary.register_dynamic_vocabulary('foo')
 
-            aenea.vocabulary.disable_dynamic_vocabulary('foo')
-            self.assertEqual(empty, {})
-            self.assertEqual(full, {})
+        self.assertEquals(foo, self.foo)
 
-            aenea.vocabulary.enable_dynamic_vocabulary('foo')
-            self.assertEqual(empty, {})
-            self.assertEqual(full.keys(), ['baz'])
-            self.assertIsInstance(full['baz'], aenea.vocabulary.Key)
+        conf = aenea.vocabulary._watchers['dynamic'].files['foobar'].conf
+        conf['vocabulary']['minus'] = '- '
+        aenea.vocabulary._watchers['dynamic'].dirty = True
 
-            aenea.vocabulary.unregister_dynamic_vocabulary('bar')
-            aenea.vocabulary.unregister_dynamic_vocabulary('foo')
-
-            aenea.vocabulary.disable_dynamic_vocabulary('foo')
-
-    @mock.patch('aenea.vocabulary._need_reload')
-    @mock.patch('os.path.exists')
-    def test_no_config_no_problem(self, exists, need_reload):
-        need_reload.return_value = True
-        exists.return_value = False
-        aenea.vocabulary._vocabulary['dynamic']['clear'] = {}
-        aenea.vocabulary._vocabulary['static']['clear'] = {}
         aenea.vocabulary.refresh_vocabulary()
-        self.assertEquals(aenea.vocabulary._vocabulary['dynamic'], {})
-        self.assertEquals(aenea.vocabulary._vocabulary['static'], {})
+        good = {'minus': 'Text("- ")'}
+        good.update(self.foo)
+        self.assertEquals(foo, good)
 
+        g = aenea.vocabulary.register_global_dynamic_vocabulary()
+        self.assertEquals(g, self.foo_foobaz)
 
-class TestGlobalVocabulary(unittest.TestCase):
-    def setUp(self):
-        aenea.vocabulary._vocabulary = {'static': {}, 'dynamic': {
-            'foo': [(['global', 'multiedit'], {'baz': 'bazaz'})],
-            'bar': [(['global', 'vim', 'multiedit'], {'bar': 'barbar'})]
-            }}
-        aenea.vocabulary._disabled_vocabularies = set()
-        aenea.vocabulary._lists = {'static': {}, 'dynamic': {}}
+        conf['tags'].append('global')
+        conf = aenea.vocabulary._watchers['dynamic'].dirty = True
 
-    @mock.patch('aenea.vocabulary._need_reload')
-    def test(self, need_reload):
-        need_reload.return_value = False
-
-        v = aenea.vocabulary.register_global_dynamic_vocabulary()
-        self.assertEqual(v, {'baz': 'bazaz', 'bar': 'barbar'})
-
-        aenea.vocabulary.disable_dynamic_vocabulary('bar')
-        self.assertEqual(v, {'baz': 'bazaz'})
-
-        m = mock.MagicMock()
-        m.matches.return_value = True
-        aenea.vocabulary.inhibit_global_dynamic_vocabulary('test', 'vim', m)
-
-        self.assertEqual(v, {'baz': 'bazaz'})
-
-        aenea.vocabulary.enable_dynamic_vocabulary('bar')
-
-        self.assertEqual(v, {'baz': 'bazaz'})
-
-        m.matches.return_value = False
         aenea.vocabulary.refresh_vocabulary()
 
-        self.assertEqual(v, {'baz': 'bazaz', 'bar': 'barbar'})
+        good.update(self.foo)
+        self.assertEquals(g, good)
+
+        aenea.vocabulary.unregister_dynamic_vocabulary('foo')
+        aenea.vocabulary.unregister_global_dynamic_vocabulary()
+
+
+    @mock.patch('aenea.vocabulary.Text')
+    @mock.patch('aenea.vocabulary.Key')
+    def test_remove_vocabulary_online(self, key, text):
+        text.side_effect = self.mocker('Text')
+        key.side_effect = self.mocker('Key')
+
+        foo = aenea.vocabulary.register_dynamic_vocabulary('foo')
+        self.assertEquals(foo, self.foo)
+        del aenea.vocabulary._watchers['dynamic'].files['foobar']
+        aenea.vocabulary.refresh_vocabulary()
+        self.assertEquals(foo, self.foo_foobaz)
+
+        aenea.vocabulary.unregister_dynamic_vocabulary('foo')
 
 if __name__ == '__main__':
     unittest.main()
