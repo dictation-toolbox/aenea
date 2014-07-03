@@ -1,4 +1,4 @@
 import strict as strict
 import lax as lax
-from lax import *
+from strict import *
 from common import *
