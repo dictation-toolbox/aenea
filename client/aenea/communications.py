@@ -14,6 +14,13 @@ _server_config = aenea.configuration.ConfigWatcher(
      'port': aenea.config.DEFAULT_SERVER_ADDRESS[1]})
 _server_config.write()
 
+
+def set_server_address(address):
+    '''address is (host, port).'''
+    _server_config.refresh()
+    _server_config['host'], _server_config['port'] = address
+    _server_config.write()
+
 class Proxy(object):
     def __init__(self):
         self._address = None

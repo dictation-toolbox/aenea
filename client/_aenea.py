@@ -10,7 +10,9 @@ try:
     import aenea
     import aenea.proxy_contexts
     import aenea.vocabulary
+    import aenea.communications
     import aenea.config
+    import aenea.configuration
 except ImportError:
     print 'Unable to import Aenea client-side modules.'
     raise
@@ -70,6 +72,10 @@ class ReloadGrammarsRule(dragonfly.CompoundRule):
 
 
 server_list = dragonfly.DictList('aenea servers')
+server_list_watcher = aenea.configuration.ConfigWatcher(
+    ('grammar_config', 'aenea'))
+for k, v in server_list_watcher.conf.get('servers', {}).iteritems():
+    server_list[str(k)] = v
 
 
 class ChangeServer(dragonfly.CompoundRule):
@@ -77,13 +83,13 @@ class ChangeServer(dragonfly.CompoundRule):
     extras = [dragonfly.DictListRef('proxy', server_list)]
 
     def _process_recognition(self, node, extras):
-        aenea.config.set_server_address((extras['proxy']['host'], extras['proxy']['port']))
+        aenea.communications.set_server_address((extras['proxy']['host'], extras['proxy']['port']))
 
     def _process_begin(self):
-        #TODO: this has to be ugly but it doesn'th ave to be this ugly.
-        server_list.clear()
-        for k, v in aenea.vocabulary.load_grammar_config('aenea').get('servers', {}).iteritems():
-            server_list[str(k)] = v
+        if server_list_watcher.refresh():
+            server_list.clear()
+            for k, v in server_list_watcher.conf.get('servers', {}).iteritems():
+                server_list[str(k)] = v
 
 grammar = dragonfly.Grammar('aenea')
 
