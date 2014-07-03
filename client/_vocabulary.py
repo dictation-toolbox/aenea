@@ -50,6 +50,7 @@ class DisableRule(dragonfly.CompoundRule):
     extras = [dragonfly.ListRef('vocabulary', vocabulary_list)]
 
     def _process_recognition(self, node, extras):
+
         aenea.vocabulary.disable_dynamic_vocabulary(extras['vocabulary'])
 
 

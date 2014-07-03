@@ -3,15 +3,20 @@ vocabulary.  These are user-configurable mappings of phrases to
 actions that can be dynamically updated and en/dis-abled on demand,
 and shared across modules.'''
 
+from aenea.wrappers.lax import (
+    Text,
+    Key
+    )
+
+from aenea import NoAction
+
+from aenea.proxy_actions import ProxyMousePhantomClick as MousePhantomClick
+
 try:
     import dragonfly
-    from aenea.wrappers.lax import (
-        Text,
-        Key,
+    from dragonfly import (
         Pause,
-        Mimic,
-        MousePhantomClick,
-        NoAction
+        Mimic
         )
 except ImportError:
     import dragonfly_mock as dragonfly
@@ -202,15 +207,16 @@ def register_dynamic_vocabulary(tag):
 def disable_dynamic_vocabulary(name):
     '''Disables all dynamic vocabularies with the specified name immediately.
        No reload or mic off/on is necessary.'''
+    _load_enabled_from_disk()
     _disabled_vocabularies.add(name)
     _rebuild_lists('dynamic')
-    _load_enabled_from_disk()
     _save_enabled_to_disk()
 
 
 def enable_dynamic_vocabulary(name):
     '''Enables all dynamic vocabularies with the specified name immediately.
        No reload or mic off/on is necessary.'''
+    _load_enabled_from_disk()
     if name in _disabled_vocabularies:
         _disabled_vocabularies.remove(name)
     _rebuild_lists('dynamic')
@@ -274,6 +280,7 @@ def uninhibit_global_dynamic_vocabulary(grammar_name, tag):
 def register_list_of_dynamic_vocabularies():
     global _list_of_dynamic_vocabularies
     _list_of_dynamic_vocabularies = dragonfly.List('list of vocabularies')
+    # Don't rebuild here because the grammar may not yet have loaded.
     return _list_of_dynamic_vocabularies
 
 
