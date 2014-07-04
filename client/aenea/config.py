@@ -49,8 +49,6 @@ else:
 
 PROJECT_ROOT = _configuration['project_root']
 
-SERVER_STATE_FILE = _configuration.get('server_state_file', os.path.join(PROJECT_ROOT, 'server_state'))
-
 DEFAULT_SERVER_ADDRESS = _configuration['host'], _configuration['port']
 
 # Whether to use proxy or native (not all modules support native.)
