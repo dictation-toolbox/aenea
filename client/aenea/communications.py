@@ -26,7 +26,7 @@ _last_failed_connect = 0
 
 
 _server_config = aenea.configuration.ConfigWatcher(
-    aenea.config.SERVER_STATE_FILE,
+    'server_state',
     {'host': aenea.config.DEFAULT_SERVER_ADDRESS[0],
      'port': aenea.config.DEFAULT_SERVER_ADDRESS[1]})
 _server_config.write()
