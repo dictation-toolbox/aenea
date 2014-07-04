@@ -144,7 +144,7 @@ class AeneaClient(tk.Tk):
         with self.buffer_lock:
             while self.sending:
                 self.buffer_ready.wait()
-            self.ProxyKey('Control_R').execute()
+            aenea.ProxyKey('Control_R').execute()
         self.log('Starting capture')
         self.bind('<Any KeyPress>', lambda event: self.send_key(event.keysym))
         self.button1.config(state=tk.DISABLED)
