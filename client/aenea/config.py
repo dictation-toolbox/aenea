@@ -25,10 +25,10 @@ except ImportError:
     import dragonfly_mock as dragonfly
 
 
-STARTING_PROJECT_POOT = 'C:\\NatLink\\NatLink\\MacroSystem'
+STARTING_PROJECT_ROOT = 'C:\\NatLink\\NatLink\\MacroSystem'
 
-if os.path.exists(os.path.join(STARTING_PROJECT_POOT, 'aenea.json')):
-    _configuration = {'project_root': STARTING_PROJECT_POOT}
+if os.path.exists(os.path.join(STARTING_PROJECT_ROOT, 'aenea.json')):
+    _configuration = {'project_root': STARTING_PROJECT_ROOT}
 
     _tried = set()
     # Recursively load the config file until we hit a self loop.
@@ -37,7 +37,7 @@ if os.path.exists(os.path.join(STARTING_PROJECT_POOT, 'aenea.json')):
         _configuration.update(json.load(open(os.path.join(_configuration['project_root'], 'aenea.json'))))
 else:
     _configuration = {
-        'project_root': 'C:\\NatLink\\NatLink\\MacroSystem',
+        'project_root': STARTING_PROJECT_ROOT,
         'host': 'localhost',
         'port': 8240,
         'platform': 'proxy',
