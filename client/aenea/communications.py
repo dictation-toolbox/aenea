@@ -15,15 +15,13 @@
 # Copyright (2014) Alex Roper
 # Alex Roper <alex@aroper.net>
 
+import httplib
 import jsonrpclib
 import socket
 import time
 
 import aenea.config
 import aenea.configuration
-
-_last_failed_connect = 0
-
 
 _server_config = aenea.configuration.ConfigWatcher(
     'server_state',
@@ -38,34 +36,65 @@ def set_server_address(address):
     _server_config['host'], _server_config['port'] = address
     _server_config.write()
 
+
+class _ImpatientTransport(jsonrpclib.jsonrpc.Transport):
+    '''Transport for jsonrpclib that supports a timeout.'''
+    def __init__(self, timeout=None):
+        self._timeout = timeout
+        jsonrpclib.jsonrpc.Transport.__init__(self)
+
+    def make_connection(self, host):
+        #return an existing connection if possible.  This allows
+        #HTTP/1.1 keep-alive.
+        if (hasattr(self, '_connection') and
+            self._connection is not None and
+            host == self._connection[0]):
+            return self._connection[1]
+
+        # create a HTTP connection object from a host descriptor
+        chost, self._extra_headers, x509 = self.get_host_info(host)
+        #store the host argument along with the connection object
+        if self._timeout is None:
+            self._connection = host, httplib.HTTPConnection(chost)
+        else:
+            self._connection = host, httplib.HTTPConnection(
+                chost,
+                timeout=self._timeout
+                )
+        return self._connection[1]
+
+
 class Proxy(object):
     def __init__(self):
         self._address = None
+        self._last_failed_connect = 0
+        self._last_successful_connect = 0
+        self._transport = _ImpatientTransport(aenea.config.SOCKET_TIMEOUT)
 
-    def execute_batch(self, batch):
-        global _last_failed_connect
+    def _execute_batch(self, batch, use_multiple_actions=False):
         self._refresh_server()
-        if time.time() - _last_failed_connect > aenea.config.CONNECT_RETRY_COOLDOWN:
+        if time.time() - self._last_failed_connect > aenea.config.CONNECT_RETRY_COOLDOWN:
             try:
-                if aenea.config.USE_MULTIPLE_ACTIONS and len(batch) > 1:
+                if len(batch) == 1:
+                    return (getattr(
+                        self._server,
+                        batch[0][0])(*batch[0][1], **batch[0][2])
+                        )
+                elif use_multiple_actions:
                     self._server.multiple_actions(batch)
                 else:
                     for (command, args, kwargs) in batch:
                         getattr(self._server, command)(*args, **kwargs)
             except socket.error:
-                _last_failed_connect = time.time()
-                print 'Failed to connect to aenea server. To avoid slowing dictation, we won\'t try again for %i seconds.' % aenea.config.CONNECT_RETRY_COOLDOWN
+                self._last_failed_connect = time.time()
+                print 'Socket error connecting to aenea server. To avoid slowing dictation, we won\'t try again for %i seconds.' % aenea.config.CONNECT_RETRY_COOLDOWN
+
+    def execute_batch(self, batch):
+        self._execute_batch(batch, aenea.config.USE_MULTIPLE_ACTIONS)
 
     def __getattr__(self, meth):
         def call(*a, **kw):
-            global _last_failed_connect
-            self._refresh_server()
-            if time.time() - _last_failed_connect > aenea.config.CONNECT_RETRY_COOLDOWN:
-                try:
-                    return getattr(self._server, meth)(*a, **kw)
-                except socket.error:
-                    _last_failed_connect = time.time()
-                    print 'Failed to connect to aenea server. To avoid slowing dictation, we won\'t try again for %i seconds.' % aenea.config.CONNECT_RETRY_COOLDOWN
+            return self._execute_batch([(meth, a, kw)])
         return call
 
     def _refresh_server(self):
@@ -73,7 +102,11 @@ class Proxy(object):
         address = _server_config.conf['host'], _server_config.conf['port']
         if self._address != address:
             self._address = address
-            self._server = jsonrpclib.Server('http://%s:%i' % address)
+            self._server = jsonrpclib.Server(
+                'http://%s:%i' % address,
+                transport=self._transport
+                )
+            self._last_failed_connect = 0
 
 
 class BatchProxy(object):
