@@ -135,7 +135,13 @@ Installation:
 
 Server (OS X)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@dopey wrote a OS X server for the older version of the communication protocol, and some work would be necessary to get it to work with the current version (pull requests welcome): https://github.com/dopey/aenea-fork
+Install:
+  - python
+  - pip install pyobjc   (this is required for py-applescript and will take a while.  no, a really, really long while)
+  - pip install py-applescript
+  
+Enable access for assistive devices in your system preferences
+
 
 Aenea client-side library
 ~~~~~~~~~~~~
