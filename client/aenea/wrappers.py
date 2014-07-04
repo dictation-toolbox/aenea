@@ -96,6 +96,24 @@ except ImportError:
 
 
 import aenea.config
+import aenea.communications
+import aenea.proxy_contexts
+
+
+def ensure_execution_context(data):
+    '''Populates the data field of execute with context information if not
+      present.'''
+    if data is None:
+        data = {}
+    if '_proxy' not in data:
+        data['_proxy'] = aenea.config.proxy_active()
+    if '_server_info' not in data:
+        data['_server_info'] = aenea.proxy_contexts._server_info()
+    if '_proxy_context' not in data:
+        data['_proxy_context'] = aenea.proxy_contexts._get_context()
+    if '_context' not in data:
+        data['_context'] = dragonfly.Window.get_foreground()
+    return data
 
 
 class NoAction(dragonfly.ActionBase):
@@ -161,7 +179,8 @@ class AeneaAction(dragonfly.ActionBase):
         dragonfly.ActionBase.__init__(self)
 
     def execute(self, data=None):
-        if aenea.config.PLATFORM == 'proxy':
+        data = ensure_execution_context(data)
+        if data['_proxy']:
             action = self._proxy_action
         else:
             action = self._local_action
@@ -177,13 +196,22 @@ class AeneaDynStrActionBase(dragonfly.DynStrActionBase):
         self._local = local
         dragonfly.DynStrActionBase.__init__(self, spec=spec, static=static)
 
+    def _execute(self, data=None):
+        # Crude, but better than copy-pasting the execute code.
+        self._data = ensure_execution_context(data)
+        dragonfly.DynStrActionBase._execute(self, data)
+
+    def get_data(self):
+        '''Returns the execution data.'''
+        return self._data
+
     def _parse_spec(self, spec):
         proxy = self._proxy._parse_spec(spec)
         local = self._local._parse_spec(spec)
         return (proxy, local)
 
     def _execute_events(self, commands):
-        if aenea.config.proxy_active():
+        if self.get_data()['_proxy']:
             return self._proxy._execute_events(commands[0])
         else:
             return self._local._execute_events(commands[1])
@@ -200,11 +228,10 @@ class ContextAction(dragonfly.ActionBase):
         self.actions.append((context, action))
 
     def execute(self, data=None):
+        data = ensure_execution_context(data)
+        win = data['_context']
         for (context, action) in self.actions:
-            win = aenea.config.get_window_foreground()
             if context.matches(win.executable, win.title, win.handle):
                 return action.execute(data)
         else:
             return self.default.execute(data)
-
-

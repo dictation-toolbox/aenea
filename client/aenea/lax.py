@@ -75,7 +75,7 @@ class AeneaLaxDynStrActionBase(AeneaDynStrActionBase):
         return (proxy, local)
 
     def _execute_events(self, commands):
-        if aenea.config.proxy_active():
+        if self.get_data()['_proxy']:
             if self._proxy_exception is not None:
                 traceback.print_tb(self._proxy_exception)
         else:
