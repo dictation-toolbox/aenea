@@ -37,7 +37,7 @@ if os.path.exists(os.path.join(STARTING_PROJECT_POOT, 'aenea.json')):
         _configuration.update(json.load(open(os.path.join(_configuration['project_root'], 'aenea.json'))))
 else:
     _configuration = {
-        'project_root': '.',
+        'project_root': 'C:\\NatLink\\NatLink\\MacroSystem',
         'host': 'localhost',
         'port': 8240,
         'platform': 'proxy',
