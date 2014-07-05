@@ -84,7 +84,7 @@ def _server_info():
 
 
 class ProxyCustomAppContext(dragonfly.Context):
-    '''matches based on the properties of the currently active window.
+    '''Matches based on the properties of the currently active window.
        Match may be 'substring', 'exact', or 'regex'. logic may be 'and',
        'or' or an integer (to match if at least N clauses satisfied.)'''
     def __init__(self, match='substring', logic='and', case_sensitive=False,
@@ -120,8 +120,8 @@ class ProxyCustomAppContext(dragonfly.Context):
         return matches
 
     def _property_match(self, key, actual, desired):
-        '''overload to change how we should compare actual and
-           desired properties'''
+        '''Overload to change how we should compare actual and
+           desired properties.'''
         if not self.case_sensitive:
             actual = actual.lower()
             desired = desired.lower()
@@ -133,8 +133,8 @@ class ProxyCustomAppContext(dragonfly.Context):
             return bool(re.match(desired, actual))
 
     def _reduce_matches(self, matches):
-        '''overload to change the logic that should be used to combine
-           the results of the matching function'''
+        '''Overload to change the logic that should be used to combine
+           the results of the matching function.'''
         if self.logic == 'and':
             return all(matches.itervalues())
         elif self.logic == 'or':
