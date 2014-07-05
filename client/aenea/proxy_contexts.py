@@ -189,7 +189,7 @@ class ProxyPlatformContext(dragonfly.Context):
 
 class ProxyCrossPlatformContext(dragonfly.Context):
     '''Class to choose between several contexts based on what the server says
-       platform is. None key may be used for none of the above as a defaualt.'''
+       platform is. None key may be used for none of the above as a default.'''
 
     def __init__(self, mapping):
         '''mapping is mapping from platform as string to Context.'''
