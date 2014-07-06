@@ -15,7 +15,7 @@
 # Copyright (2014) Alex Roper
 # Alex Roper <alex@aroper.net>
 
-'''performs black magic on the dragonfly actions objects to force them to
+'''Performs black magic on the dragonfly actions objects to force them to
    forward their actions to a remote server.'''
 
 import aenea.communications

@@ -56,7 +56,7 @@ class ConfigWatcher(object):
             print 'Error writing config file %s: %s.' % (self._path, str(e))
 
     def read(self):
-        '''Forces to read the file regardless of whether it's mtime has
+        '''Forces to read the file regardless of whether its mtime has
            changed.'''
         self._exists = os.path.exists(self._path)
         if not os.path.exists(self._path):
