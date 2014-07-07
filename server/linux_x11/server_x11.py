@@ -481,5 +481,5 @@ if __name__ == '__main__':
                     os._exit(0)
             else:
                 os._exit(0)
-    server = setup_server(config.HOST, config.PORT)
-    server.serve_forever()
+        server = setup_server(config.HOST, config.PORT)
+        server.serve_forever()
