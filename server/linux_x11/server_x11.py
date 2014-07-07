@@ -255,6 +255,13 @@ def get_context(_xdotool=None):
             except Exception:
                 pass
 
+    try:
+        cmdline_path = '/proc/%s/cmdline' % properties['pid']
+        with open(cmdline_path) as fd:
+            properties['cmdline'] = fd.read().replace('\x00', ' ').strip()
+    except OSError:
+        pass
+
     return properties
 
 
