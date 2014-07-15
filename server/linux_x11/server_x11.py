@@ -26,6 +26,13 @@ import jsonrpclib.SimpleJSONRPCServer
 
 import config
 
+try:
+    import yapsy
+    import yapsy.PluginManager
+except ImportError:
+    print "Cannot import yapsy; server plugin functionality not available."
+    yapsy = None
+
 _MOUSE_BUTTONS = {
     'left': 1,
     'middle': 2,
@@ -448,6 +455,15 @@ def setup_server(host, port):
     for command in list_rpc_commands():
         server.register_function(globals()[command])
     server.register_function(multiple_actions)
+
+    if yapsy is not None:
+        plugin_manager = yapsy.PluginManager.PluginManager()
+        plugin_manager.setPluginPlaces(config.PLUGIN_PATH)
+        plugin_manager.collectPlugins()
+        for plugin_info in plugin_manager.getAllPlugins():
+            print 'Loading plugin "%s"' % plugin_info.name
+            plugin_manager.activatePluginByName(plugin_info.name)
+            plugin_info.plugin_object.register_rpcs(server)
 
     return server
 
