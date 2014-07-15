@@ -1,0 +1,8 @@
+[Core]
+Name = Example plugin
+Module = example
+
+[Documentation]
+Author = Alex Roper
+Version = 0.1
+Description = Example plugin for how to add RPC commands to the server.
