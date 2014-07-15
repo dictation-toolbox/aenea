@@ -49,6 +49,8 @@ class ConfigWatcher(object):
 
     def write(self):
         '''Writes the config file to disk.'''
+        if not os.path.exists(os.path.split(self._path)[0]):
+            os.makedirs(os.path.split(self._path)[0])
         try:
             with open(self._path, 'w') as fd:
                 json.dump(self.conf, fd)
