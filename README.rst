@@ -249,6 +249,11 @@ The "global" tag is special -- it's used by _vocabulary.py for things you should
 
 The whole system can sound quite intimidating at first (much like Dragonfly) but it's not as bad as it sounds to use, I promise! Just take a look at the example grammars and vocabularies and you'll be writing your own in no time! (example grammars: https://github.com/dictation-toolbox/aenea-grammars)
 
+Grammar Configuration
+---------------------
+
+configuration.py is designed to provide easy to use code for grammars to read config files under PROJECT_ROOT/grammar_config. In particular, they make it easy for a grammar to allow users to overwrite their keybindings. This is similar to the idea behind Dragonfly's configuration system, but simpler and less powerful -- you can't include arbitrary code. Grammars need not use this system, but all mine do.
+
 Documentation
 -------------
 
