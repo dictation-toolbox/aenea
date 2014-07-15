@@ -28,12 +28,7 @@ import os
 import dragonfly
 
 try:
-    import aenea
-    import aenea.proxy_contexts
-    import aenea.configuration
     import aenea.communications
-    import aenea.config
-    import aenea.configuration
 except ImportError:
     print 'Unable to import Aenea client-side modules.'
     raise
@@ -56,7 +51,7 @@ class GreetUser(dragonfly.MappingRule):
         }
     extras = [dragonfly.Dictation(name='name')]
 
-grammar = dragonfly.Grammar('aenea')
+grammar = dragonfly.Grammar('server_plugin_example')
 
 grammar.add_rule(GreetUser())
 
