@@ -222,6 +222,43 @@ The lax version will ignore errors at grammar load time and only raise them if y
 - ContextAction -- takes a different action based on which context is currently active. Takes a list of (context, action) pairs. Whenever executed, all actions whose context matches are executed.
 - Key, Text, Mouse -- Executes either on proxy or locally based on whether proxy server is currently enabled.
 
+Taking advantage of the vocabulary system
+-----------------------------------------
+
+I noticed that many of my grammars had similar vocabulary but wanted to put them in different places, leading to duplication. In particular, both verbal_emacs and multiedit should be usable for programming, and as such duplicated a great deal of both language specific vocabulary as well as general help. Since both of these grammars make use of nested trees, and chaining commands together in the grammar, I wanted to separate vocabulary and grammar.
+
+Inspired by the dynamics system @nirvdrum wrote, I also wanted the ability to dynamically disable and enable certain vocabulary as appropriate (e.g., disable Python vocabulary when not using Python). The vocabulary system allows you to define vocabulary items that grammars can then hook into. Currently, multiedit, verbal_emacs, and _vocabulary use them.
+
+There are two types of vocabulary, due to Dragonfly/NatLink limitations. Static vocabularies are loaded at system start, cannot be dynamically enabled/disabled, and you need to restart Dragon to reload them. On the plus side, they can use more complex specifications such as "reload [all] (configuration|config)".
+
+Dynamic vocabulary is limited to straight key-value pairs -- what you say and what is typed. However _vocabulary.py lets you dynamically turn them on/off as necessary.
+
+Writing a Vocabulary
+--------------------
+
+The format is identical for both static and dynamic vocabularies. You create a JSON file in ROOT/vocabulary_config/static or ROOT/vocabulary_config/dynamic, containing several properties. "name" is what you will say to enable/disable the grammar. "tags" is a list of tags, explained below. "shortcuts" is a mapping from what you say to what KEY(s) are pressed (i.e., the string is used as the spec for a Key object). "vocabulary" is a mapping from what you say to what you get.
+
+In addition to plain text, the value may also specify Text, Key, and Mouse actions (see the end of python.json for an example of this).
+
+Using Vocabularies in your Grammar
+----------------------------------
+
+Vocabularies are attached to grammars by use of the tag system. Your grammars may request one or more tags, which are simply hooks vocabularies can attach to. So for example, multiedit creates "multiedit" and "multiedit.count" hooks, which are simply things which may be chained together. The .count hook means you can say a number after it to do it N times. The dynamic Eclipse vocabulary is a good example of this. For example, my Python vocabulary says it should be active in "verbal_emacs.insertions.code", "multiedit", and "global". This is best explained by examining the example vocabularies at https://github.com/dictation-toolbox/aenea-grammars/tree/master/vocabulary_config.
+
+The "global" tag is special -- it's used by _vocabulary.py for things you should be able to say anywhere. The reason it's a special case is because we want to make sure that there aren't multiple grammars competing to recognize an entry. Thus, a grammar may suppress a tag in the global context (multiedit and verbal_emacs do this), so that whenever they are in use, _vocabulary won't recognize the tags they've taken over. See multiedit and verbal_emacs for examples of this.
+
+The whole system can sound quite intimidating at first (much like Dragonfly) but it's not as bad as it sounds to use, I promise! Just take a look at the example grammars and vocabularies and you'll be writing your own in no time! (example grammars: https://github.com/dictation-toolbox/aenea-grammars)
+
+Documentation
+-------------
+
+The API and core are extensively documented via pydoc. I tried to provide a high level description of how it all fits together in this README, but for the latest/details, see the pydoc. aenea should import on Linux even though Dragonfly isn't there (necessary for running tests), so you should be able to browse/read the docs.
+
+Server Plugins
+--------------
+
+You can add custom RPCs to the server using the plugin system (using yapsy). Take a look at the example plugin and corresponding grammar for details.
+
 Writing Your Own Server
 ---------------------------
 
