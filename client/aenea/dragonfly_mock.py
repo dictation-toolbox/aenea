@@ -59,3 +59,11 @@ class Repetition(object):
 class Choice(object):
     def __init__(self, name, choices, extras=None, default=None):
         pass
+
+
+class AppContext(object):
+    def __init__(self, *a, **kw):
+        pass
+
+    def matches(self, *a, **kw):
+       return True
