@@ -34,6 +34,7 @@ TRANSLATE_KEYS = {
     'End': 'end',
     'BackSpace': 'backspace',
     'Delete': 'delete',
+    'quoteright': 'apostrophe',
 }
 
 # Keys that may be sent as part of a text string. Any key pressed that
