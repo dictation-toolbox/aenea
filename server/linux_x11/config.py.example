@@ -2,6 +2,8 @@
 HOST = "192.168.56.1"
 PORT = 8240
 
+PLUGIN_PATH = ["plugins"]
+
 # When using the Text action, grammars may request (the default is not to) to
 # input the text using the clipboard rather than emulating keypresses. This has
 # the advantage of allowing far more rapid entry of a large chunk of text, but

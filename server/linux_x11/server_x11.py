@@ -456,7 +456,7 @@ def setup_server(host, port):
         server.register_function(globals()[command])
     server.register_function(multiple_actions)
 
-    if yapsy is not None:
+    if yapsy is not None and hasattr(config, 'PLUGIN_PATH'):
         plugin_manager = yapsy.PluginManager.PluginManager()
         plugin_manager.setPluginPlaces(config.PLUGIN_PATH)
         plugin_manager.collectPlugins()
