@@ -27,7 +27,7 @@ import jsonrpclib.SimpleJSONRPCServer
 import config
 
 try:
-    import yapsi
+    import yapsy
     import yapsy.PluginManager
 except ImportError:
     if hasattr(config, 'PLUGIN_PATH') and config.PLUGIN_PATH is not None:
