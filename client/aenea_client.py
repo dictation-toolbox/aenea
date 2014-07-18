@@ -172,7 +172,8 @@ class AeneaClient(tk.Tk):
             if key in LITERAL_KEYS:
                 self.aenea_buffer.append(key)
             else:
-                self.to_send.append(aenea.ProxyText(''.join(self.aenea_buffer)))
+                if self.aenea_buffer:
+                    self.to_send.append(aenea.ProxyText(''.join(self.aenea_buffer)))
 
                 try:
                     self.to_send.append(aenea.ProxyKey(key))
