@@ -27,10 +27,11 @@ import jsonrpclib.SimpleJSONRPCServer
 import config
 
 try:
-    import yapsy
+    import yapsi
     import yapsy.PluginManager
 except ImportError:
-    print "Cannot import yapsy; server plugin functionality not available."
+    if hasattr(config, 'PLUGIN_PATH') and config.PLUGIN_PATH is not None:
+        print 'Cannot import yapsy; the optional server plugin support won\'t work. You don\'t need this unless you want to use plugins, which are not necessary for basic operation. To squelch this message, don\'t set a PLUGIN_PATH in config.py.'
     yapsy = None
 
 _MOUSE_BUTTONS = {
@@ -456,7 +457,9 @@ def setup_server(host, port):
         server.register_function(globals()[command])
     server.register_function(multiple_actions)
 
-    if yapsy is not None and hasattr(config, 'PLUGIN_PATH'):
+    if (yapsy is not None and
+       hasattr(config, 'PLUGIN_PATH') and
+       config.PLUGIN_PATH is not None):
         plugin_manager = yapsy.PluginManager.PluginManager()
         plugin_manager.setPluginPlaces(config.PLUGIN_PATH)
         plugin_manager.collectPlugins()
