@@ -34,6 +34,7 @@ TRANSLATE_KEYS = {
     'End': 'end',
     'BackSpace': 'backspace',
     'Delete': 'delete',
+    'quoteright': 'apostrophe',
 }
 
 # Keys that may be sent as part of a text string. Any key pressed that
@@ -172,7 +173,12 @@ class AeneaClient(tk.Tk):
                 self.aenea_buffer.append(key)
             else:
                 self.to_send.append(aenea.ProxyText(''.join(self.aenea_buffer)))
-                self.to_send.append(aenea.ProxyKey(key))
+
+                try:
+                    self.to_send.append(aenea.ProxyKey(key))
+                except Exception:
+                    self.log("Encountered a bad key: %s" % key)
+
                 self.aenea_buffer = []
             self.buffer_ready.notify()
 
