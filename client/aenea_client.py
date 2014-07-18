@@ -176,7 +176,7 @@ class AeneaClient(tk.Tk):
 
                 try:
                     self.to_send.append(aenea.ProxyKey(key))
-                except:
+                except Exception:
                     self.log("Encountered a bad key: %s" % key)
 
                 self.aenea_buffer = []
