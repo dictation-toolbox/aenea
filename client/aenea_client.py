@@ -33,7 +33,7 @@ TRANSLATE_KEYS = {
     'Prior': 'pgdown',
     'End': 'end',
     'BackSpace': 'backspace',
-    'Delete': 'delete',
+    'Delete': 'del',
     'quoteright': 'apostrophe',
 }
 
