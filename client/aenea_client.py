@@ -48,6 +48,10 @@ LITERAL_KEYS = ('abcdefghijklmnopqrstuvwxyz'
 # this cilent.
 IGNORED_KEYS = ('Shift_L', 'Control_L', 'Alt_L', '??')
 
+_config = aenea.configuration.ConfigWatcher(
+    'dictation_capture_state',
+    {'enabled': True})
+
 
 class AeneaClient(tk.Tk):
 
@@ -161,6 +165,10 @@ class AeneaClient(tk.Tk):
         pass
 
     def send_key(self, key):
+        _config.refresh()
+        if not _config.conf.get('enabled', True):
+            return
+
         if self.display_entered_text.get():
             self.tab1.text1.insert(tk.END, (key if key != 'space' else ' '))
             self.tab1.text1.see(tk.END)  # Scroll to end.
