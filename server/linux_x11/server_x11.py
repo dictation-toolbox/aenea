@@ -111,6 +111,7 @@ _KEY_TRANSLATION = {
     'colon': 'colon',
     'comma': 'comma',
     'del': 'Delete',
+    'delete': 'Delete',
     'dollar': 'dollar',
     'dot': 'period',
     'dquote': 'quotedbl',
