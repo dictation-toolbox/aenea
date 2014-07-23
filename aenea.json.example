@@ -5,5 +5,5 @@
     "use_multiple_actions": true,
     "screen_resolution": [6400, 1440],
     "project_root": "C:\\NatLink\\NatLink\\MacroSystem",
-    "restrict_proxy_to_aenea_client": true
+    "restrict_proxy_to_aenea_client": false
 }
