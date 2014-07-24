@@ -85,8 +85,9 @@ class ReloadGrammarsRule(dragonfly.CompoundRule):
         path = 'C:\\NatLink\\NatLink\\MacroSystem'
         for g in os.listdir(path):
             fn = os.path.join(path, g)
-            with open(fn, 'a') as fd:
-                fd.write(' ')
+            if os.path.isfile(fn):
+                with open(fn, 'a') as fd:
+                    fd.write(' ')
 
 
 server_list = dragonfly.DictList('aenea servers')
