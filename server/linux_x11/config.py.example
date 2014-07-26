@@ -29,3 +29,7 @@ PLUGIN_PATH = ["plugins"]
 # least enables users to configure it to work properly, this will become
 # workable.
 ENABLE_XSEL = False
+
+# xdotool delay.  Setting this value greater than zero may help solve some text
+# input issues.  Obviously this setting does not apply when ENABLE_XSEL = True.
+XDOTOOL_DELAY = 0

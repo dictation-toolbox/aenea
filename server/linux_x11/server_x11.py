@@ -336,8 +336,11 @@ def write_text(text, paste=False, _xdotool=None):
             run_command('-x', executable='xsel')
         else:
             flush_xdotool(_xdotool)
-            write_command(text, arguments='type --file - --delay 0')
 
+            write_command(
+                text,
+                arguments='type --file - --delay %d' % config.XDOTOOL_DELAY
+            )
 
 def click_mouse(
         button,
