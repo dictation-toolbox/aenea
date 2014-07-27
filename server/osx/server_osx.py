@@ -20,14 +20,17 @@
 import os
 import sys
 import time
+import re
 
 import jsonrpclib
 import jsonrpclib.SimpleJSONRPCServer
 
 import config
 
-# I initially thought to use cliclick (https://github.com/BlueM/cliclick) but found it didn't support the full range of function that xdotool does.  So to match xdotool, I'm using a combination of the python-applescript module as well as some of lower-level cocoa api's.
+# I initially thought to use cliclick (https://github.com/BlueM/cliclick) but found it didn't support the full range of function that xdotool does.  So to match xdotool, I'm using a combination of python-applescript, as well as some of lower-level cocoa api's through pyobjc.
 import applescript
+from Quartz.CoreGraphics import * 
+
 # http://apple.stackexchange.com/questions/36943/how-do-i-automate-a-key-press-in-applescript
 # http://en.wikibooks.org/wiki/AppleScript_Programming/System_Events
 # https://discussions.apple.com/message/17493621   # working mouse move and click
@@ -292,13 +295,28 @@ def write_command(message, arguments=' -f -', executable='???'):
 
 def get_active_window(_xdotool=None):
     '''Returns the window id and title of the active window.'''
-# http://stackoverflow.com/questions/5292204/macosx-get-foremost-window-title
-    flush_xdotool(_xdotool)
-    window_id = read_command('getactivewindow')
+    # http://stackoverflow.com/questions/5292204/macosx-get-foremost-window-title
+    script = applescript.AppleScript('''
+        global frontApp, frontAppName, windowTitle
+
+        set windowTitle to ""
+        tell application "System Events"
+            set frontApp to first application process whose frontmost is true
+            set frontAppName to name of frontApp
+            tell process frontAppName
+                tell (1st window whose value of attribute "AXMain" is true)
+                    set windowTitle to value of attribute "AXTitle"
+                end tell
+            end tell
+        end tell
+
+        return {frontAppName, windowTitle}
+    ''')
+    # window_id isn't really a unique id, instead it's just the app name -- but still
+    # useful for automating through applescript
+    window_id, window_title = script.run()
     if window_id:
-        window_id = int(window_id)
-        window_title = read_command('getwindowname %i' % window_id).strip()
-        return window_id, window_title
+        return str(window_id), str(window_title)
     else:
         return None, None
 
@@ -309,18 +327,34 @@ def get_active_window(_xdotool=None):
 # http://stackoverflow.com/questions/6836278/api-for-accessing-ui-elements-in-mac-os-x
 # http://stackoverflow.com/questions/21069066/move-other-windows-on-mac-os-x-using-accessibility-api
 
+def map_window_properties(properties):
+    p={}
+    for key in properties:
+        short_key = re.match(r".*\('(.*)'\).*", str(key)) # is there a better way to access keys that are instances?
+        p[str(short_key.group(1))] = str(properties[key])
+    return p
+
 def get_geometry(window_id=None, _xdotool=None):
-    flush_xdotool(_xdotool)
     if window_id is None:
         window_id, _ = get_active_window()
-    geometry = read_command('getwindowgeometry --shell %i' % window_id)
-    geometry = geometry.strip().split('\n')
-    geo = dict([val.lower()
-               for val in line.split('=')]
-               for line in geometry)
-    geo = dict((key, int(value)) for (key, value) in geo.iteritems())
-    relevant_keys = 'x', 'y', 'width', 'height', 'screen'
-    return dict((key, geo[key]) for key in relevant_keys)
+
+    cmd = '''tell application "System Events" to tell application process "%s"
+        try
+            get properties of window 1
+        on error errmess
+            log errmess
+        end try
+    end tell
+    ''' % window_id
+    script = applescript.AppleScript(cmd)
+    properties = script.run()
+
+    p = map_window_properties(properties)
+
+    # {'posn': [-4, 66], 'ptsz': [1049, 731], 'titl': u'~/natlink/aenea/server/osx/server_osx.py \u2014 aenea', 'focu': True, 'role': u'AXWindow', 'rold': u'standard window', 'pnam': u'~/natlink/aenea/server/osx/server_osx.py \u2014 aenea', 'desc': u'standard window', 'sbrl': u'AXStandardWindow'}
+    # relevant_keys = 'x', 'y', 'width', 'height', 'screen'
+
+    return { 'x': p['posn'][0], 'y': p['posn'][1], 'width': p['ptsz'][0], 'height': p['ptsz'][1]}  # what to do about screen?
 
 
 def transform_relative_mouse_event(event):
@@ -334,40 +368,30 @@ def get_context(_xdotool=None):
        window. it is fine to include platform specific information, but
        at least include title and executable.'''
 
-    flush_xdotool(_xdotool)
     window_id, window_title = get_active_window()
     if window_id is None:
         return {}
 
-    properties = {
-        'id': window_id,
-        'title': window_title,
-        }
-    for line in read_command('-id %s' % window_id, 'xprop').split('\n'):
-        split = line.split(' = ', 1)
-        if len(split) == 2:
-            rawkey, value = split
-            if split[0] in _XPROP_PROPERTIES:
-                property_value = value[1:-1] if '(STRING)' in rawkey else value
-                properties[_XPROP_PROPERTIES[rawkey]] = property_value
-            elif rawkey == 'WM_CLASS(STRING)':
-                window_class_name, window_class = value.split('", "')
-                properties['cls_name'] = window_class_name[1:]
-                properties['cls'] = window_class[:-1]
+    cmd = '''tell application "System Events" to tell application process "%s"
+        try
+            get properties of window 1
+        on error errmess
+            log errmess
+        end try
+    end tell
+    ''' % window_id
+    script     = applescript.AppleScript(cmd)
+    properties = {}
+    props      = script.run()
 
-    # Sigh...
-    properties['executable'] = None
-    try:
-        proc_command = '/proc/%s/exe' % properties['pid']
-        properties['executable'] = os.readlink(proc_command)
-    except OSError:
-        ps = read_command('%s' % properties['pid'], executable='ps')
-        ps = ps.split('\n')[1:]
-        if ps:
-            try:
-                properties['executable'] = ps[0].split()[4]
-            except Exception:
-                pass
+    properties          = map_window_properties(props)
+    properties['id']    = window_id
+    properties['title'] = window_title
+
+    print properties
+
+    # properties['executable'] = None
+    print "XXXXXXXXX"
 
     return properties
 
@@ -438,12 +462,6 @@ def key_press(
 
     script.run()
 
-    # if _xdotool is not None:
-    #     _xdotool.extend(keys)
-    # else:
-    #     run_command(delay + ' '.join(keys))
-
-
 def write_text(text, paste=False, _xdotool=None):
     '''send text formatted exactly as written to active window.  will use pbpaste clipboard to paste the text instead
        of typing it.'''
@@ -456,6 +474,46 @@ def write_text(text, paste=False, _xdotool=None):
         key_press('v', 'super')
 
 
+
+def mouseEvent(type, posx, posy, clickCount=1):
+    theEvent = CGEventCreateMouseEvent(None, type, (posx,posy), kCGMouseButtonLeft)
+    CGEventSetIntegerValueField(theEvent, kCGMouseEventClickState, clickCount)
+    CGEventPost(kCGHIDEventTap, theEvent)
+    CGEventSetType(theEvent, type)
+
+def mousemove(posx,posy):
+    # maybe look at or use https://github.com/joseph/osxautomation ?
+    mouseEvent(kCGEventMouseMoved, posx,posy);
+
+def trigger_mouseclick(button, direction, posx, posy, clickCount=1):
+    # button: number 1-5, direction {click, up, down}
+    click_mapping = {
+        1: [kCGEventLeftMouseDown, kCGEventLeftMouseUp],
+        2: [kCGEventOtherMouseDown, kCGEventOtherMouseUp],
+        3: [kCGEventRightMouseDown, kCGEventRightMouseUp]
+        }
+    # kCGEventMouseMoved
+    # kCGEventScrollWheel
+
+    if button == 4 or button == 5:
+        yScroll = -10 if button == 5 else 10 # wheeldown - negative, wheelup - positive
+        # theEvent = CGEventCreateScrollWheelEvent(None, kCGScrollEventUnitPixel, 1, yScroll)
+        theEvent = CGEventCreateScrollWheelEvent(None, kCGScrollEventUnitLine, 1, yScroll)
+
+        for _ in xrange(clickCount):
+            CGEventPost(kCGHIDEventTap, theEvent)
+    elif direction == 'click':
+        theEvent = CGEventCreateMouseEvent(None, click_mapping[button][0], (posx, posy), kCGMouseButtonLeft)
+        for _ in xrange(clickCount):
+            CGEventSetType(theEvent, click_mapping[button][0])
+            CGEventSetIntegerValueField(theEvent, kCGMouseEventClickState, clickCount)
+            CGEventPost(kCGHIDEventTap, theEvent)
+            CGEventSetType(theEvent, click_mapping[button][1])
+            CGEventPost(kCGHIDEventTap, theEvent)
+    # else: # up or down
+
+
+
 def click_mouse(
         button,
         direction='click',
@@ -463,31 +521,30 @@ def click_mouse(
         count_delay=None,
         _xdotool=None
         ):
-
     '''click the mouse button specified. button maybe one of 'right',
-       'left', 'middle', 'wheeldown', 'wheelup'. This X11 server will
-       also accept a number.'''
+       'left', 'middle', 'wheeldown', 'wheelup'.'''
 
+    print "button = "+button
     if count_delay is None or count < 2:
-        delay = ''
+        delay = 0
     else:
-        delay = '--delay %i ' % count_delay
-
-    repeat = '' if count == 1 else '--repeat %i' % count
+        delay = count_delay
 
     try:
         button = _MOUSE_BUTTONS[button]
     except KeyError:
         button = int(button)
 
-    command = ('%s %s %s %s' %
-              (_MOUSE_CLICKS[direction], delay, repeat, button))
+    print '_MOUSE_CLICKS[direction]' + _MOUSE_CLICKS[direction]
+    
+    ourEvent = CGEventCreate(None);
+    currentpos=CGEventGetLocation(ourEvent);  # Save current mouse position
+    trigger_mouseclick(button, _MOUSE_CLICKS[direction], int(currentpos.x),int(currentpos.y), count);
+    # if delay > 0 :
+    #     print "sleeping"
+    #     time.sleep(delay)
 
-    if _xdotool is not None:
-        _xdotool.append(command)
-    else:
-        run_command(command)
-
+    # CFRelease(ourEvent) # causes segfault - pyobjc manages the release count automatically
 
 def move_mouse(
         x,
@@ -507,25 +564,19 @@ def move_mouse(
     if proportional:
         x = geo['width'] * x
         y = geo['height'] * y
-    command = _MOUSE_MOVE_COMMANDS[reference]
-    if command == 'mousemove_active':
-        command = 'mousemove --window %i' % get_active_window()[0]
-    commands = ['%s %f %f' % (command, x, y)]
+
+    mousemove(x, y)
+
     if phantom is not None:
-        commands.append('click %s' % _MOUSE_BUTTONS[phantom])
-        commands.append('mousemove restore')
-    if _xdotool is not None:
-        _xdotool.extend(commands)
-    else:
-        run_command(' '.join(commands))
+        ourEvent = CGEventCreate(None);
+        currentpos=CGEventGetLocation(ourEvent);  # Save current mouse position
+        trigger_mouseclick(1, 'click', x, y, 1);
+
 
 
 def pause(amount, _xdotool=None):
     '''pause amount in ms.'''
-    if _xdotool is not None:
-        _xdotool.append('sleep %f' % (amount / 1000.))
-    else:
-        time.sleep(amount / 1000.)
+    time.sleep(amount / 1000.)
 
 
 def server_info(_xdotool=None):
@@ -534,6 +585,7 @@ def server_info(_xdotool=None):
 
 
 def flush_xdotool(actions):
+    return
     if actions:
         run_command(' '.join(actions))
         del actions[:]
