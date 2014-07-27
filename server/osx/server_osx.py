@@ -26,6 +26,17 @@ import jsonrpclib.SimpleJSONRPCServer
 
 import config
 
+# I initially thought to use cliclick (https://github.com/BlueM/cliclick) but found it didn't support the full range of function that xdotool does.  So to match xdotool, I'm using a combination of the python-applescript module as well as some of lower-level cocoa api's.
+import applescript
+# http://apple.stackexchange.com/questions/36943/how-do-i-automate-a-key-press-in-applescript
+# http://en.wikibooks.org/wiki/AppleScript_Programming/System_Events
+# https://discussions.apple.com/message/17493621   # working mouse move and click
+# http://apple.stackexchange.com/questions/74523/position-windows-via-command-line
+
+
+# set {width, height, scale} to words of (do shell script "system_profiler SPDisplaysDataType | awk '/Built-In: Yes/{found=1} /Resolution/{width=$2; height=$4} /Retina/{scale=($2 == \"Yes\" ? 2 : 1)} /^ {8}[^ ]+/{if(found) {exit}; scale=1} END{printf \"%d %d %d\\n\", width, height, scale}'")
+
+
 _MOUSE_BUTTONS = {
     'left': 1,
     'middle': 2,
@@ -58,9 +69,9 @@ _MOUSE_MOVE_COMMANDS = {
 
 _SERVER_INFO = {
     'window_manager': 'awesome',
-    'operating_system': 'linux',
-    'platform': 'linux',
-    'display': 'X11',
+    'operating_system': 'darwin',
+    'platform': 'darwin',
+    'display': 'cocoa',
     'server': 'aenea_reference',
     'server_version': 1
     }
@@ -78,105 +89,202 @@ _XPROP_PROPERTIES = {
 
 
 _MOD_TRANSLATION = {
-    'alt': 'Alt_L',
-    'shift': 'Shift_L',
-    'control': 'Control_L',
-    'super': 'Super_L',
-    'hyper': 'Hyper_L',
-    'meta': 'Meta_L',
-    'win': 'Super_L',
-    'flag': 'Super_L',
+    'alt': 'alt',
+    'shift': 'shift',
+    'control': 'control',
+    'super': 'command',
+    'hyper': 'command', # not sure how to map these others.  probably not important
+    'meta': 'command',
+    'win': 'command',
+    'flag': 'command'
+    }
+
+# The key maps are broken up into different sections because AppleScript has different semantics for keypress versus keycode
+
+# these are used via keystroke, and need quoting.
+_QUOTED_KEY_TRANSLATION =  {
+    'ampersand': '&',
+    'apostrophe': "'",
+    'asterisk': '*',
+    'at': '@',
+    'backslash': '\\',
+    'backtick': '`',
+    'bar': '-',
+    'caret': '^',
+    'colon': ':',
+    'comma': ',',
+    'dollar': '$',
+    'dot': '.',
+    'dquote': '"',
+    'equal': '=',
+    'exclamation': '!',
+    'hash': '#',
+    'hyphen': '-',
+    'langle': '<',
+    'lbrace': '[',
+    'lbracket': '{',
+    'lparen': '(',
+    'minus': '-',
+    'percent': '%',
+    'plus': '+',
+    'question': '?',
+    'rangle': '>',
+    'rbrace': '}',
+    'rbracket': ']',
+    'rparen': ')',
+    'semicolon': ';',
+    'slash': '/',
+    'space': ' ',
+    'squote': "'",
+    'tilde': '~',
+    'underscore': '_'
+    }
+
+_MODIFIER_KEY_DIRECT = {
+    # modifiers
+    'command': 'command',
+    'shift': 'shift',
+    'option': 'option',
+    'control': 'control',
+    'rightshift': 'rightshift',
+    'rightoption': 'rightoption',
+    'rightcontrol': 'rightcontrol',
+    'function': 'function'
+    }
+
+# from /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/Headers/Events.h
+# these need applescript "key code " and a number to operate
+_KEYCODE_TRANSLATION = {
+    # 'apps': 'Menu', ???
+    # 'win': 'Super_L',
+    'a': 0,
+    's': 1,
+    'd': 2,
+    'f': 3,
+    'h': 4,
+    'g': 5,
+    'z': 6,
+    'x': 7,
+    'c': 8,
+    'v': 9,
+    # 'ISO_Section': 10,
+    'b': 11,
+    'q': 12,
+    'w': 13,
+    'e': 14,
+    'r': 15,
+    'y': 16,
+    't': 17,
+    '1': 18,
+    '2': 19,
+    '3': 20,
+    '4': 21,
+    '6': 22,
+    '5': 23,
+    'equal': 24,
+    '9': 25,
+    '7': 26,
+    'minus': 27,
+    '8': 28,
+    '0': 29,
+    'rbracket': 30, # rightbracket
+    'o': 31,
+    'u': 32,
+    'lbracket': 33, # leftbracket
+    'i': 34,
+    'p': 35,
+    'enter': 36, # return
+    'l': 37,
+    'j': 38,
+    'quote': 39,
+    'k': 40,
+    'semicolon': 41,
+    'backslash': 42,
+    'comma': 43,
+    'slash': 44,
+    'n': 45,
+    'm': 46,
+    'period': 47,
+    'tab': 48,
+    'space': 49,
+    'grave': 50,
+    'backspace': 51, # delete
+    'escape': 53,
+    'capslock': 57,
+
+    'f17': 64,
+    'npdecimal': 65,
+    'npmultiply': 67,
+    'npplus': 69,
+    'npclear': 71,
+    'volumeup': 72,
+    'volumedown': 73,
+    'mute': 74,
+    'npdivide': 75,
+    'npenter': 76,
+    'npminus': 78,
+    'f18': 79,
+    'f19': 80,
+    'keypadequals': 81,
+    'np0': 82, #  np = numberpad
+    'np1': 83,
+    'np2': 84,
+    'np3': 85,
+    'np4': 86,
+    'np5': 87,
+    'np6': 88,
+    'np7': 89,
+    'f20': 90,
+    'np8': 91,
+    'np9': 92,
+    'jis_yen': 93,
+    'jis_underscore': 94,
+    'jis_keypadcomma': 95,
+    'f5': 96,
+    'f6': 97,
+    'f7': 98,
+    'f3': 99,
+    'f8': 100,
+    'f9': 101,
+    'jis_eisu': 102,
+    'f11': 103,
+    'jis_kana': 104,
+    'f13': 105,
+    'f16': 106,
+    'f14': 107,
+    'f10': 109,
+    'f12': 111,
+    'f15': 113,
+    'help': 114,
+    'home': 115,
+    'pgup': 116, # pageup
+    'del': 117, # forwarddelete
+    'f4': 118,
+    'end': 119,
+    'f2': 120,
+    'pgdown': 121, # pagedown
+    'f1': 122,
+    'left': 123, # leftarrow
+    'right': 124, # rightarrow
+    'down': 125, # downarrow
+    'up': 126 # uparrow
     }
 
 
-_KEY_TRANSLATION = {
-    'ampersand': 'ampersand',
-    'apostrophe': 'apostrophe',
-    'apps': 'Menu',
-    'asterisk': 'asterisk',
-    'at': 'at',
-    'backslash': 'backslash',
-    'backspace': 'BackSpace',
-    'backtick': 'grave',
-    'bar': 'bar',
-    'caret': 'asciicircum',
-    'colon': 'colon',
-    'comma': 'comma',
-    'del': 'Delete',
-    'dollar': 'dollar',
-    'dot': 'period',
-    'dquote': 'quotedbl',
-    'enter': 'Return',
-    'equal': 'equal',
-    'exclamation': 'exclam',
-    'hash': 'numbersign',
-    'hyphen': 'minus',
-    'langle': 'less',
-    'lbrace': 'braceleft',
-    'lbracket': 'bracketleft',
-    'lparen': 'parenleft',
-    'minus': 'minus',
-    'npadd': 'KP_Add',
-    'npdec': 'KP_Decimal',
-    'npdiv': 'KP_Divide',
-    'npmul': 'KP_Multiply',
-    'percent': 'percent',
-    'pgdown': 'Next',
-    'pgup': 'Prior',
-    'plus': 'plus',
-    'question': 'question',
-    'rangle': 'greater',
-    'rbrace': 'braceright',
-    'rbracket': 'bracketright',
-    'rparen': 'parenright',
-    'semicolon': 'semicolon',
-    'shift': 'Shift_L',
-    'slash': 'slash',
-    'space': 'space',
-    'squote': 'apostrophe',
-    'tilde': 'asciitilde',
-    'underscore': 'underscore',
-    'win': 'Super_L',
-    }
-
-
-def update_key_translation(translation):
-    caps_keys = [
-        'left',
-        'right',
-        'up',
-        'down',
-        'home',
-        'end',
-        'tab',
-        'insert',
-        'escape'
-        ]
-    caps_keys.extend('f%i' % i for i in xrange(1, 13))
-    for key in caps_keys:
-        translation[key] = key[0].upper() + key[1:]
-    for index in xrange(10):
-        translation['np%i' % index] = 'KP_%i' % index
-    for c in range(ord('a'), ord('z')) + range(ord('0'), ord('9')):
-        translation[chr(c)] = chr(c)
-        translation[chr(c).upper()] = chr(c).upper()
-update_key_translation(_KEY_TRANSLATION)
-
-
-def run_command(command, executable='xdotool'):
+def run_command(command, executable='???'):
     command_string = '%s %s' % (executable, command)
     print command_string
     os.system(command_string)
 
 
-def read_command(command, executable='xdotool'):
+def read_command(command, executable='???'):
     print '%s %s | <server>' % (executable, command)
     with os.popen('%s %s' % (executable, command), 'r') as fd:
         rval = fd.read()
     return rval
 
 
-def write_command(message, arguments='type --file -', executable='xdotool'):
+def write_command(message, arguments=' -f -', executable='???'):
     print 'echo \'%s\' | %s %s' % (message, executable, arguments)
     with os.popen('%s %s' % (executable, arguments), 'w') as fd:
         fd.write(message)
@@ -184,7 +292,7 @@ def write_command(message, arguments='type --file -', executable='xdotool'):
 
 def get_active_window(_xdotool=None):
     '''Returns the window id and title of the active window.'''
-
+# http://stackoverflow.com/questions/5292204/macosx-get-foremost-window-title
     flush_xdotool(_xdotool)
     window_id = read_command('getactivewindow')
     if window_id:
@@ -194,6 +302,12 @@ def get_active_window(_xdotool=None):
     else:
         return None, None
 
+#http://stackoverflow.com/questions/3039717/how-to-get-another-application-windows-title-position-and-size-in-mac-os-witho
+# https://developer.apple.com/library/mac/samplecode/SonOfGrab/Introduction/Intro.html
+# http://stackoverflow.com/questions/6164164/resizing-windows-of-unscriptable-applications-in-applescript  # get the window id?
+# https://developer.apple.com/library/mac/documentation/Accessibility/Conceptual/AccessibilityMacOSX/OSXAXModel/OSXAXmodel.html
+# http://stackoverflow.com/questions/6836278/api-for-accessing-ui-elements-in-mac-os-x
+# http://stackoverflow.com/questions/21069066/move-other-windows-on-mac-os-x-using-accessibility-api
 
 def get_geometry(window_id=None, _xdotool=None):
     flush_xdotool(_xdotool)
@@ -257,7 +371,6 @@ def get_context(_xdotool=None):
 
     return properties
 
-
 def key_press(
     key,
         modifiers=(),
@@ -272,55 +385,75 @@ def key_press(
        'meta', and 'flag' (same as super). count is number of times to
        press it. count_delay delay in ms between presses.'''
 
+    print "\nkey = {key} modifiers = {modifiers} direction = {direction} count = {count} count_delay = {count_delay} ".format(modifiers=modifiers, direction = direction, count=count, count_delay = count_delay, key=key)
+    
     if count_delay is None or count < 2:
         delay = ''
     else:
-        delay = '--delay %i ' % count_delay
+        delay = 'delay %i ' % (count_delay / 1000.0)
+
+    if modifiers and hasattr(modifiers, 'lower'):
+        modifiers = [modifiers]
 
     modifiers = [_MOD_TRANSLATION.get(mod, mod) for mod in modifiers]
-    key_to_press = _KEY_TRANSLATION.get(key, key)
+    print "modifiers = %s" % modifiers
 
-    keys = ['keydown ' + k for k in modifiers]
-    keys.extend(['key%s %s' % (_KEY_PRESSES[direction], key_to_press)] * count)
-    keys.extend('keyup ' + k for k in reversed(modifiers))
+    key_to_press = _MODIFIER_KEY_DIRECT.get(key.lower(), None)
+    if key_to_press:
+        if direction == 'down' or direction == 'up':
+            command = '{key_to_press} key {direction}'.format(key_to_press=key_to_press, direction=direction)
 
-    if _xdotool is not None:
-        _xdotool.extend(keys)
+    if not key_to_press:
+        key_to_press = _QUOTED_KEY_TRANSLATION.get(key.lower(), None)
+        if key_to_press:
+            command = 'keystroke "{0}"'.format(key_to_press)
+        elif not key_to_press:
+            key_to_press = _KEYCODE_TRANSLATION.get(key.lower(), None)
+            command = 'key code "{0}"'.format(key_to_press)
+
+
+    if key_to_press == None:
+        raise RuntimeError("Don't know how to handle keystroke {0}".format(key))
+
+    if modifiers:
+        elems = map(lambda s: "%s down" % s, modifiers)
+        key_command = "%s using {%s} " % (command, ', '.join(elems))
     else:
-        run_command(delay + ' '.join(keys))
+        key_command = command
+
+    print "XXX command = "+command+'  key_command = '+key_command
+
+    script = applescript.AppleScript('''
+    tell application "System Events"
+        try
+            repeat {count} times
+                {key_command}
+                {delay}
+            end repeat
+        on error
+            key up {{control, shift, option, command}}
+        end try
+    end tell
+    '''.format(key_command=key_command, count=count, delay=delay))
+
+    script.run()
+
+    # if _xdotool is not None:
+    #     _xdotool.extend(keys)
+    # else:
+    #     run_command(delay + ' '.join(keys))
 
 
 def write_text(text, paste=False, _xdotool=None):
-    '''send text formatted exactly as written to active window. If paste
-       is True, will use X11 PRIMARY clipboard to paste the text instead
-       of typing it. See config.ENABLE_XSEL documentation for more
-       information on this.'''
-
-    # Workaround for https://github.com/jordansissel/xdotool/pull/29
+    '''send text formatted exactly as written to active window.  will use pbpaste clipboard to paste the text instead
+       of typing it.'''
+    # TODO: use pbcopy and pbpaste?
+    print "text = %s paste = %s" % (text, paste)
     if text:
-        if paste and config.ENABLE_XSEL:
-            # swap primary and secondary X11 clipboards so we can
-            # restore after paste
-            run_command('-x', executable='xsel')
-
-            # copy the pasted text to the clipboard
-            write_command(text, arguments='-i', executable='xsel')
-
-            # paste by simulating midde click
-            # TODO: can we do this even in programs that don't have a
-            #     middle click?
-            #     if not, we may need a blacklist of buggy programs.
-            click_mouse(2, _xdotool=_xdotool)
-            flush_xdotool(_xdotool)
-
-            # nuke the text we selected
-            run_command('-c', executable='xsel')
-
-            # restore the previous clipboard contents
-            run_command('-x', executable='xsel')
-        else:
-            flush_xdotool(_xdotool)
-            write_command(text, arguments='type --file - --delay 0')
+        # copy the pasted text to the clipboard
+        write_command(text, arguments='', executable='pbcopy')
+        # paste
+        key_press('v', 'super')
 
 
 def click_mouse(
