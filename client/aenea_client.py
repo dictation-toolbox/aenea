@@ -194,6 +194,36 @@ class AeneaClient(tk.Tk):
     def clear_text(self):
         self.tab1.text1.delete('1.0', tk.END)
 
+    def action_reducer(self, accumulator, element):
+        compare = None if accumulator is None else accumulator[-1]
+
+        if compare is None:
+            return [element]
+
+        elif isinstance(compare, aenea.ProxyKey) and isinstance(element, aenea.ProxyKey):
+            # If they're the same key press, we can reduce to a single press with a count modifier.
+            if compare._spec == element._spec:
+                return accumulator[0:-1] + [aenea.ProxyKey(compare._spec + ":2")]
+            else:
+                parts = compare._spec.split(':')
+
+                # If they're logically the same key press, but the count is different, we reduce to a single press
+                # with an incremented count..
+                if len(parts) == 2 and parts[0] == element._spec:
+                    return accumulator[0:-1] + [aenea.ProxyKey(parts[0] + ":" + str(int(parts[-1]) + 1))]
+
+                # Otherwise, if they're completely different key presses there's no reduction we can perform.
+                else:
+                    return accumulator + [element]
+
+        # If they're both blobs of text, we can reduce to a single text entry of the combined text fields.
+        elif isinstance(compare, aenea.ProxyText) and isinstance(element, aenea.ProxyText):
+            return accumulator[0:-1] + [aenea.ProxyText(compare._spec + element._spec)]
+
+        # There's no way to reduce a key press onto a text entry and vice versa.
+        else:
+            return accumulator + [element]
+
     def worker_thread(self):
         while 1:
             with self.buffer_lock:
@@ -212,7 +242,8 @@ class AeneaClient(tk.Tk):
                 todo, self.to_send = self.to_send, []
 
             if todo:
-                for action in todo:
+                actions = reduce(self.action_reducer, todo, None)
+                for action in actions:
                     action.execute()
 
 if __name__ == '__main__':
