@@ -25,6 +25,9 @@ import jsonrpclib
 import jsonrpclib.SimpleJSONRPCServer
 
 import config
+if not hasattr(config, 'XDOTOOL_DELAY'):
+    setattr(config, 'XDOTOOL_DELAY', 0)
+
 
 try:
     import yapsy
