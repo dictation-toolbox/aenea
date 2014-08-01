@@ -26,6 +26,9 @@ import jsonrpclib
 import jsonrpclib.SimpleJSONRPCServer
 
 import config
+import logging
+
+# logging.basicConfig(level=logging.DEBUG)
 
 # I initially thought to use cliclick (https://github.com/BlueM/cliclick) but found it didn't support the full range of function that xdotool does.  So to match xdotool, I'm using a combination of python-applescript, as well as some of lower-level cocoa api's through pyobjc.
 import applescript
@@ -388,10 +391,9 @@ def get_context(_xdotool=None):
     properties['id']    = window_id
     properties['title'] = window_title
 
-    print properties
+    logging.debug(properties)
 
     # properties['executable'] = None
-    print "XXXXXXXXX"
 
     return properties
 
@@ -409,7 +411,7 @@ def key_press(
        'meta', and 'flag' (same as super). count is number of times to
        press it. count_delay delay in ms between presses.'''
 
-    print "\nkey = {key} modifiers = {modifiers} direction = {direction} count = {count} count_delay = {count_delay} ".format(modifiers=modifiers, direction = direction, count=count, count_delay = count_delay, key=key)
+    logging.debug("\nkey = {key} modifiers = {modifiers} direction = {direction} count = {count} count_delay = {count_delay} ".format(modifiers=modifiers, direction = direction, count=count, count_delay = count_delay, key=key))
     
     if count_delay is None or count < 2:
         delay = ''
@@ -420,7 +422,7 @@ def key_press(
         modifiers = [modifiers]
 
     modifiers = [_MOD_TRANSLATION.get(mod, mod) for mod in modifiers]
-    print "modifiers = %s" % modifiers
+    logging.debug("modifiers = %s" % modifiers)
 
     key_to_press = _MODIFIER_KEY_DIRECT.get(key.lower(), None)
     if key_to_press:
@@ -445,8 +447,6 @@ def key_press(
     else:
         key_command = command
 
-    print "XXX command = "+command+'  key_command = '+key_command
-
     script = applescript.AppleScript('''
     tell application "System Events"
         try
@@ -465,14 +465,13 @@ def key_press(
 def write_text(text, paste=False, _xdotool=None):
     '''send text formatted exactly as written to active window.  will use pbpaste clipboard to paste the text instead
        of typing it.'''
-    # TODO: use pbcopy and pbpaste?
-    print "text = %s paste = %s" % (text, paste)
+
+    logging.debug("text = %s paste = %s" % (text, paste))
     if text:
         # copy the pasted text to the clipboard
         write_command(text, arguments='', executable='pbcopy')
         # paste
         key_press('v', 'super')
-
 
 
 def mouseEvent(type, posx, posy, clickCount=1):
@@ -524,7 +523,7 @@ def click_mouse(
     '''click the mouse button specified. button maybe one of 'right',
        'left', 'middle', 'wheeldown', 'wheelup'.'''
 
-    print "button = "+button
+    logging.debug("button = "+button)
     if count_delay is None or count < 2:
         delay = 0
     else:
@@ -535,7 +534,7 @@ def click_mouse(
     except KeyError:
         button = int(button)
 
-    print '_MOUSE_CLICKS[direction]' + _MOUSE_CLICKS[direction]
+    logging.debug('_MOUSE_CLICKS[direction]' + _MOUSE_CLICKS[direction])
     
     ourEvent = CGEventCreate(None);
     currentpos=CGEventGetLocation(ourEvent);  # Save current mouse position
