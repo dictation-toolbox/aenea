@@ -79,7 +79,10 @@ class ProxyBuffer(object):
                 self.text_buffer.append(key)
             else:
                 self.flush_text_buffer()
-                self.key_buffer.append(key)
+                if self.key_buffer and self.key_buffer[-1][0] == key:
+                    self.key_buffer[-1] = (key, self.key_buffer[-1][1] + 1)
+                else:
+                    self.key_buffer.append((key, 1))
             self.buffer_ready.notify()
 
     # Requires buffer_lock
@@ -92,9 +95,12 @@ class ProxyBuffer(object):
     def flush_key_buffer(self):
         if self.key_buffer:
             try:
-                self.to_send.append(aenea.ProxyKey(','.join(self.key_buffer)))
+                spec = []
+                for (key, count) in self.key_buffer:
+                    spec.append('%s:%i' % (key, count))
+                self.to_send.append(aenea.ProxyKey(','.join(spec)))
             except Exception:
-                self.log("Encountered a bad key: %s" % str(self.key_buffer))
+                self.log("Encountered a bad key: %s" % spec)
             self.key_buffer = []
 
     def worker_thread(self):
