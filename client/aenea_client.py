@@ -94,7 +94,7 @@ class ProxyBuffer(object):
             try:
                 self.to_send.append(aenea.ProxyKey(','.join(self.key_buffer)))
             except Exception:
-                self.log("Encountered a bad key: %s" % key)
+                self.log("Encountered a bad key: %s" % str(self.key_buffer))
             self.key_buffer = []
 
     def worker_thread(self):
