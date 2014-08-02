@@ -53,19 +53,79 @@ _config = aenea.configuration.ConfigWatcher(
     {'enabled': True})
 
 
-class AeneaClient(tk.Tk):
-
-    def __init__(self):
-        tk.Tk.__init__(self)
-        self.aenea_buffer = []
+class ProxyBuffer(object):
+    def __init__(self, log=lambda msg: None):
+        self.log = log
+        self.text_buffer = []
+        self.key_buffer = []
         self.buffer_lock = threading.Lock()
         self.buffer_ready = threading.Condition(self.buffer_lock)
         self.to_send = []
         self.aenea_worker_active = False
+        self.sending = False
+        threading.Thread(target=self.worker_thread).start()
+
+    def start_capture(self):
+        with self.buffer_lock:
+            while self.sending:
+                self.buffer_ready.wait()
+            aenea.ProxyKey('Control_R').execute()
+
+    def send_key(self, key):
+        with self.buffer_lock:
+            assert not self.text_buffer or not self.key_buffer
+            if key in LITERAL_KEYS:
+                self.flush_key_buffer()
+                self.text_buffer.append(key)
+            else:
+                self.flush_text_buffer()
+                self.key_buffer.append(key)
+            self.buffer_ready.notify()
+
+    # Requires buffer_lock
+    def flush_text_buffer(self):
+        if self.text_buffer:
+            self.to_send.append(aenea.ProxyText(''.join(self.text_buffer)))
+            self.text_buffer = []
+
+    # Requires buffer_lock
+    def flush_key_buffer(self):
+        if self.key_buffer:
+            try:
+                self.to_send.append(aenea.ProxyKey(','.join(self.key_buffer)))
+            except Exception:
+                self.log("Encountered a bad key: %s" % key)
+            self.key_buffer = []
+
+    def worker_thread(self):
+        while 1:
+            with self.buffer_lock:
+
+                # Wait until we have something to send.
+                while not (self.text_buffer or self.key_buffer or self.to_send):
+                    assert not self.text_buffer or not self.key_buffer
+                    self.sending = False
+                    self.buffer_ready.wait()
+                    self.sending = True
+
+                assert not self.text_buffer or not self.key_buffer
+                self.flush_text_buffer()
+                self.flush_key_buffer()
+
+                todo, self.to_send = self.to_send, []
+
+            if todo:
+                for action in todo:
+                    action.execute()
+
+
+class AeneaClient(tk.Tk):
+
+    def __init__(self):
+        tk.Tk.__init__(self)
         self.wm_title('Aenea client - Dictation capturing')
         self.geometry('400x600+400+0')
         self.wait_visibility(self)
-        self.sending = False
         note = ttk.Notebook(self)
         self.tab1 = tk.Frame(note)
         self.tab2 = tk.Frame(note)
@@ -137,7 +197,7 @@ class AeneaClient(tk.Tk):
         note.add(self.tab2, text='Configuration')
         note.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.YES)
 
-        threading.Thread(target=self.worker_thread).start()
+        self.proxy_buffer = ProxyBuffer(log=self.log)
 
     def log(self, message):
         timeStamp = datetime.datetime.now()
@@ -146,10 +206,7 @@ class AeneaClient(tk.Tk):
 
     def start_capture(self):
         # Release VirtualBox keyboard capture.
-        with self.buffer_lock:
-            while self.sending:
-                self.buffer_ready.wait()
-            aenea.ProxyKey('Control_R').execute()
+        self.proxy_buffer.start_capture()
         self.log('Starting capture')
         self.bind('<Any KeyPress>', lambda event: self.send_key(event.keysym))
         self.button1.config(state=tk.DISABLED)
@@ -174,46 +231,10 @@ class AeneaClient(tk.Tk):
             self.tab1.text1.see(tk.END)  # Scroll to end.
         if key in IGNORED_KEYS:
             return
-        key = TRANSLATE_KEYS.get(key, key)
-
-        with self.buffer_lock:
-            if key in LITERAL_KEYS:
-                self.aenea_buffer.append(key)
-            else:
-                if self.aenea_buffer:
-                    self.to_send.append(aenea.ProxyText(''.join(self.aenea_buffer)))
-
-                try:
-                    self.to_send.append(aenea.ProxyKey(key))
-                except Exception:
-                    self.log("Encountered a bad key: %s" % key)
-
-                self.aenea_buffer = []
-            self.buffer_ready.notify()
+        self.proxy_buffer.send_key(TRANSLATE_KEYS.get(key, key))
 
     def clear_text(self):
         self.tab1.text1.delete('1.0', tk.END)
-
-    def worker_thread(self):
-        while 1:
-            with self.buffer_lock:
-                # Wait until buffer is non-empty.
-                while not self.aenea_buffer and not self.to_send:
-                    self.sending = False
-                    self.buffer_ready.wait()
-                    self.sending = True
-
-                # Add buffered text and flush buffer
-                if self.aenea_buffer:
-                    self.to_send.append(
-                        aenea.ProxyText(''.join(self.aenea_buffer)))
-                    self.aenea_buffer = []
-
-                todo, self.to_send = self.to_send, []
-
-            if todo:
-                for action in todo:
-                    action.execute()
 
 if __name__ == '__main__':
     root = AeneaClient()
