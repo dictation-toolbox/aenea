@@ -30,18 +30,8 @@ import logging
 
 # logging.basicConfig(level=logging.DEBUG)
 
-# I initially thought to use cliclick (https://github.com/BlueM/cliclick) but found it didn't support the full range of function that xdotool does.  So to match xdotool, I'm using a combination of python-applescript, as well as some of lower-level cocoa api's through pyobjc.
 import applescript
-from Quartz.CoreGraphics import * 
-
-# http://apple.stackexchange.com/questions/36943/how-do-i-automate-a-key-press-in-applescript
-# http://en.wikibooks.org/wiki/AppleScript_Programming/System_Events
-# https://discussions.apple.com/message/17493621   # working mouse move and click
-# http://apple.stackexchange.com/questions/74523/position-windows-via-command-line
-
-
-# set {width, height, scale} to words of (do shell script "system_profiler SPDisplaysDataType | awk '/Built-In: Yes/{found=1} /Resolution/{width=$2; height=$4} /Retina/{scale=($2 == \"Yes\" ? 2 : 1)} /^ {8}[^ ]+/{if(found) {exit}; scale=1} END{printf \"%d %d %d\\n\", width, height, scale}'")
-
+from Quartz.CoreGraphics import *
 
 _MOUSE_BUTTONS = {
     'left': 1,
@@ -74,7 +64,7 @@ _MOUSE_MOVE_COMMANDS = {
 
 
 _SERVER_INFO = {
-    'window_manager': 'awesome',
+    'window_manager': 'osx',
     'operating_system': 'darwin',
     'platform': 'darwin',
     'display': 'cocoa',
@@ -83,32 +73,19 @@ _SERVER_INFO = {
     }
 
 
-_XPROP_PROPERTIES = {
-    '_NET_WM_DESKTOP(CARDINAL)': 'desktop',
-    'WM_WINDOW_ROLE(STRING)': 'role',
-    '_NET_WM_WINDOW_TYPE(ATOM)': 'type',
-    '_NET_WM_PID(CARDINAL)': 'pid',
-    'WM_LOCALE_NAME(STRING)': 'locale',
-    'WM_CLIENT_MACHINE(STRING)': 'client_machine',
-    'WM_NAME(STRING)': 'name'
-    }
-
-
 _MOD_TRANSLATION = {
     'alt': 'alt',
     'shift': 'shift',
     'control': 'control',
     'super': 'command',
-    'hyper': 'command', # not sure how to map these others.  probably not important
-    'meta': 'command',
-    'win': 'command',
-    'flag': 'command'
+    'command': 'command'
     }
 
-# The key maps are broken up into different sections because AppleScript has different semantics for keypress versus keycode
+# The key maps are broken up into different sections because AppleScript has
+# different semantics for keypress versus keycode
 
 # these are used via keystroke, and need quoting.
-_QUOTED_KEY_TRANSLATION =  {
+_QUOTED_KEY_TRANSLATION = {
     'ampersand': '&',
     'apostrophe': "'",
     'asterisk': '*',
@@ -158,11 +135,11 @@ _MODIFIER_KEY_DIRECT = {
     'function': 'function'
     }
 
-# from /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/Headers/Events.h
+# from /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/ \
+# HIToolbox.framework/Versions/A/Headers/Events.h
 # these need applescript "key code " and a number to operate
 _KEYCODE_TRANSLATION = {
     # 'apps': 'Menu', ???
-    # 'win': 'Super_L',
     'a': 0,
     's': 1,
     'd': 2,
@@ -173,7 +150,6 @@ _KEYCODE_TRANSLATION = {
     'x': 7,
     'c': 8,
     'v': 9,
-    # 'ISO_Section': 10,
     'b': 11,
     'q': 12,
     'w': 13,
@@ -193,13 +169,13 @@ _KEYCODE_TRANSLATION = {
     'minus': 27,
     '8': 28,
     '0': 29,
-    'rbracket': 30, # rightbracket
+    'rbracket': 30,  # rightbracket
     'o': 31,
     'u': 32,
-    'lbracket': 33, # leftbracket
+    'lbracket': 33,  # leftbracket
     'i': 34,
     'p': 35,
-    'enter': 36, # return
+    'enter': 36,  # return
     'l': 37,
     'j': 38,
     'quote': 39,
@@ -214,7 +190,7 @@ _KEYCODE_TRANSLATION = {
     'tab': 48,
     'space': 49,
     'grave': 50,
-    'backspace': 51, # delete
+    'backspace': 51,  # delete
     'escape': 53,
     'capslock': 57,
 
@@ -232,7 +208,7 @@ _KEYCODE_TRANSLATION = {
     'f18': 79,
     'f19': 80,
     'keypadequals': 81,
-    'np0': 82, #  np = numberpad
+    'np0': 82,  # np = numberpad
     'np1': 83,
     'np2': 84,
     'np3': 85,
@@ -263,31 +239,18 @@ _KEYCODE_TRANSLATION = {
     'f15': 113,
     'help': 114,
     'home': 115,
-    'pgup': 116, # pageup
-    'del': 117, # forwarddelete
+    'pgup': 116,  # pageup
+    'del': 117,  # forwarddelete
     'f4': 118,
     'end': 119,
     'f2': 120,
-    'pgdown': 121, # pagedown
+    'pgdown': 121,  # pagedown
     'f1': 122,
-    'left': 123, # leftarrow
-    'right': 124, # rightarrow
-    'down': 125, # downarrow
-    'up': 126 # uparrow
+    'left': 123,  # leftarrow
+    'right': 124,  # rightarrow
+    'down': 125,  # downarrow
+    'up': 126  # uparrow
     }
-
-
-def run_command(command, executable='???'):
-    command_string = '%s %s' % (executable, command)
-    print command_string
-    os.system(command_string)
-
-
-def read_command(command, executable='???'):
-    print '%s %s | <server>' % (executable, command)
-    with os.popen('%s %s' % (executable, command), 'r') as fd:
-        rval = fd.read()
-    return rval
 
 
 def write_command(message, arguments=' -f -', executable='???'):
@@ -296,9 +259,9 @@ def write_command(message, arguments=' -f -', executable='???'):
         fd.write(message)
 
 
-def get_active_window(_xdotool=None):
+def get_active_window():
     '''Returns the window id and title of the active window.'''
-    # http://stackoverflow.com/questions/5292204/macosx-get-foremost-window-title
+
     script = applescript.AppleScript('''
         global frontApp, frontAppName, windowTitle
 
@@ -315,29 +278,25 @@ def get_active_window(_xdotool=None):
 
         return {frontAppName, windowTitle}
     ''')
-    # window_id isn't really a unique id, instead it's just the app name -- but still
-    # useful for automating through applescript
+    # window_id isn't really a unique id, instead it's just the app name -- but
+    # still useful for automating through applescript
     window_id, window_title = script.run()
     if window_id:
         return str(window_id), str(window_title)
     else:
         return None, None
 
-#http://stackoverflow.com/questions/3039717/how-to-get-another-application-windows-title-position-and-size-in-mac-os-witho
-# https://developer.apple.com/library/mac/samplecode/SonOfGrab/Introduction/Intro.html
-# http://stackoverflow.com/questions/6164164/resizing-windows-of-unscriptable-applications-in-applescript  # get the window id?
-# https://developer.apple.com/library/mac/documentation/Accessibility/Conceptual/AccessibilityMacOSX/OSXAXModel/OSXAXmodel.html
-# http://stackoverflow.com/questions/6836278/api-for-accessing-ui-elements-in-mac-os-x
-# http://stackoverflow.com/questions/21069066/move-other-windows-on-mac-os-x-using-accessibility-api
 
 def map_window_properties(properties):
-    p={}
+    p = {}
     for key in properties:
-        short_key = re.match(r".*\('(.*)'\).*", str(key)) # is there a better way to access keys that are instances?
+        short_key = re.match(r".*\('(.*)'\).*", str(key))  # is there a better
+        # way to access keys that are instances?
         p[str(short_key.group(1))] = str(properties[key])
     return p
 
-def get_geometry(window_id=None, _xdotool=None):
+
+def get_geometry(window_id=None):
     if window_id is None:
         window_id, _ = get_active_window()
 
@@ -354,10 +313,10 @@ def get_geometry(window_id=None, _xdotool=None):
 
     p = map_window_properties(properties)
 
-    # {'posn': [-4, 66], 'ptsz': [1049, 731], 'titl': u'~/natlink/aenea/server/osx/server_osx.py \u2014 aenea', 'focu': True, 'role': u'AXWindow', 'rold': u'standard window', 'pnam': u'~/natlink/aenea/server/osx/server_osx.py \u2014 aenea', 'desc': u'standard window', 'sbrl': u'AXStandardWindow'}
-    # relevant_keys = 'x', 'y', 'width', 'height', 'screen'
-
-    return { 'x': p['posn'][0], 'y': p['posn'][1], 'width': p['ptsz'][0], 'height': p['ptsz'][1]}  # what to do about screen?
+    return {'x': p['posn'][0],
+            'y': p['posn'][1],
+            'width': p['ptsz'][0],
+            'height': p['ptsz'][1]}  # what to do about screen?
 
 
 def transform_relative_mouse_event(event):
@@ -366,7 +325,7 @@ def transform_relative_mouse_event(event):
     return [('mousemove', '%i %i' % (geo['x'] + dx, geo['y'] + dy))]
 
 
-def get_context(_xdotool=None):
+def get_context():
     '''return a dictionary of window properties for the currently active
        window. it is fine to include platform specific information, but
        at least include title and executable.'''
@@ -383,27 +342,25 @@ def get_context(_xdotool=None):
         end try
     end tell
     ''' % window_id
-    script     = applescript.AppleScript(cmd)
+    script = applescript.AppleScript(cmd)
     properties = {}
-    props      = script.run()
+    props = script.run()
 
-    properties          = map_window_properties(props)
-    properties['id']    = window_id
+    properties = map_window_properties(props)
+    properties['id'] = window_id
     properties['title'] = window_title
 
     logging.debug(properties)
 
-    # properties['executable'] = None
-
     return properties
+
 
 def key_press(
     key,
         modifiers=(),
         direction='press',
         count=1,
-        count_delay=None,
-        _xdotool=None
+        count_delay=None
         ):
     '''press a key possibly modified by modifiers. direction may be
        'press', 'down', or 'up'. modifiers may contain 'alt', 'shift',
@@ -411,8 +368,15 @@ def key_press(
        'meta', and 'flag' (same as super). count is number of times to
        press it. count_delay delay in ms between presses.'''
 
-    logging.debug("\nkey = {key} modifiers = {modifiers} direction = {direction} count = {count} count_delay = {count_delay} ".format(modifiers=modifiers, direction = direction, count=count, count_delay = count_delay, key=key))
-    
+    logging.debug("\nkey = {key} modifiers = {modifiers} " +
+                  "direction = {direction} " +
+                  "count = {count} count_delay = {count_delay} ".
+                  format(modifiers=modifiers,
+                         direction=direction,
+                         count=count,
+                         count_delay=count_delay,
+                         key=key))
+
     if count_delay is None or count < 2:
         delay = ''
     else:
@@ -427,7 +391,8 @@ def key_press(
     key_to_press = _MODIFIER_KEY_DIRECT.get(key.lower(), None)
     if key_to_press:
         if direction == 'down' or direction == 'up':
-            command = '{key_to_press} key {direction}'.format(key_to_press=key_to_press, direction=direction)
+            command = '{key_to_press} key {direction}'.format(
+                key_to_press=key_to_press, direction=direction)
 
     if not key_to_press:
         key_to_press = _QUOTED_KEY_TRANSLATION.get(key.lower(), None)
@@ -437,8 +402,7 @@ def key_press(
             key_to_press = _KEYCODE_TRANSLATION.get(key.lower(), None)
             command = 'key code "{0}"'.format(key_to_press)
 
-
-    if key_to_press == None:
+    if key_to_press is None:
         raise RuntimeError("Don't know how to handle keystroke {0}".format(key))
 
     if modifiers:
@@ -462,9 +426,10 @@ def key_press(
 
     script.run()
 
-def write_text(text, paste=False, _xdotool=None):
-    '''send text formatted exactly as written to active window.  will use pbpaste clipboard to paste the text instead
-       of typing it.'''
+
+def write_text(text, paste=False):
+    '''send text formatted exactly as written to active window.  will use
+       pbpaste clipboard to paste the text instead of typing it.'''
 
     logging.debug("text = %s paste = %s" % (text, paste))
     if text:
@@ -475,14 +440,16 @@ def write_text(text, paste=False, _xdotool=None):
 
 
 def mouseEvent(type, posx, posy, clickCount=1):
-    theEvent = CGEventCreateMouseEvent(None, type, (posx,posy), kCGMouseButtonLeft)
+    theEvent = CGEventCreateMouseEvent(
+        None, type, (posx, posy), kCGMouseButtonLeft)
     CGEventSetIntegerValueField(theEvent, kCGMouseEventClickState, clickCount)
     CGEventPost(kCGHIDEventTap, theEvent)
     CGEventSetType(theEvent, type)
 
-def mousemove(posx,posy):
-    # maybe look at or use https://github.com/joseph/osxautomation ?
-    mouseEvent(kCGEventMouseMoved, posx,posy);
+
+def mousemove(posx, posy):
+    mouseEvent(kCGEventMouseMoved, posx, posy)
+
 
 def trigger_mouseclick(button, direction, posx, posy, clickCount=1):
     # button: number 1-5, direction {click, up, down}
@@ -491,34 +458,32 @@ def trigger_mouseclick(button, direction, posx, posy, clickCount=1):
         2: [kCGEventOtherMouseDown, kCGEventOtherMouseUp],
         3: [kCGEventRightMouseDown, kCGEventRightMouseUp]
         }
-    # kCGEventMouseMoved
-    # kCGEventScrollWheel
 
     if button == 4 or button == 5:
-        yScroll = -10 if button == 5 else 10 # wheeldown - negative, wheelup - positive
-        # theEvent = CGEventCreateScrollWheelEvent(None, kCGScrollEventUnitPixel, 1, yScroll)
-        theEvent = CGEventCreateScrollWheelEvent(None, kCGScrollEventUnitLine, 1, yScroll)
+        yScroll = -10 if button == 5 else 10  # wheeldown -, wheelup +
+        theEvent = CGEventCreateScrollWheelEvent(
+            None, kCGScrollEventUnitLine, 1, yScroll)
 
         for _ in xrange(clickCount):
             CGEventPost(kCGHIDEventTap, theEvent)
     elif direction == 'click':
-        theEvent = CGEventCreateMouseEvent(None, click_mapping[button][0], (posx, posy), kCGMouseButtonLeft)
+        theEvent = CGEventCreateMouseEvent(
+            None, click_mapping[button][0], (posx, posy), kCGMouseButtonLeft)
         for _ in xrange(clickCount):
             CGEventSetType(theEvent, click_mapping[button][0])
-            CGEventSetIntegerValueField(theEvent, kCGMouseEventClickState, clickCount)
+            CGEventSetIntegerValueField(
+                theEvent, kCGMouseEventClickState, clickCount)
             CGEventPost(kCGHIDEventTap, theEvent)
             CGEventSetType(theEvent, click_mapping[button][1])
             CGEventPost(kCGHIDEventTap, theEvent)
     # else: # up or down
 
 
-
 def click_mouse(
         button,
         direction='click',
         count=1,
-        count_delay=None,
-        _xdotool=None
+        count_delay=None
         ):
     '''click the mouse button specified. button maybe one of 'right',
        'left', 'middle', 'wheeldown', 'wheelup'.'''
@@ -535,23 +500,20 @@ def click_mouse(
         button = int(button)
 
     logging.debug('_MOUSE_CLICKS[direction]' + _MOUSE_CLICKS[direction])
-    
-    ourEvent = CGEventCreate(None);
-    currentpos=CGEventGetLocation(ourEvent);  # Save current mouse position
-    trigger_mouseclick(button, _MOUSE_CLICKS[direction], int(currentpos.x),int(currentpos.y), count);
-    # if delay > 0 :
-    #     print "sleeping"
-    #     time.sleep(delay)
 
-    # CFRelease(ourEvent) # causes segfault - pyobjc manages the release count automatically
+    ourEvent = CGEventCreate(None)
+    currentpos = CGEventGetLocation(ourEvent)  # Save current mouse position
+    trigger_mouseclick(
+        button, _MOUSE_CLICKS[direction],
+        int(currentpos.x), int(currentpos.y), count)
+
 
 def move_mouse(
         x,
         y,
         reference='absolute',
         proportional=False,
-        phantom=None,
-        _xdotool=None
+        phantom=None
         ):
     '''move the mouse to the specified coordinates. reference may be one
     of 'absolute', 'relative', or 'relative_active'. if phantom is not
@@ -567,27 +529,16 @@ def move_mouse(
     mousemove(x, y)
 
     if phantom is not None:
-        ourEvent = CGEventCreate(None);
-        currentpos=CGEventGetLocation(ourEvent);  # Save current mouse position
-        trigger_mouseclick(1, 'click', x, y, 1);
+        trigger_mouseclick(1, 'click', x, y, 1)
 
 
-
-def pause(amount, _xdotool=None):
+def pause(amount):
     '''pause amount in ms.'''
     time.sleep(amount / 1000.)
 
 
-def server_info(_xdotool=None):
-    flush_xdotool(_xdotool)
+def server_info():
     return _SERVER_INFO
-
-
-def flush_xdotool(actions):
-    return
-    if actions:
-        run_command(' '.join(actions))
-        del actions[:]
 
 
 def list_rpc_commands():
@@ -616,10 +567,10 @@ def multiple_actions(actions):
             commands[method](*parameters, _xdotool=xdotool, **optional)
         else:
             break
-    flush_xdotool(xdotool)
 
 
 def setup_server(host, port):
+    print "started on host = %s port = %s " % (host, port)
     server = jsonrpclib.SimpleJSONRPCServer.SimpleJSONRPCServer((host, port))
 
     for command in list_rpc_commands():
