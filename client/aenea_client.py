@@ -60,7 +60,7 @@ class ProxyBuffer(object):
         self.key_buffer = []
         self.buffer_lock = threading.Lock()
         self.buffer_ready = threading.Condition(self.buffer_lock)
-        self.to_send = []
+        self.to_send = aenea.communications.BatchProxy()
         self.aenea_worker_active = False
         self.sending = False
         threading.Thread(target=self.worker_thread).start()
@@ -88,19 +88,14 @@ class ProxyBuffer(object):
     # Requires buffer_lock
     def flush_text_buffer(self):
         if self.text_buffer:
-            self.to_send.append(aenea.ProxyText(''.join(self.text_buffer)))
+            self.to_send.write_text(''.join(self.text_buffer))
             self.text_buffer = []
 
     # Requires buffer_lock
     def flush_key_buffer(self):
         if self.key_buffer:
-            try:
-                spec = []
-                for (key, count) in self.key_buffer:
-                    spec.append('%s:%i' % (key, count))
-                self.to_send.append(aenea.ProxyKey(','.join(spec)))
-            except Exception:
-                self.log("Encountered a bad key: %s" % spec)
+            for (key, count) in self.key_buffer:
+                self.to_send.key_press(key=key, count=count)
             self.key_buffer = []
 
     def worker_thread(self):
@@ -108,7 +103,7 @@ class ProxyBuffer(object):
             with self.buffer_lock:
 
                 # Wait until we have something to send.
-                while not (self.text_buffer or self.key_buffer or self.to_send):
+                while not (self.text_buffer or self.key_buffer or self.to_send._commands):
                     assert not self.text_buffer or not self.key_buffer
                     self.sending = False
                     self.buffer_ready.wait()
@@ -118,11 +113,10 @@ class ProxyBuffer(object):
                 self.flush_text_buffer()
                 self.flush_key_buffer()
 
-                todo, self.to_send = self.to_send, []
+                todo, self.to_send = self.to_send, aenea.communications.BatchProxy()
 
-            if todo:
-                for action in todo:
-                    action.execute()
+            if todo._commands:
+                aenea.communications.server.execute_batch(todo._commands)
 
 
 class AeneaClient(tk.Tk):

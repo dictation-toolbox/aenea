@@ -275,7 +275,7 @@ def get_context(_xdotool=None):
 
 
 def key_press(
-    key,
+        key=None,
         modifiers=(),
         direction='press',
         count=1,
@@ -287,6 +287,7 @@ def key_press(
        'control', 'super'. this X11 server also supports 'hyper',
        'meta', and 'flag' (same as super). count is number of times to
        press it. count_delay delay in ms between presses.'''
+    assert key is not None
 
     if count_delay is None or count < 2:
         delay = ''
