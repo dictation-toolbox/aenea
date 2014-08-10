@@ -29,12 +29,17 @@ if not hasattr(config, 'XDOTOOL_DELAY'):
     setattr(config, 'XDOTOOL_DELAY', 0)
 
 import logging.config
-log_file = '/dev/null' if not hasattr(config, 'LOG_FILE') else config.LOG_FILE
-logging.config.fileConfig(
-    os.path.join(os.path.dirname(__file__), 'logging.config'),
-    defaults={'log_file': log_file},
-    disable_existing_loggers=False
-)
+try:
+    log_file = '/dev/null' if not hasattr(config, 'LOG_FILE') else config.LOG_FILE
+    logging.config.fileConfig(
+        os.path.join(os.path.dirname(__file__), 'logging.config'),
+        defaults={'log_file': log_file},
+        disable_existing_loggers=False
+    )
+except Exception, e:
+    print 'Failed to load logging configuration.  Please copy ' \
+          'logging.config.example to logging.config for server' \
+          ' logging support.'
 
 import logging
 logger = logging.getLogger('server')
