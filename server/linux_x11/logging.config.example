@@ -24,9 +24,11 @@ keys=root,server
 
 [logger_server]
 level=DEBUG
-handlers=file,console
 propagate=1
 qualname=server
+# Configured handlers for the server logger:
+#handlers=file,console
+handlers=console
 
 [logger_root]
 level=NOTSET

@@ -33,3 +33,7 @@ ENABLE_XSEL = False
 # xdotool delay.  Setting this value greater than zero may help solve some text
 # input issues.  Obviously this setting does not apply when ENABLE_XSEL = True.
 XDOTOOL_DELAY = 0
+
+# Server log file.  To enable file based logging please copy
+# logging.config.example to logging.config and edit as noted.
+#LOG_FILE = '/path/to/server.log'

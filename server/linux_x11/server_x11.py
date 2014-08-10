@@ -28,40 +28,6 @@ import config
 if not hasattr(config, 'XDOTOOL_DELAY'):
     setattr(config, 'XDOTOOL_DELAY', 0)
 
-"""
-logging.config.dictConfig({
-
-    "version": 1,
-    "formatters": {
-        "generic": {
-            "format": '%(asctime)s [%(levelname)-6s] [%(name)-s] %(message)s'
-        }
-    },
-    "handlers": {
-        "file": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "formatter": "generic",
-            "filename": "server.log",
-            "maxBytes": 10485760,
-            "backupCount": 3,
-            "level": "DEBUG"
-        },
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "generic",
-            "level": "DEBUG"
-        }
-    },
-    "loggers": {
-        "server": {
-            "handlers": ["file", "console"],
-            "level": "DEBUG",
-            "propagate": True
-        },
-    }
-})
-"""
-
 import logging.config
 log_file = '/dev/null' if not hasattr(config, 'LOG_FILE') else config.LOG_FILE
 logging.config.fileConfig(
