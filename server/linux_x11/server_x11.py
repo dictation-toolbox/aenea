@@ -28,14 +28,63 @@ import config
 if not hasattr(config, 'XDOTOOL_DELAY'):
     setattr(config, 'XDOTOOL_DELAY', 0)
 
+"""
+logging.config.dictConfig({
+
+    "version": 1,
+    "formatters": {
+        "generic": {
+            "format": '%(asctime)s [%(levelname)-6s] [%(name)-s] %(message)s'
+        }
+    },
+    "handlers": {
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "generic",
+            "filename": "server.log",
+            "maxBytes": 10485760,
+            "backupCount": 3,
+            "level": "DEBUG"
+        },
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "generic",
+            "level": "DEBUG"
+        }
+    },
+    "loggers": {
+        "server": {
+            "handlers": ["file", "console"],
+            "level": "DEBUG",
+            "propagate": True
+        },
+    }
+})
+"""
+
+import logging.config
+log_file = '/dev/null' if not hasattr(config, 'LOG_FILE') else config.LOG_FILE
+logging.config.fileConfig(
+    os.path.join(os.path.dirname(__file__), 'logging.config'),
+    defaults={'log_file': log_file},
+    disable_existing_loggers=False
+)
+
+import logging
+logger = logging.getLogger('server')
 
 try:
     import yapsy
     import yapsy.PluginManager
-except ImportError:
+except ImportError, e:
     if hasattr(config, 'PLUGIN_PATH') and config.PLUGIN_PATH is not None:
-        print 'Cannot import yapsy; the optional server plugin support won\'t work. You don\'t need this unless you want to use plugins, which are not necessary for basic operation. To squelch this message, don\'t set a PLUGIN_PATH in config.py.'
-    yapsy = None
+        logger.warn(
+            'Cannot import yapsy; the optional server plugin support won\'t '
+            'work. You don\'t need this unless you want to use plugins, which '
+            'are not necessary for basic operation. To squelch this message, '
+            'don\'t set a PLUGIN_PATH in config.py.'
+        )
+        yapsy = None
 
 _MOUSE_BUTTONS = {
     'left': 1,
@@ -177,19 +226,19 @@ update_key_translation(_KEY_TRANSLATION)
 
 def run_command(command, executable='xdotool'):
     command_string = '%s %s' % (executable, command)
-    print command_string
+    logger.debug(command_string)
     os.system(command_string)
 
 
 def read_command(command, executable='xdotool'):
-    print '%s %s | <server>' % (executable, command)
+    logger.debug('%s %s | <server>' % (executable, command))
     with os.popen('%s %s' % (executable, command), 'r') as fd:
         rval = fd.read()
     return rval
 
 
 def write_command(message, arguments='type --file -', executable='xdotool'):
-    print 'echo \'%s\' | %s %s' % (message, executable, arguments)
+    logger.debug('echo \'%s\' | %s %s' % (message, executable, arguments))
     with os.popen('%s %s' % (executable, arguments), 'w') as fd:
         fd.write(message)
 
@@ -471,7 +520,7 @@ def setup_server(host, port):
         plugin_manager.setPluginPlaces(config.PLUGIN_PATH)
         plugin_manager.collectPlugins()
         for plugin_info in plugin_manager.getAllPlugins():
-            print 'Loading plugin "%s"' % plugin_info.name
+            logger.info('Loading plugin "%s"' % plugin_info.name)
             plugin_manager.activatePluginByName(plugin_info.name)
             plugin_info.plugin_object.register_rpcs(server)
 
@@ -484,8 +533,10 @@ if __name__ == '__main__':
         try:
             import pprint
             pprint.pprint(ctx)
-        except ImportError:
-            print ctx
+        except ImportError, e:
+            logger.error('failed to pretty print context. error:%s' % e)
+
+
     else:
         if '-d' in sys.argv or '--daemon' in sys.argv:
             if os.fork() == 0:
