@@ -29,17 +29,13 @@ if not hasattr(config, 'XDOTOOL_DELAY'):
     setattr(config, 'XDOTOOL_DELAY', 0)
 
 import logging.config
+import server_logging
+
 try:
-    log_file = '/dev/null' if not hasattr(config, 'LOG_FILE') else config.LOG_FILE
-    logging.config.fileConfig(
-        os.path.join(os.path.dirname(__file__), 'logging.config'),
-        defaults={'log_file': log_file},
-        disable_existing_loggers=False
-    )
+    logging_config = server_logging.make_logging_config(config)
+    logging.config.dictConfig(logging_config)
 except Exception, e:
-    print 'Failed to load logging configuration.  Please copy ' \
-          'logging.config.example to logging.config for server' \
-          ' logging support.'
+    print 'Failed to initialize logging support. Error: %s' % e
 
 import logging
 logger = logging.getLogger('server')
@@ -365,6 +361,7 @@ def write_text(text, paste=False, _xdotool=None):
                 arguments='type --file - --delay %d' % config.XDOTOOL_DELAY
             )
 
+
 def click_mouse(
         button,
         direction='click',
@@ -390,7 +387,7 @@ def click_mouse(
         button = int(button)
 
     command = ('%s %s %s %s' %
-              (_MOUSE_CLICKS[direction], delay, repeat, button))
+               (_MOUSE_CLICKS[direction], delay, repeat, button))
 
     if _xdotool is not None:
         _xdotool.append(command)
@@ -503,10 +500,9 @@ if __name__ == '__main__':
         ctx = get_context()
         try:
             import pprint
-            pprint.pprint(ctx)
+            logger.info(pprint.pformat(ctx))
         except ImportError, e:
             logger.error('failed to pretty print context. error:%s' % e)
-
 
     else:
         if '-d' in sys.argv or '--daemon' in sys.argv:

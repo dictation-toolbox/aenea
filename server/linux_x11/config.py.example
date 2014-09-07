@@ -34,6 +34,10 @@ ENABLE_XSEL = False
 # input issues.  Obviously this setting does not apply when ENABLE_XSEL = True.
 XDOTOOL_DELAY = 0
 
-# Server log file.  To enable file based logging please copy
-# logging.config.example to logging.config and edit as noted.
+# Server log file path
 #LOG_FILE = '/path/to/server.log'
+
+# Logger verbosity settings.  See the following for a list of levels:
+# https://docs.python.org/2/library/logging.html#levels
+#CONSOLE_LOG_LEVEL = 'DEBUG'
+#FILE_LOG_LEVEL = 'DEBUG'
