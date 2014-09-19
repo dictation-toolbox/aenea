@@ -78,7 +78,7 @@ _KEY_PRESSES = {
 
 _MOUSE_MOVE_COMMANDS = {
     'absolute': 'mousemove',
-    'relative': 'mousemove_relative --', # -- is required here for negative numbers to work.
+    'relative': 'mousemove_relative',
     'relative_active': 'mousemove_active'
     }
 
@@ -408,7 +408,9 @@ def move_mouse(
     of 'absolute', 'relative', or 'relative_active'. if phantom is not
     None, it is a button as click_mouse. If possible, click that
     location without moving the mouse. If not, the server will move the
-    mouse there and click.'''
+    mouse there and click. Currently, phantom only works with absolute
+    moves. Negative coordinates are allowed for all references; in the
+    case of absolute they will be clamped to 0.'''
 
     geo = get_geometry()
     if proportional:
@@ -417,13 +419,22 @@ def move_mouse(
     command = _MOUSE_MOVE_COMMANDS[reference]
     if command == 'mousemove_active':
         command = 'mousemove --window %i' % get_active_window()[0]
-    commands = ['%s %f %f' % (command, x, y)]
+
+    if x < 0 or y < 0:
+        commands = ['%s -- %f %f' % (command, x, y)]
+    else:
+        commands = ['%s %f %f' % (command, x, y)]
     if phantom is not None:
         commands.append('click %s' % _MOUSE_BUTTONS[phantom])
         commands.append('mousemove restore')
-    if _xdotool is not None:
+
+    # To avoid headaches down the road with argparse, we don't chain commands
+    # if we need to use -- since it would block future flags from being
+    # interpreted.
+    if _xdotool is not None and x >= 0 and y >= 0:
         _xdotool.extend(commands)
     else:
+        flush_xdotool(_xdotool)
         run_command(' '.join(commands))
 
 
