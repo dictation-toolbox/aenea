@@ -92,7 +92,7 @@ class ProxyCustomAppContext(dragonfly.Context):
         if query is None:
             query = {}
         query.update(kw)
-        self._str = 'ProxyBaseAppContext'
+        self._str = 'ProxyCustomAppContext'
         self.match = match
         self.logic = logic
         self.case_sensitive = case_sensitive
@@ -176,7 +176,8 @@ class ProxyPlatformContext(dragonfly.Context):
     def __init__(self, platform):
         '''mapping is mapping from platform as string to Context.'''
         self._platform = platform
-
+        self._str = 'ProxyPlatformContext'
+        
     def matches(self, windows_executable, windows_title, windows_handle):
         enabled = aenea.config.proxy_active((
             windows_executable,
@@ -195,7 +196,8 @@ class ProxyCrossPlatformContext(dragonfly.Context):
         '''mapping is mapping from platform as string to Context.'''
         assert all(hasattr(x, 'matches') for x in mapping)
         self._mapping = mapping
-
+        self._str = 'ProxyCrossPlatformContext'
+        
     def matches(self, windows_executable, windows_title, windows_handle):
         platform = _server_info().get('platform', None)
         chosen = self._mapping.get(platform, self._mapping.get(None, _Warn()))
