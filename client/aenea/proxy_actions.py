@@ -59,7 +59,7 @@ def _make_key_parser():
 def _make_mouse_parser():
     from pyparsing import (Optional, Literal, Word, Group, Keyword,
                            Or, ZeroOrMore, Regex, Suppress)
-    double = Regex(r'\d+(\.\d*)?([eE]\d+)?')
+    double = Regex(r'-?\d+(\.\d*)?([eE]\d+)?')
     coords = double + Suppress(Optional(Literal(','))) + double
     integer = Word('0123456789')
     move = (
@@ -97,7 +97,7 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
 
             modifiers = ([aenea.config.MODIFIERS[c] for c in modifier_part[0]]
                          if modifier_part else [])
-            key = key_part[0]
+            key = aenea.config.KEY_TRANSLATIONS.get(key_part[0], key_part[0])
 
             # regular keypress event
             if len(command_part) == 1:

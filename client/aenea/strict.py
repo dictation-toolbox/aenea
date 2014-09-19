@@ -51,8 +51,8 @@ class Text(AeneaDynStrActionBase):
         elif len(a) == 1:
             kw['spec'] = a[0]
         a = []
-        proxy = aenea.proxy_actions.ProxyText(a, kw)
-        local = dragonfly.Text(a, kw)
+        proxy = aenea.proxy_actions.ProxyText(*a, **kw)
+        local = dragonfly.Text(*a, **kw)
         AeneaDynStrActionBase.__init__(
             self,
             proxy,
@@ -64,6 +64,11 @@ class Text(AeneaDynStrActionBase):
 
 class Mouse(AeneaDynStrActionBase):
     def __init__(self, *a, **kw):
+        if len(a) == 2:
+            kw['spec'], kw['static'] = a
+        elif len(a) == 1:
+            kw['spec'] = a[0]
+        a = []
         proxy = aenea.proxy_actions.ProxyMouse(*a, **kw)
         local = dragonfly.Mouse(*a, **kw)
         AeneaDynStrActionBase.__init__(
