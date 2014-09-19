@@ -97,7 +97,7 @@ class ProxyKey(ProxyBase, dragonfly.DynStrActionBase):
 
             modifiers = ([aenea.config.MODIFIERS[c] for c in modifier_part[0]]
                          if modifier_part else [])
-            key = key_part[0]
+            key = aenea.config.KEY_TRANSLATIONS.get(key_part[0], key_part[0])
 
             # regular keypress event
             if len(command_part) == 1:
