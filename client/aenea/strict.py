@@ -51,8 +51,8 @@ class Text(AeneaDynStrActionBase):
         elif len(a) == 1:
             kw['spec'] = a[0]
         a = []
-        proxy = aenea.proxy_actions.ProxyText(a, kw)
-        local = dragonfly.Text(a, kw)
+        proxy = aenea.proxy_actions.ProxyText(*a, **kw)
+        local = dragonfly.Text(*a, **kw)
         AeneaDynStrActionBase.__init__(
             self,
             proxy,
