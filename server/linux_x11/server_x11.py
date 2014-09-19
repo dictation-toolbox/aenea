@@ -78,7 +78,7 @@ _KEY_PRESSES = {
 
 _MOUSE_MOVE_COMMANDS = {
     'absolute': 'mousemove',
-    'relative': 'mousemove_relative',
+    'relative': 'mousemove_relative --', # -- is required here for negative numbers to work.
     'relative_active': 'mousemove_active'
     }
 
