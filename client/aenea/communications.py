@@ -67,14 +67,20 @@ class _ImpatientTransport(jsonrpclib.jsonrpc.Transport):
 class Proxy(object):
     def __init__(self):
         self._address = None
+        self.last_connect_good = False
         self._last_failed_connect = 0
-        self._last_successful_connect = 0
-        self._transport = _ImpatientTransport(aenea.config.SOCKET_TIMEOUT)
+        self._transport = _ImpatientTransport(aenea.config.COMMAND_TIMEOUT)
 
     def _execute_batch(self, batch, use_multiple_actions=False):
         self._refresh_server()
+        if self._address is None:
+            return
         if time.time() - self._last_failed_connect > aenea.config.CONNECT_RETRY_COOLDOWN:
             try:
+                if not self.last_connect_good:
+                    socket.create_connection(self._address, aenea.config.CONNECT_TIMEOUT)
+                self.last_connect_good = True
+
                 if len(batch) == 1:
                     return (getattr(
                         self._server,
@@ -87,6 +93,7 @@ class Proxy(object):
                         getattr(self._server, command)(*args, **kwargs)
             except socket.error:
                 self._last_failed_connect = time.time()
+                self.last_connect_good = False
                 print 'Socket error connecting to aenea server. To avoid slowing dictation, we won\'t try again for %i seconds.' % aenea.config.CONNECT_RETRY_COOLDOWN
 
     def execute_batch(self, batch):
@@ -101,6 +108,7 @@ class Proxy(object):
         _server_config.refresh()
         address = _server_config.conf['host'], _server_config.conf['port']
         if self._address != address:
+            self.last_connect_good = False
             self._address = address
             self._server = jsonrpclib.Server(
                 'http://%s:%i' % address,

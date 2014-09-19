@@ -66,7 +66,8 @@ CONNECT_RETRY_COOLDOWN = _configuration.get('connect_retry_cooldown', 5)
 
 STALE_CONTEXT_DELTA = _configuration.get('stale_context_delta', 0.025)
 
-SOCKET_TIMEOUT = _configuration.get('socket_timeout', 0.1)
+CONNECT_TIMEOUT = _configuration.get('connect_timeout', 0.1)
+COMMAND_TIMEOUT = _configuration.get('command_timeout', 2)
 
 if _configuration.get('restrict_proxy_to_aenea_client', True):
     proxy_enable_context = dragonfly.AppContext(
