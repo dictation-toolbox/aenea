@@ -59,7 +59,7 @@ def _make_key_parser():
 def _make_mouse_parser():
     from pyparsing import (Optional, Literal, Word, Group, Keyword,
                            Or, ZeroOrMore, Regex, Suppress)
-    double = Regex(r'\d+(\.\d*)?([eE]\d+)?')
+    double = Regex(r'-?\d+(\.\d*)?([eE]\d+)?')
     coords = double + Suppress(Optional(Literal(','))) + double
     integer = Word('0123456789')
     move = (
