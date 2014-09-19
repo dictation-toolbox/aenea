@@ -500,7 +500,7 @@ if __name__ == '__main__':
         ctx = get_context()
         try:
             import pprint
-            logger.info(pprint.pformat(ctx))
+            pprint.pprint(ctx)
         except ImportError, e:
             logger.error('failed to pretty print context. error:%s' % e)
 

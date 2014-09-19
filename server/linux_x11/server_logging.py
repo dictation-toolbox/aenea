@@ -28,8 +28,8 @@ DEFAULT_CONFIG = {
 
 def make_logging_config(aenea_config):
     log_file = getattr(aenea_config, 'LOG_FILE', None)
-    console_level = getattr(aenea_config, 'CONSOLE_LOG_LEVEL', 'DEBUG')
-    file_level = getattr(aenea_config, 'FILE_LOG_LEVEL', 'DEBUG')
+    console_level = getattr(aenea_config, 'CONSOLE_LOG_LEVEL', 'WARNING')
+    file_level = getattr(aenea_config, 'FILE_LOG_LEVEL', 'INFO')
 
     logging_config = DEFAULT_CONFIG.copy()
     logging_config['handlers']['console']['level'] = console_level

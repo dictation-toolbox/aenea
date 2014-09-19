@@ -39,5 +39,5 @@ XDOTOOL_DELAY = 0
 
 # Logger verbosity settings.  See the following for a list of levels:
 # https://docs.python.org/2/library/logging.html#levels
-#CONSOLE_LOG_LEVEL = 'DEBUG'
-#FILE_LOG_LEVEL = 'DEBUG'
+#CONSOLE_LOG_LEVEL = 'WARNING'
+#FILE_LOG_LEVEL = 'INFO'
