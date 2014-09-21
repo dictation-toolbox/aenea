@@ -420,7 +420,7 @@ def move_mouse(
     if command == 'mousemove_active':
         command = 'mousemove --window %i' % get_active_window()[0]
 
-    if x < 0 or y < 0:
+    if x <= 0 or y <= 0:
         commands = ['%s -- %f %f' % (command, x, y)]
     else:
         commands = ['%s %f %f' % (command, x, y)]
