@@ -19,10 +19,13 @@
 # Copyright (2014) Alex Roper
 # Alex Roper <alex@aroper.net>
 
-
 import os
+import sys
 
 import dragonfly
+
+# Internal NatLink module for reloading grammars.
+import natlinkmain
 
 try:
     import aenea
@@ -63,6 +66,13 @@ command_table = aenea.configuration.make_grammar_commands(
     )
 
 
+def topy(path):
+    if path.endswith == ".pyc":
+        return path[:-1]
+
+    return path
+
+
 class DisableRule(dragonfly.CompoundRule):
     spec = command_table['disable proxy server']
 
@@ -77,18 +87,48 @@ class EnableRule(dragonfly.CompoundRule):
         aenea.config.enable_proxy()
 
 
-# Note that you must also turn mic off then on after saying this.
-class ReloadGrammarsRule(dragonfly.CompoundRule):
-    spec = command_table['force natlink to reload all grammars']
+def reload_code():
+    # Do not reload anything in these directories or their subdirectories.
+    dir_reload_blacklist = set(["core"])
+    macro_dir = "C:\\NatLink\\NatLink\\MacroSystem"
 
-    def _process_recognition(self, node, extras):
-        path = 'C:\\NatLink\\NatLink\\MacroSystem'
-        for g in os.listdir(path):
-            fn = os.path.join(path, g)
-            if os.path.isfile(fn):
-                with open(fn, 'a') as fd:
-                    fd.write(' ')
+    # Unload all grammars.
+    natlinkmain.unloadEverything()
 
+    # Unload all modules in macro_dir except for those in directories on the
+    # blacklist.
+
+    for name, module in sys.modules.items():
+        if module and hasattr(module, "__file__"):
+            # Some builtin modules only have a name so module is None or
+            # do not have a __file__ attribute.  We skip these.
+            path = module.__file__
+
+            # Convert .pyc paths to .py paths.
+            path = topy(path)
+
+            # Do not unimport this module!  This will cause major problems!
+            if (path.startswith(macro_dir) and
+                not bool(set(path.split(os.path.sep)) & dir_reload_blacklist)
+                and path != topy(os.path.abspath(__file__))):
+
+                print "removing %s from cache" % name
+
+                # Remove the module from the cache so that it will be reloaded
+                # the next time # that it is imported.  The paths for packages
+                # end with __init__.pyc so this # takes care of them as well.
+                del sys.modules[name]
+
+    # Reload the top-level modules in macro_dir.
+    natlinkmain.findAndLoadFiles()
+    print "finished reloading"
+
+
+# Note that you do not need to turn mic off and then on after saying this.  This
+# also unloads all modules and packages in the macro directory so that they will
+# be reloaded the next time that they are imported.  It even reloads Aenea!
+class ReloadGrammarsRule(dragonfly.MappingRule):
+    mapping = {command_table['force natlink to reload all grammars']: dragonfly.Function(reload_code)}
 
 server_list = dragonfly.DictList('aenea servers')
 server_list_watcher = aenea.configuration.ConfigWatcher(
