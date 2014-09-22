@@ -186,7 +186,7 @@ Please remember that the server simply accepts any connection made to it and wil
 Using Aenea-Aware Modules
 -------------------------
 
-Drop them in C:\\NatLink\\NatLink\\MacroSystem\\ along with anything they depend on. Restart Dragon. You MAY be able to just turn the mic off and on again, but this doesn't always work due to how NatLink decides when to reload a module.
+Drop them in C:\\NatLink\\NatLink\\MacroSystem\\ along with anything they depend on. In theory you can just say "force natlink to reload all grammars" (if you are using the _aenea module), but if anything goes wrong just restart Dragon.
 
 Using Dragonfly Modules
 --------------------------
@@ -231,9 +231,9 @@ The lax version will ignore errors at grammar load time and only raise them if y
 Taking advantage of the vocabulary system
 -----------------------------------------
 
-I noticed that many of my grammars had similar vocabulary but wanted to put them in different places, leading to duplication. In particular, both verbal_emacs and multiedit should be usable for programming, and as such duplicated a great deal of both language specific vocabulary as well as general help. Since both of these grammars make use of nested trees, and chaining commands together in the grammar, I wanted to separate vocabulary and grammar.
+I noticed that many of my grammars had similar vocabulary but wanted to put them in different places, leading to duplication. In particular, both vim and multiedit should be usable for programming, and as such duplicated a great deal of both language specific vocabulary as well as general help. Since both of these grammars make use of nested trees, and chaining commands together in the grammar, I wanted to separate vocabulary and grammar.
 
-Inspired by the dynamics system @nirvdrum wrote, I also wanted the ability to dynamically disable and enable certain vocabulary as appropriate (e.g., disable Python vocabulary when not using Python). The vocabulary system allows you to define vocabulary items that grammars can then hook into. Currently, multiedit, verbal_emacs, and _vocabulary use them.
+Inspired by the dynamics system @nirvdrum wrote, I also wanted the ability to dynamically disable and enable certain vocabulary as appropriate (e.g., disable Python vocabulary when not using Python). The vocabulary system allows you to define vocabulary items that grammars can then hook into. Currently, multiedit, vim, and _vocabulary use them.
 
 There are two types of vocabulary, due to Dragonfly/NatLink limitations. Static vocabularies are loaded at system start, cannot be dynamically enabled/disabled, and you need to restart Dragon to reload them. On the plus side, they can use more complex specifications such as "reload [all] (configuration|config)".
 
@@ -249,9 +249,9 @@ In addition to plain text, the value may also specify Text, Key, and Mouse actio
 Using Vocabularies in your Grammar
 ----------------------------------
 
-Vocabularies are attached to grammars by use of the tag system. Your grammars may request one or more tags, which are simply hooks vocabularies can attach to. So for example, multiedit creates "multiedit" and "multiedit.count" hooks, which are simply things which may be chained together. The .count hook means you can say a number after it to do it N times. The dynamic Eclipse vocabulary is a good example of this. For example, my Python vocabulary says it should be active in "verbal_emacs.insertions.code", "multiedit", and "global". This is best explained by examining the example vocabularies at https://github.com/dictation-toolbox/aenea-grammars/tree/master/vocabulary_config.
+Vocabularies are attached to grammars by use of the tag system. Your grammars may request one or more tags, which are simply hooks vocabularies can attach to. So for example, multiedit creates "multiedit" and "multiedit.count" hooks, which are simply things which may be chained together. The .count hook means you can say a number after it to do it N times. The dynamic Eclipse vocabulary is a good example of this. For example, my Python vocabulary says it should be active in "vim.insertions.code", "multiedit", and "global". This is best explained by examining the example vocabularies at https://github.com/dictation-toolbox/aenea-grammars/tree/master/vocabulary_config.
 
-The "global" tag is special -- it's used by _vocabulary.py for things you should be able to say anywhere. The reason it's a special case is because we want to make sure that there aren't multiple grammars competing to recognize an entry. Thus, a grammar may suppress a tag in the global context (multiedit and verbal_emacs do this), so that whenever they are in use, _vocabulary won't recognize the tags they've taken over. See multiedit and verbal_emacs for examples of this.
+The "global" tag is special -- it's used by _vocabulary.py for things you should be able to say anywhere. The reason it's a special case is because we want to make sure that there aren't multiple grammars competing to recognize an entry. Thus, a grammar may suppress a tag in the global context (multiedit and vim do this), so that whenever they are in use, _vocabulary won't recognize the tags they've taken over. See multiedit and vim for examples of this.
 
 The whole system can sound quite intimidating at first (much like Dragonfly) but it's not as bad as it sounds to use, I promise! Just take a look at the example grammars and vocabularies and you'll be writing your own in no time! (example grammars: https://github.com/dictation-toolbox/aenea-grammars)
 
