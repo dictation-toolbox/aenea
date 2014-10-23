@@ -19,6 +19,9 @@ import json
 import os
 
 import aenea.config
+from proxy_contexts import ProxyAppContext
+from wrappers import NeverContext
+from dragonfly import AppContext
 
 
 class ConfigWatcher(object):
@@ -177,3 +180,58 @@ def make_grammar_commands(module_name, mapping, config_key='commands'):
         if not user_phrase.startswith('!'):
             commands[user_phrase] = mapping[default_phrase]
     return commands
+
+
+def make_local_disable_context(grammar_conf):
+    """
+    Given a grammar config generate a local grammar disabled context.
+
+    Example: to locally disable multiedit where window titles contain
+     "VIM" multiedit.json should contain the following keys:
+    {
+      "local_disable_context": "VIM"
+    }
+
+    :param grammar_conf:
+    :return: Context
+    """
+    local_disable_setting = grammar_conf.get('local_disable_context', None)
+    local_disable_context = NeverContext()
+    if local_disable_setting is not None:
+        if not isinstance(local_disable_setting, basestring):
+            print 'Local disable context may only be a string.'
+        else:
+            local_disable_context = AppContext(str(local_disable_setting))
+    return local_disable_context
+
+
+def make_proxy_disable_context(grammar_conf):
+    """
+    Given a grammar config generate a local grammar disabled context.
+
+    Example: to disable multiedit in proxty contexts where window titles
+    contain "VIM" multiedit.json should contain the following keys:
+    {
+      "proxy_disable_context": {
+        "match": "regex",
+        "title": ".*VIM.*"
+      }
+    }
+
+    :param grammar_conf:
+    :return: Context
+    """
+    proxy_disable_setting = grammar_conf.get('proxy_disable_context', None)
+    proxy_disable_context = NeverContext()
+    if proxy_disable_setting is not None:
+        if isinstance(proxy_disable_setting, dict):
+            d = {}
+            for k, v in proxy_disable_setting.iteritems():
+                d[str(k)] = str(v)
+            proxy_disable_context = ProxyAppContext(**d)
+        else:
+            proxy_disable_context = ProxyAppContext(
+                title=str(proxy_disable_setting),
+                match='substring'
+                )
+    return proxy_disable_context
