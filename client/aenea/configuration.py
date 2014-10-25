@@ -18,6 +18,7 @@
 import json
 import os
 
+from aenea.alias import Alias
 import aenea.config
 
 
@@ -153,7 +154,7 @@ class ConfigDirWatcher(object):
                 self.files[fn].refresh()
 
 
-def make_grammar_commands(module_name, mapping, config_key='commands'):
+def make_grammar_commands(module_name, mapping, config_key='commands', alias = Alias()):
     '''Given the command map from default spoken phrase to actions in mapping,
        constructs a mapping that takes user config, if specified, into account.
        config_key may be a key in the JSON to use (for modules with multiple
@@ -176,4 +177,4 @@ def make_grammar_commands(module_name, mapping, config_key='commands'):
         # Allow users to nuke a command with !
         if not user_phrase.startswith('!'):
             commands[user_phrase] = mapping[default_phrase]
-    return commands
+    return alias.make_mapping_spec(commands)
