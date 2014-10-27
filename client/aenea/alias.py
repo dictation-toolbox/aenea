@@ -23,7 +23,7 @@ def product(choices_product):
 def normalize_whitespace(text):
     return " ".join(text.split())
 
-class Alias:
+class Alias(object):
     """A mapping each string to a list of aliases."""
     def __init__(self, aliases = []):
         self._map = {}
