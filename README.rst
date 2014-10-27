@@ -278,4 +278,6 @@ Writing your own server should be fairly straightforward. All you would need to 
 Help!
 ------
 
+Please feel free to post in the Dragonfly Google group https://groups.google.com/forum/#!forum/dragonflyspeech or to email me if you have questions about this system or issues getting it working. I don't use it as much as I used to, but I'm still happy to discuss getting it to work and improving it, particularly the setup instructions, and I've learned a great deal from other users already.
+
 Please feel free to email me if you have questions about this system or issues getting it working. I don't use it as much as I used to, but I'm still happy to discuss getting it to work and improving it, particularly the setup instructions.
