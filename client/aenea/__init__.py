@@ -31,4 +31,4 @@ from aenea.wrappers import *
 from aenea.proxy_actions import *
 from aenea.proxy_contexts import *
 from aenea.strict import *
-from aenea.alias import *
+from aenea.alias import Alias
