@@ -46,7 +46,7 @@ Primary limitations:
 Missing features:
 
 - Currently no encryption or authentication for remote control protocol (not a huge issue since it is typically used on single user systems via loopback).
-- Currently only fully supports a Linux host. Partial support for Windows is available, and OS X support is in development here: https://github.com/dopey/aenea-fork.
+- Currently only fully supports a Linux X11 and OS X host. Partial support for Windows is available.
 
 The primary focus of this project is writing code, system administration, terminal use, etc, and it works quite well for those tasks. For writing prose, word processing, etc., this project is quite limited compared to using Dragon natively on Windows, though it is still usable for those tasks.
 
@@ -279,5 +279,3 @@ Help!
 ------
 
 Please feel free to post in the Dragonfly Google group https://groups.google.com/forum/#!forum/dragonflyspeech or to email me if you have questions about this system or issues getting it working. I don't use it as much as I used to, but I'm still happy to discuss getting it to work and improving it, particularly the setup instructions, and I've learned a great deal from other users already.
-
-Please feel free to email me if you have questions about this system or issues getting it working. I don't use it as much as I used to, but I'm still happy to discuss getting it to work and improving it, particularly the setup instructions.
