@@ -131,7 +131,7 @@ class Alias(object):
             return "(" + " | ".join([string] + list(map(self.spec_for_words, alias_strings))) + ")"
 
     def split(self, text):
-        """Find all substrings in text that strings in this object.  Return an iterable of all such strings that the non-matching strings between them in the order they are encountered."""
+        """Find all substrings in text that are strings in this object.  Return an iterable of all such strings that the non-matching strings between them in the order they are encountered."""
         self._update_regex()
         k = 0 # The end of the previous match.
         open_angle_brackets = 0
