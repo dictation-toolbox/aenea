@@ -180,7 +180,7 @@ def make_grammar_commands(module_name, mapping, config_key='commands', alias = A
         # Allow users to nuke a command with !
         if not user_phrase.startswith('!'):
             commands[user_phrase] = mapping[default_phrase]
-    return commands
+    return alias.make_mapping_spec(commands)
 
 
 def make_local_disable_context(grammar_conf):
