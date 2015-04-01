@@ -271,24 +271,28 @@ def get_context(_xdotool=None):
 
     # Sigh...
     properties['executable'] = None
-    try:
-        proc_command = '/proc/%s/exe' % properties['pid']
-        properties['executable'] = os.readlink(proc_command)
-    except OSError:
-        ps = read_command('%s' % properties['pid'], executable='ps')
-        ps = ps.split('\n')[1:]
-        if ps:
-            try:
-                properties['executable'] = ps[0].split()[4]
-            except Exception:
-                pass
+    properties['executable'] = None
+    if 'pid' in properties:
+        try:
+            proc_command = '/proc/%s/exe' % properties['pid']
+            properties['executable'] = os.readlink(proc_command)
+        except OSError:
+            ps = read_command('%s' % properties['pid'], executable='ps')
+            ps = ps.split('\n')[1:]
+            if ps:
+                try:
+                    properties['executable'] = ps[0].split()[4]
+                except Exception:
+                    pass
 
-    try:
-        cmdline_path = '/proc/%s/cmdline' % properties['pid']
-        with open(cmdline_path) as fd:
-            properties['cmdline'] = fd.read().replace('\x00', ' ').strip()
-    except OSError:
-        pass
+        try:
+            cmdline_path = '/proc/%s/cmdline' % properties['pid']
+            with open(cmdline_path) as fd:
+                properties['cmdline'] = fd.read().replace('\x00', ' ').strip()
+        except OSError:
+            pass
+    else:
+        logger.warn('pid not set. properties: %s' % properties)
 
     return properties
 
