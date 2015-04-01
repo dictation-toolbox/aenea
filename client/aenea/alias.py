@@ -1,5 +1,7 @@
 import copy
 import re
+from aenea.wrappers import (Alternative,
+                            Literal)
 
 def _product(choices_product):
     if len(choices_product) == 0:
@@ -230,3 +232,5 @@ class Alias(object):
 
         return new_mapping
 
+    def make_alternative(self, literal, **kwargs):
+        return Alternative([Literal(equivalent_text) for equivalent_text in self.substitute(literal)] , **kwargs)
