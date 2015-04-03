@@ -18,6 +18,7 @@
 # Alex Roper <alex@aroper.net>
 
 import os
+import subprocess
 import sys
 import time
 
@@ -450,6 +451,14 @@ def pause(amount, _xdotool=None):
         time.sleep(amount / 1000.)
 
 
+def notify(message):
+    '''Send a message to the notification daemon via notify-send.'''
+    try:
+        subprocess.Popen(['notify-send', message])
+    except Exception as e:
+        logger.warn('failed to start notify-send process: %s' % e)
+        
+
 def server_info(_xdotool=None):
     flush_xdotool(_xdotool)
     return _SERVER_INFO
@@ -470,6 +479,7 @@ def list_rpc_commands():
         'move_mouse': move_mouse,
         'server_info': server_info,
         'pause': pause,
+        'notify' : notify
         }
     return _RPC_COMMANDS
 
