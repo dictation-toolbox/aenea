@@ -61,7 +61,6 @@ class Text(AeneaDynStrActionBase):
             static=kw.get('static', False)
             )
 
-
 class Mouse(AeneaDynStrActionBase):
     def __init__(self, *a, **kw):
         if len(a) == 2:

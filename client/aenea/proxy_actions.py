@@ -141,6 +141,18 @@ class ProxyText(ProxyBase, dragonfly.DynStrActionBase):
         aenea.communications.server.write_text(text=events)
 
 ###############################################################################
+# Notification
+
+
+class ProxyNotification(ProxyBase, dragonfly.DynStrActionBase):
+    def _parse_spec(self, spec):
+        return spec
+
+    def _execute_events(self, events):
+        aenea.communications.server.notify(events)
+    
+
+###############################################################################
 # Mouse
 
 
