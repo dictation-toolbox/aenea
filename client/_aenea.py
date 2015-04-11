@@ -97,8 +97,8 @@ def reload_code():
 
     # Unload all modules in macro_dir except for those in directories on the
     # blacklist.
-
-    for name, module in sys.modules.items():
+    # Consider them in sorted order to try to make things as predictable as possible to ease debugging.
+    for name, module in sorted(sys.modules.items()):
         if module and hasattr(module, "__file__"):
             # Some builtin modules only have a name so module is None or
             # do not have a __file__ attribute.  We skip these.
@@ -119,9 +119,13 @@ def reload_code():
                 # end with __init__.pyc so this # takes care of them as well.
                 del sys.modules[name]
 
-    # Reload the top-level modules in macro_dir.
-    natlinkmain.findAndLoadFiles()
-    print "finished reloading"
+    try:
+        # Reload the top-level modules in macro_dir.
+        natlinkmain.findAndLoadFiles()
+    except Exception as e:
+        print "reloading failed: {}".format(e)
+    else:
+        print "finished reloading"
 
 
 # Note that you do not need to turn mic off and then on after saying this.  This
