@@ -181,7 +181,7 @@ class Alias(object):
         return normalize_whitespace(new_spec)
 
     def make_mapping_spec(self, mapping):
-        return {self.spec(spec) : value for spec, value in mapping.items()}
+        return {self.spec(spec) : value for spec, value in dict(mapping).items()}
 
     def choices_for_word(self, word):
         choices = [word]
@@ -224,6 +224,7 @@ class Alias(object):
         return list(map(normalize_whitespace, product(choices_product)))
         
     def make_mapping(self, mapping):
+        mapping = dict(mapping)
         new_mapping = dict(mapping)
         
         for string in mapping:
