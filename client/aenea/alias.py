@@ -140,9 +140,11 @@ class Alias(object):
 
         while True:
             m = self._regex.search(text[k:])
-            # import pdb; pdb.set_trace()
+
             if not m:
-                yield text[k:]
+                if text[k:] != "":
+                    yield text[k:]
+                    
                 break
             
             i, j = m.start("string"), m.end("string")
@@ -152,11 +154,12 @@ class Alias(object):
             assert open_angle_brackets <= 0
 
             # Ignore anything inside angle brackets
-            if open_angle_brackets == 0 and text.find("<", k, i) == -1 and text.find(">", k, i) == -1:
+            if open_angle_brackets == 0:# and text.find("<", k, i) == -1 and text.find(">", k, i) == -1:
                 if text[k:i] != "":
                     yield text[k:i]
 
-                yield text[i:j]
+                if text[i:j] != "":
+                    yield text[i:j]
 
             k = j
         
@@ -214,13 +217,15 @@ class Alias(object):
     def substitute(self, text):
         """Return the strings that can be obtained from phrase by performing substitutions."""
         choices_product = []
-
+            
         for substr in self.split(text):
             if substr in self:
-                choices_product.append(self.choices_for_string(substr))
+                choices = list(self.choices_for_string(substr))
+                assert choices
+                choices_product.append(choices)
             else:
                 choices_product.append([substr])
-
+        
         return list(map(normalize_whitespace, product(choices_product)))
         
     def make_mapping(self, mapping):
