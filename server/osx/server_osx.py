@@ -297,6 +297,16 @@ def map_window_properties(properties):
 
 
 def get_geometry(window_id=None):
+    p = get_window_properties(window_id)
+    frame = {'x': p['posn'][0],
+            'y': p['posn'][1],
+            'width': p['ptsz'][0],
+            'height': p['ptsz'][1]} 
+
+    return frame  # what to do about screen?
+
+
+def get_window_properties(window_id=None):
     if window_id is None:
         window_id, _ = get_active_window()
 
@@ -312,12 +322,7 @@ def get_geometry(window_id=None):
     properties = script.run()
 
     p = map_window_properties(properties)
-
-    return {'x': p['posn'][0],
-            'y': p['posn'][1],
-            'width': p['ptsz'][0],
-            'height': p['ptsz'][1]}  # what to do about screen?
-
+    return p
 
 def transform_relative_mouse_event(event):
     geo = get_geometry()
@@ -331,22 +336,7 @@ def get_context():
        at least include title and executable.'''
 
     window_id, window_title = get_active_window()
-    if window_id is None:
-        return {}
-
-    cmd = '''tell application "System Events" to tell application process "%s"
-        try
-            get properties of window 1
-        on error errmess
-            log errmess
-        end try
-    end tell
-    ''' % window_id
-    script = applescript.AppleScript(cmd)
-    properties = {}
-    props = script.run()
-
-    properties = map_window_properties(props)
+    properties = get_window_properties(window_id)
     properties['id'] = window_id
     properties['title'] = window_title
 
