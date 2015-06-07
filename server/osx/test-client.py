@@ -58,6 +58,7 @@ def test_click_mouse(distobj):
     distobj.click_mouse(button='left', count=2)
     distobj.click_mouse(button='wheelup', count=2)
     distobj.click_mouse(button='right')
+    distobj.click_mouse(button='left')
 
 
 def test_move_mouse(distobj):
@@ -109,6 +110,7 @@ def all_tests(distobj):
     test_move_mouse(distobj)
     test_mouse_drag(distobj)
     test_pause(distobj)
+    distobj.key_press(key='escape')
     distobj.get_context()
 
 
