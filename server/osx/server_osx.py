@@ -282,7 +282,7 @@ def get_active_window():
     # still useful for automating through applescript
     window_id, window_title = script.run()
     if window_id:
-        return str(window_id), str(window_title)
+        return window_id.encode('utf-8'), window_title.encode('utf-8')
     else:
         return None, None
 
@@ -292,7 +292,7 @@ def map_window_properties(properties):
     for key in properties:
         short_key = re.match(r".*\('(.*)'\).*", str(key))  # is there a better
         # way to access keys that are instances?
-        p[str(short_key.group(1))] = str(properties[key])
+        p[str(short_key.group(1))] = properties[key]
     return p
 
 
@@ -349,6 +349,24 @@ def get_context():
     properties = map_window_properties(props)
     properties['id'] = window_id
     properties['title'] = window_title
+
+    # Types in 'breaking' throw an exception in jsonrpclib, so
+    # they need to be converted to strings.
+    breaking = [objc.pyobjc_unicode,         # NSString
+                applescript.aecodecs.AEType] # AppleEvent
+
+    for key in properties:
+        for c in breaking:
+            if isinstance(properties[key], c):
+                if hasattr(properties[key], 'encode') and \
+                   callable(getattr(properties[key], 'encode')):
+                    # pyobjc_unicode aren't accepted by 'str()', but need
+                    # to be converted or jsonrpclib balks.
+                    properties[key] = properties[key].encode('utf-8')
+                else:
+                    # AEType doesn't respond to 'encode()'
+                    properties[key] = str(properties[key])
+                break
 
     logging.debug(properties)
 
@@ -560,11 +578,10 @@ def multiple_actions(actions):
        'method', 'params', and 'optional' keys. See also JSON-RPC
        multicall.  Guaranteed to execute in specified order.'''
 
-    xdotool = []
     for (method, parameters, optional) in actions:
         commands = list_rpc_commands()
         if method in commands:
-            commands[method](*parameters, _xdotool=xdotool, **optional)
+            commands[method](*parameters, **optional)
         else:
             break
 
