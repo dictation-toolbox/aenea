@@ -35,14 +35,14 @@ command_table = [
     '<static>',
     '<dynamic>'
     ]
-command_table = aenea.configuration.make_grammar_commands(
+command_table = aenea.configuration.make_commands(
     'vocabulary',
     dict(zip(command_table, command_table))
     )
 
 
 class RefreshRule(dragonfly.CompoundRule):
-    spec = '[refresh|reload] dynamic [vocabulary|vocabularies]'
+    spec = command_table['[refresh|reload] dynamic [vocabulary|vocabularies]']
 
     def _process_begin(self):
         # Refresh every time the user starts to say anything. Refresh is

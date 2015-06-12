@@ -60,7 +60,7 @@ command_table = [
     'enable proxy server',
     'force natlink to reload all grammars'
     ]
-command_table = aenea.configuration.make_grammar_commands(
+command_table = aenea.configuration.make_commands(
     'aenea',
     dict(zip(command_table, command_table))
     )

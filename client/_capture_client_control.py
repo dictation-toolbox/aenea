@@ -18,8 +18,6 @@
 # Copyright (2014) Alex Roper
 # Alex Roper <alex@aroper.net>
 
-import os
-
 import dragonfly
 
 try:
@@ -32,17 +30,6 @@ except ImportError:
 _config = aenea.configuration.ConfigWatcher(
     'dictation_capture_state',
     {'enabled': True})
-
-
-# Commands that can be rebound.
-command_table = [
-    'enable dictation capture',
-    'disable dictation capture'
-    ]
-command_table = aenea.configuration.make_grammar_commands(
-    'capture_client_control',
-    dict(zip(command_table, command_table))
-    )
 
 
 def enable_capture():
@@ -58,10 +45,12 @@ def disable_capture():
 
 
 class ControlRule(dragonfly.MappingRule):
-    mapping = {
-        'enable dictation capture': dragonfly.Function(enable_capture),
-        'disable dictation capture': dragonfly.Function(disable_capture)
-        }
+    mapping = aenea.configuration.make_grammar_commands(
+        'capture_client_control',
+        mapping = {
+            'enable dictation capture': dragonfly.Function(enable_capture),
+            'disable dictation capture': dragonfly.Function(disable_capture)
+        })
 
 
 grammar = dragonfly.Grammar('capture_client_control')

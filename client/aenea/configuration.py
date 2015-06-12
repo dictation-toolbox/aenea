@@ -160,9 +160,19 @@ class ConfigDirWatcher(object):
 def make_grammar_commands(module_name, mapping, config_key='commands', alias = Alias()):
     '''Given the command map from default spoken phrase to actions in mapping,
        constructs a mapping that takes user config, if specified, into account.
+
        config_key may be a key in the JSON to use (for modules with multiple
        mapping rules.) If a user phrase starts with !,
-       no mapping is generated for that phrase.'''
+       no mapping is generated for that phrase.
+
+       Returns a mapping from SPOKEN to ACTIONS, suitable for use
+       directly in MappingRules as the mapping.
+
+       mapping: {DEFAULT_SPOKEN:ACTION}
+       <conffile>: {USER_PHRASE:DEFAULT_SPOKEN}
+
+       returns: {USER_PHRASE:ACTION} (where defaults are used if a user
+       phrase is not given for a particular command.'''
     conf_path = ('grammar_config', module_name)
     conf = ConfigWatcher(conf_path).conf.get(config_key, {})
     commands = mapping.copy()
@@ -182,6 +192,29 @@ def make_grammar_commands(module_name, mapping, config_key='commands', alias = A
             commands[user_phrase] = mapping[default_phrase]
     return alias.make_mapping_spec(commands)
 
+
+def make_commands(module_name, mapping, config_key='commands', alias = Alias()):
+    '''Similar to make_grammar_commands, except designed for use in more
+       complex grammars that do not make use of MappingRules and thus need
+       to be able to look up phrases by key. You probably want
+       make_grammar_commands instead.
+
+       mapping: {DEFAULT_SPOKEN:COMMAND_KEY} (same as make_grammar_commands)
+       <conffile>: {USER_PHRASE:DEFAULT_SPOKEN} (same as make_grammar_commands)
+
+       returns: {COMMAND_KEY:USER_PHRASE} (NOT same as grammar commands.)
+       phrase is not given for a particular command.
+
+       COMMAND_KEY is an arbitrary value known to the rule.'''
+    table = make_grammar_commands(module_name, mapping, config_key, alias)
+
+    rval = {}
+    for (user_phrase, arbitrary_key) in table.iteritems():
+        rval.setdefault(arbitrary_key, []).append('(%s)' % user_phrase)
+
+    return {arbitrary_key:'|'.join(user_phrases)
+            for (arbitrary_key, user_phrases)
+            in rval.iteritems()}
 
 def make_local_disable_context(grammar_conf):
     """
