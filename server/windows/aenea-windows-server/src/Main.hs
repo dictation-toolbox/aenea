@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 
 module Main (main) where
 
@@ -14,7 +15,6 @@ import Network.JsonRpc.Server( Parameter (..)
                              , call
                              , Method
                              , toMethod
-                             , toMethods
                              , rpcError)
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)
@@ -22,11 +22,9 @@ import Data.List (delete, intersperse)
 import Data.Maybe (catMaybes, mapMaybe, fromMaybe)
 import Data.Aeson (Value, object, (.=))
 import qualified Data.ByteString.Lazy as B
-import Control.Applicative ((<$>))
 import Control.Monad ((<=<), guard, forM_)
 import Control.Monad.Trans (liftIO)
 import Control.Monad.Reader (lift)
-import Control.Monad.Error (throwError)
 import Control.Concurrent (threadDelay, readMVar)
 import Happstack.Lite (Request, toResponse)
 import qualified Happstack.Server.SimpleHTTP as H
@@ -35,6 +33,16 @@ import System.Environment (getArgs)
 import System.Console.GetOpt( OptDescr (Option), ArgDescr(..)
                             , ArgOrder (Permute), getOpt, usageInfo)
 import System.Exit (ExitCode (ExitFailure), exitSuccess, exitWith)
+
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative ((<$>))
+#endif
+
+#if MIN_VERSION_mtl(2,2,1)
+import Control.Monad.Except (throwError)
+#else
+import Control.Monad.Error (throwError)
+#endif
 
 main :: IO ()
 main = getArgs >>= \args ->
@@ -59,7 +67,7 @@ handleRequests :: H.ServerPartT IO H.Response
 handleRequests = do
   request <- H.askRq
   body <- lift $ getBody request
-  result <- lift $ call (toMethods methods) body
+  result <- lift $ call methods body
   let resultStr = fromMaybe "" result
       response = toResponse resultStr
   return $ noContentLength response
