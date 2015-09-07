@@ -20,9 +20,13 @@ import Foreign.C.Types (CInt (..))
 import Data.Text (Text)
 import Data.Aeson (FromJSON, parseJSON)
 import qualified Data.Map as M
-import Control.Applicative ((<$>), empty)
+import Control.Applicative (empty)
 import Control.Monad (when)
 import Control.Exception (finally)
+
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative ((<$>))
+#endif
 
 #include "Windows.h"
 #include "Winuser.h"
