@@ -18,11 +18,12 @@ import Network.JsonRpc.Server( Parameter (..)
                              , rpcError)
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)
-import Data.List (delete, intersperse)
+import Data.List (intersperse)
 import Data.Maybe (catMaybes, mapMaybe, fromMaybe)
 import Data.Aeson (Value, object, (.=))
-import qualified Data.ByteString.Lazy as B
-import Control.Monad ((<=<), guard, forM_)
+import qualified Data.ByteString.Lazy as LB
+import qualified Data.ByteString.Lazy.Char8 as LBChar8
+import Control.Monad ((<=<), when, forM_)
 import Control.Monad.Trans (liftIO)
 import Control.Monad.Reader (lift)
 import Control.Concurrent (threadDelay, readMVar)
@@ -49,78 +50,100 @@ main = getArgs >>= \args ->
   case parseArgs args of
     Left Nothing -> putStrLn usage >> exitSuccess
     Left (Just errs) -> putStrLn (errs ++ usage) >> exitWith (ExitFailure 1)
-    Right (maybeAddress, portStr) -> case parseInt portStr of
-                                       Nothing -> putStrLn "cannot parse port" >> exitWith (ExitFailure 1)
-                                       Just port -> serve maybeAddress port
+    Right (maybeAddress, portStr, verbosity) ->
+        case parseInt portStr of
+          Nothing -> putStrLn "cannot parse port" >> exitWith (ExitFailure 1)
+          Just port -> serve verbosity maybeAddress port
 
-serve :: Maybe String -> Int -> IO ()
-serve maybeAddress port = let conf = H.nullConf {H.port = port}
-                          in case maybeAddress of
-                               Nothing -> putStrLn ("listening on port " ++ show port) >>
-                                          H.simpleHTTP conf handleRequests
-                               Just addr -> do
-                                 s <- H.bindIPv4 addr port
-                                 putStrLn $ "listening on " ++ addr ++ ":" ++ show port
-                                 H.simpleHTTPWithSocket s conf handleRequests
+serve :: Verbosity -> Maybe Address -> Int -> IO ()
+serve verbosity maybeAddress port =
+    let conf = H.nullConf {H.port = port}
+    in case maybeAddress of
+         Nothing -> putStrLn ("listening on port " ++ show port) >>
+                    H.simpleHTTP conf (handleRequests verbosity)
+         Just addr -> do
+           s <- H.bindIPv4 addr port
+           putStrLn $ "listening on " ++ addr ++ ":" ++ show port
+           H.simpleHTTPWithSocket s conf $ handleRequests verbosity
 
-handleRequests :: H.ServerPartT IO H.Response
-handleRequests = do
+handleRequests :: Verbosity -> H.ServerPartT IO H.Response
+handleRequests verbosity = do
   request <- H.askRq
   body <- lift $ getBody request
+  printMsg body
   result <- lift $ call methods body
   let resultStr = fromMaybe "" result
-      response = toResponse resultStr
-  return $ noContentLength response
+  printMsg resultStr
+  return $ noContentLength $ toResponse resultStr
+    where printMsg = when (verbosity == Verbose)
+                     . lift . LBChar8.putStrLn
 
-getBody :: Request -> IO B.ByteString
+getBody :: Request -> IO LB.ByteString
 getBody r = H.unBody <$> readMVar (H.rqBody r)
 
 usage :: String
 usage = usageInfo "usage: aenea [options]" options
 
-parseArgs :: [String] -> Either (Maybe String) (Maybe String, String)
+data Verbosity = Verbose | Quiet deriving Eq
+
+type Address = String
+type Port = String
+
+parseArgs :: [String] -> Either (Maybe String) (Maybe Address, Port, Verbosity)
 parseArgs args = case getOpt Permute options args of
                    (opts, _, []) | Help `elem` opts -> Left Nothing
-                   (opts, [], []) -> maybe (Left $ Just msg) Right $ parseOpts opts
+                   (opts, [], []) -> Right $ parseOpts opts
                    (_, _, []) -> Left $ Just msg
                    (_, _, errs) -> Left $ Just $ concat errs
                  where msg = "unexpected arguments\n"
-                       parseOpts opts = do
-                         (addr, opts') <- getArg opts getAddress Nothing
-                         (port, opts'') <- getArg opts' getPort "8240"
-                         guard $ null opts''
-                         return (addr, port)
+                       parseOpts opts =
+                           let addr = getArg opts getAddress Nothing
+                               port = getArg opts getPort "8240"
+                               verbosity = getArg opts getVerbosity Quiet
+                           in (addr, port, verbosity)
 
-getArg :: [Flag] -> (Flag -> Maybe (Flag, a)) -> a -> Maybe (a, [Flag])
-getArg opts f default' = case mapMaybe f opts of
-                           [(flag, arg)] -> Just (arg, delete flag opts)
-                           [] -> Just (default', opts)
-                           _ -> Nothing
+getArg :: [Flag] -> (Flag -> Maybe a) -> a -> a
+getArg opts f default' = case safeLast $ mapMaybe f opts of
+                           Just arg -> arg
+                           Nothing -> default'
 
-getAddress x@(Address a) = Just (x, Just a)
+safeLast :: [a] -> Maybe a
+safeLast [] = Nothing
+safeLast xs = Just $ last xs
+
+getAddress :: Flag -> Maybe (Maybe Address)
+getAddress (Address a) = Just $ Just a
 getAddress _ = Nothing
 
-getPort x@(Port p) = Just (x, p)
+getPort :: Flag -> Maybe Port
+getPort (Port p) = Just p
 getPort _ = Nothing
+
+getVerbosity :: Flag -> Maybe Verbosity
+getVerbosity Verbosity = Just Verbose
+getVerbosity _ = Nothing
 
 parseInt :: String -> Maybe Int
 parseInt x = case reads x of
                [(i, [])] -> Just i
                _ -> Nothing
 
-data Flag = Address String | Port String | Help
+data Flag = Address String | Port String | Verbosity | Help
             deriving (Eq, Ord, Show)
 
 options :: [OptDescr Flag]
 options = [ Option "a" ["address"] (ReqArg Address "address") "specify host IP address (not host name)"
           , Option "p" ["port"] (ReqArg Port "port") "specify host port (default is 8240)"
+          , Option "v" ["verbose"] (NoArg Verbosity) "print JSON-RPC requests and responses"
           , Option "h" ["help"] (NoArg Help) "show this message"]
 
+methods :: [Method IO]
 methods = [ getContextMethod
           , keyPressMethod
           , writeTextMethod
           , pauseMethod ]
 
+keyPressMethod :: Method IO
 keyPressMethod = toMethod "key_press" keyPressFunction
                  (Required "key" :+:
                   Optional "modifiers" [] :+:
@@ -140,6 +163,7 @@ keyPressFunction keyName modifiers direction count delayMillis = do
   lift $ compose (withPress <$> modKeys) pressKey
     where compose = foldl (.) id
 
+defaultKeyDelay :: Int
 defaultKeyDelay = -1
 
 getContextMethod :: Method IO
@@ -150,6 +174,7 @@ getContextMethod = toMethod "get_context" context ()
           active = (titlePair <$>) <$> getForegroundWindowText
           titlePair text = ["id" .= ("" :: String), "title" .= text]
 
+writeTextMethod :: Method IO
 writeTextMethod = toMethod "write_text" writeTextFunction
                   (Required "text" :+: ())
 
@@ -158,6 +183,7 @@ writeTextFunction text = forM_ (unpack text) $
                          lift . keyPress <=< tryLookupKey charToKey charToText
     where charToText c = fromString [c]
 
+pauseMethod :: Method IO
 pauseMethod = toMethod "pause" pause (Required "amount" :+: ())
     where pause :: Int -> RpcResult IO ()
           pause ms = liftIO $ threadDelay (1000 * ms)
