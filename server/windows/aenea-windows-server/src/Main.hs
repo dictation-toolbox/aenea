@@ -20,7 +20,7 @@ import Data.Text (Text, unpack, append)
 import Data.String (fromString)
 import Data.List (intersperse)
 import Data.Maybe (catMaybes, mapMaybe, fromMaybe)
-import Data.Aeson (Value, object, (.=))
+import Data.Aeson (Value (Number, String), object, (.=))
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.Lazy.Char8 as LBChar8
 import Control.Monad ((<=<), when, forM_)
@@ -70,7 +70,7 @@ handleRequests :: Verbosity -> H.ServerPartT IO H.Response
 handleRequests verbosity = do
   request <- H.askRq
   body <- lift $ getBody request
-  printMsg body
+  printMsg "" >> printMsg body
   result <- lift $ call methods body
   let resultStr = fromMaybe "" result
   printMsg resultStr
@@ -141,7 +141,8 @@ methods :: [Method IO]
 methods = [ getContextMethod
           , keyPressMethod
           , writeTextMethod
-          , pauseMethod ]
+          , pauseMethod
+          , serverInfoMethod ]
 
 keyPressMethod :: Method IO
 keyPressMethod = toMethod "key_press" keyPressFunction
@@ -173,6 +174,18 @@ getContextMethod = toMethod "get_context" context ()
           ancestor = ((\t -> ["name" .= t]) <$>) <$> getForegroundWindowAncestorText
           active = (titlePair <$>) <$> getForegroundWindowText
           titlePair text = ["id" .= ("" :: String), "title" .= text]
+
+serverInfoMethod :: Method IO
+serverInfoMethod = toMethod "server_info" serverInfo ()
+    where serverInfo :: RpcResult IO Value
+          serverInfo = return $ object
+                         [ "window_manager" .= String "windows"
+                         , "operating_system" .= String "windows"
+                         , "platform" .= String "windows"
+                         , "display" .= String "windows"
+                         , "server" .= String "aenea"
+                         , "server_version" .= Number 1
+                         ]
 
 writeTextMethod :: Method IO
 writeTextMethod = toMethod "write_text" writeTextFunction
