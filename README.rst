@@ -129,9 +129,9 @@ Installation:
 
 - Install the Haskell Platform for Windows from http://www.haskell.org/platform.
 - Run the command ``cabal update``.
-- Run ``cabal install`` in the folder ...aenea\\WindowsServer\\aenea-windows-server to install aenea.exe for the current user.
-- aenea takes optional arguments specifying the IP address and port. These should match those on the server config.
-- Set USE_MULTIPLE_ACTIONS to False in the client config file.
+- Run ``cabal install`` in the folder ...aenea\\WindowsServer\\aenea-windows-server to create aenea.exe in cabal's bin folder.
+- aenea.exe takes optional arguments specifying the IP address and port. These should match those on C:\\NatLink\\NatLink\\MacroSystem\\aenea.json.
+- Set use_multiple_actions to false in aenea.json.
 
 Server (OS X)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -145,16 +145,17 @@ Enable access for assistive devices in your system preferences
 
 Aenea client-side library
 ~~~~~~~~~~~~
+At this point, the folder C:\\NatLink\\NatLink\\MacroSystem should contain a folder named core.
 
-0) Copy aenea/client/aenea to C:\\NatLink\\NatLink\\MacroSystem.
+0) Copy aenea/client/aenea into C:\\NatLink\\NatLink\\MacroSystem.
 
-1) Copy aenea/aenea.json.example to C:\\NatLink\\NatLink\\MacroSystem and edit to suit.
+1) Copy aenea/aenea.json.example into C:\\NatLink\\NatLink\\MacroSystem. Rename it to aenea.json and edit to suit.
 
-1a) For aenea itself you have a choice -- you can either store its state and configuration files (these are used for keeping track of which dynamic vocabulary are currently active, which server to send commands to, etc) in C:\\Natlink\\NatLink\\MacroSystem, or you can store them elsewhere. If you store them in NatLink just edit aenea.json to suit and you're done. If you want to store it elsewhere (I put it on a shared folder mounted as the E drive so I can manage it from the host), then delete all the lines except 'project_root', and set its value to whatever directory you want to manage the config from. Then, in that directory, copy the full aenea.json.example and edit to taste. Basically on startup we first load C:\\NatLink\\NatLink\\MacroSystem\\aenea.json (hardcoded), then if the project_root specified is another directory we load aenea.json from that directory, overwriting any settings, and repeat until aenea.json specifies its own path (or a cycle which is an error). All other config files are relative to the project_root.
+1a) For aenea itself you have a choice -- you can either store its state and configuration files (these are used for keeping track of which dynamic vocabulary are currently active, which server to send commands to, etc) in C:\\Natlink\\NatLink\\MacroSystem, or you can store them elsewhere. If you store them in MacroSystem just edit aenea.json to suit and you're done. If you want to store it elsewhere (I put it on a shared folder mounted as the E drive so I can manage it from the host), then delete all the lines except 'project_root', and set its value to whatever directory you want to manage the config from. Then, in that directory, copy the full aenea.json.example and edit to taste. Basically on startup we first load C:\\NatLink\\NatLink\\MacroSystem\\aenea.json (hardcoded), then if the project_root specified is another directory we load aenea.json from that directory, overwriting any settings, and repeat until aenea.json specifies its own path (or a cycle which is an error). All other config files are relative to the project_root.
 
 1b) If not using VirtualBox host only adapter as described above, you will need to set the host and port to the correct settings.
 
-4) Copy aenea/client/_hello_world_aenea.py to C:\\NatLink\\NatLink\\MacroSystem, and restart Dragon. Now try saying "test hello world remote grammar". The text "Aenea remote setup operational" should be typed through the server, into whatever window is in the foreground (including potentially the VM itself.) The server will also print updates for every command received and executed to aid in debugging setup issues. If it doesn't work, check the NatLink window for backtraces as well. Note that the JSON-RPC library will serialize and return Python exceptions from the server to print in the NatLink window, so a backtrace in that window can be either from the client or the server.
+4) Copy aenea/client/_hello_world_aenea.py into C:\\NatLink\\NatLink\\MacroSystem, and restart Dragon. Now try saying "test hello world remote grammar". The text "Aenea remote setup operational" should be typed through the server, into whatever window is in the foreground (unless it is the VM itself.) The server will also print updates for every command received and executed to aid in debugging setup issues. If it doesn't work, check the NatLink window for backtraces as well. Note that the JSON-RPC library will serialize and return Python exceptions from the server to print in the NatLink window, so a backtrace in that window can be either from the client or the server.
 
 5) If all's well, delete _hello_world_aenea.py.
 
@@ -163,13 +164,13 @@ Built-In Optional Modules
 
 While optional, Aenea comes with two very useful modules.
 
-_aenea.py allows you to dynamically switch between local (i.e., in the VM) and remote (i.e., send to server), as well as changing which server commands are sent to (if you're using several different computers). It will also print useful information when the module is loaded such as the current networking settings. To install, just copy client/_aenea.py to NatLink directory. It is configured in ROOT/grammar_config/aenea.json, there you can rebind commands and add or remove servers to connect to. It reads and writes ROOT/server_state.json to keep track of which server is currently active.
+_aenea.py allows you to dynamically switch between local (i.e., in the VM) and remote (i.e., send to server), as well as changing which server commands are sent to (if you're using several different computers). It will also print useful information when the module is loaded such as the current networking settings. To install, just copy client/_aenea.py into the MacroSystem directory. It is configured in ROOT\\grammar_config\\aenea.json, there you can rebind commands and add or remove servers to connect to. It reads and writes ROOT\\server_state.json to keep track of which server is currently active.
 
-_vocabulary.py is used by most of my grammars, and allows multiple grammars to make use of the same set of vocabulary. (For example, one may want access to Python vocabulary both in a VIM grammar and a generic edit grammar). It makes use of ROOT/vocabulary_config. ROOT/vocabulary_config/static contains vocabularies that are always enabled, and ROOT/vocabulary_config/dynamic contains vocabularies that may be switched on and off by the user at will. ROOT/vocabulary_config/enabled.json (read and written) keeps track of the current state of dynamic vocabularies. You can rebind the commands used to control vocabulary in ROOT/grammar_config/vocabulary.json. To install, just copy client/_vocabulary.py into the NatLink dir.
+_vocabulary.py is used by most of my grammars, and allows multiple grammars to make use of the same set of vocabulary. (For example, one may want access to Python vocabulary both in a VIM grammar and a generic edit grammar). It makes use of ROOT\\vocabulary_config. ROOT\\vocabulary_config\\static contains vocabularies that are always enabled, and ROOT\\vocabulary_config\\dynamic contains vocabularies that may be switched on and off by the user at will. ROOT\\vocabulary_config\\enabled.json (read and written) keeps track of the current state of dynamic vocabularies. You can rebind the commands used to control vocabulary in ROOT\\grammar_config\\vocabulary.json. To install, just copy client/_vocabulary.py into the MacroSystem dir.
 
 Aenea Dictation Client (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Also available is a dictation capture client @poppe1219 wrote. This is simply a window that captures all keystrokes typed into it an relays them to the Linux host. If you disable Dragon's dictation box, you can dictate in Dragon's normal mode with the capture client in the foreground in Windows. Dragon will then type into the client, which will send the keystrokes to the server. You can still use grammars with the client in the foreground. To use, just copy client/aenea_client.py to NatLink and run it. By default, all grammars will only work when the client is in the foreground. You can change this behavior in aenea.json by setting restrict_proxy_to_aenea_client to false.
+Also available is a dictation capture client @poppe1219 wrote. This is simply a window that captures all keystrokes typed into it an relays them to the Linux host. If you disable Dragon's dictation box, you can dictate in Dragon's normal mode with the capture client in the foreground in Windows. Dragon will then type into the client, which will send the keystrokes to the server. You can still use grammars with the client in the foreground. To use, just copy client/aenea_client.py to MacroSystem and run it. By default, all grammars will only work when the client is in the foreground. You can change this behavior in aenea.json by setting restrict_proxy_to_aenea_client to false.
 
 Snapshot and backup (MANDATORY)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
