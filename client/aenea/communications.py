@@ -101,6 +101,10 @@ class Proxy(object):
 
     def __getattr__(self, meth):
         def call(*a, **kw):
+            # Cannot use both positional and keyword arguments
+            # (according to JSON-RPC spec.)
+            assert not (a and kw)
+
             return self._execute_batch([(meth, a, kw)])
         return call
 
@@ -123,6 +127,10 @@ class BatchProxy(object):
 
     def __getattr__(self, key):
         def call(*a, **kw):
+            # Cannot use both positional and keyword arguments
+            # (according to JSON-RPC spec.)
+            assert not (a and kw)
+
             if not key.startswith('_'):
                 self._commands.append((key, a, kw))
         return call

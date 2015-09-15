@@ -480,6 +480,12 @@ def multiple_actions(actions):
     for (method, parameters, optional) in actions:
         commands = list_rpc_commands()
         if method in commands:
+            # JSON-RPC forbids specifying both optional and parameters.
+            # Since multiple_actions is trying to mimic something like
+            # Multicall except with sequential ordering and abort,
+            # we enforce it here.
+            assert not (parameters and optional)
+
             commands[method](*parameters, _xdotool=xdotool, **optional)
         else:
             break
