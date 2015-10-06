@@ -46,7 +46,9 @@ LITERAL_KEYS = ('abcdefghijklmnopqrstuvwxyz'
 # Keys that should be completely ignored when pressed. This has the side
 # effect that Dragon commands like 'press control J' will not work via
 # this cilent.
-IGNORED_KEYS = ('Shift_L', 'Control_L', 'Alt_L', '??')
+IGNORED_KEYS = ('Shift_L', 'Control_L')
+
+ALT_KEY_SEQUENCE_MAP = {u'\u2013' : 'hyphen'}
 
 _config = aenea.configuration.ConfigWatcher(
     'dictation_capture_state',
@@ -118,11 +120,17 @@ class ProxyBuffer(object):
             if todo._commands:
                 aenea.communications.server.execute_batch(todo._commands)
 
+class AltKeySequenceState(object):
+    NO_SEQUENCE = 0
+    STARTING_ALT_SEQUENCE = 1
+    IN_ALT_SEQUENCE = 2
+    ENDING_ALT_SEQUENCE = 3
 
 class AeneaClient(tk.Tk):
 
     def __init__(self):
         tk.Tk.__init__(self)
+        self.alt_key_sequence = AltKeySequenceState.NO_SEQUENCE
         self.wm_title('Aenea client - Dictation capturing')
         self.geometry('400x600+400+0')
         self.wait_visibility(self)
@@ -208,7 +216,7 @@ class AeneaClient(tk.Tk):
         # Release VirtualBox keyboard capture.
         self.proxy_buffer.start_capture()
         self.log('Starting capture')
-        self.bind('<Any KeyPress>', lambda event: self.send_key(event.keysym))
+        self.bind('<Any KeyPress>', lambda event: self.send_key(event.char, event.keysym))
         self.button1.config(state=tk.DISABLED)
         self.button2.config(state=tk.NORMAL)
 
@@ -221,17 +229,39 @@ class AeneaClient(tk.Tk):
     def dummy_event(self, event):
         pass
 
-    def send_key(self, key):
+    def send_key(self, char, key):
         _config.refresh()
         if not _config.conf.get('enabled', True):
             return
+
+        if key == 'Alt_L':
+            self.alt_key_sequence = AltKeySequenceState.STARTING_ALT_SEQUENCE
+            return
+
+        if self.alt_key_sequence == AltKeySequenceState.STARTING_ALT_SEQUENCE:
+            if key == '0':
+                self.alt_key_sequence = AltKeySequenceState.IN_ALT_SEQUENCE
+                return
+            else:
+                self.alt_key_sequence = AltKeySequenceState.NO_SEQUENCE
+
+        if self.alt_key_sequence == AltKeySequenceState.IN_ALT_SEQUENCE:
+            if key == '??':
+                self.alt_key_sequence = AltKeySequenceState.ENDING_ALT_SEQUENCE
+            else:
+                return
 
         if self.display_entered_text.get():
             self.tab1.text1.insert(tk.END, (key if key != 'space' else ' '))
             self.tab1.text1.see(tk.END)  # Scroll to end.
         if key in IGNORED_KEYS:
             return
-        self.proxy_buffer.send_key(TRANSLATE_KEYS.get(key, key))
+
+        if self.alt_key_sequence == AltKeySequenceState.ENDING_ALT_SEQUENCE:
+            self.alt_key_sequence = AltKeySequenceState.NO_SEQUENCE
+            self.proxy_buffer.send_key(ALT_KEY_SEQUENCE_MAP.get(char, char))
+        else:
+            self.proxy_buffer.send_key(TRANSLATE_KEYS.get(key, key))
 
     def clear_text(self):
         self.tab1.text1.delete('1.0', tk.END)
