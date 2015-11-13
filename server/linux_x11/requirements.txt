@@ -1,0 +1,4 @@
+psutil==3.0.0
+python-xlib==0.15rc1
+python-libxdo==0.1a
+yapsy==1.10.423
