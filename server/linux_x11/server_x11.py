@@ -21,9 +21,17 @@ import os
 import subprocess
 import sys
 import time
+import array
 
 import jsonrpclib
 import jsonrpclib.SimpleJSONRPCServer
+
+import xdo
+import Xlib.display
+import psutil
+
+display = Xlib.display.Display()
+libxdo = xdo.Xdo()
 
 import config
 if not hasattr(config, 'XDOTOOL_DELAY'):
@@ -94,15 +102,21 @@ _SERVER_INFO = {
     }
 
 
-_XPROP_PROPERTIES = {
-    '_NET_WM_DESKTOP(CARDINAL)': 'desktop',
-    'WM_WINDOW_ROLE(STRING)': 'role',
-    '_NET_WM_WINDOW_TYPE(ATOM)': 'type',
-    '_NET_WM_PID(CARDINAL)': 'pid',
-    'WM_LOCALE_NAME(STRING)': 'locale',
-    'WM_CLIENT_MACHINE(STRING)': 'client_machine',
-    'WM_NAME(STRING)': 'name'
-    }
+# Additional X properties that we'd like to expose via get_context()
+_X_PROPERTIES = {
+    '_NET_WM_DESKTOP': 'desktop',
+    'WM_WINDOW_ROLE': 'role',
+    '_NET_WM_WINDOW_TYPE': 'type',
+    '_NET_WM_PID': 'pid',
+    'WM_LOCALE_NAME': 'locale',
+    'WM_CLIENT_MACHINE': 'client_machine',
+    'WM_NAME': 'name'
+}
+
+
+# compute {atom_name: atom_value} map once to save us from having to query X
+# for this data repeatedly.
+_X_ATOMS = {name: display.intern_atom(name) for name in _X_PROPERTIES}
 
 
 _MOD_TRANSLATION = {
@@ -244,56 +258,78 @@ def transform_relative_mouse_event(event):
     return [('mousemove', '%i %i' % (geo['x'] + dx, geo['y'] + dy))]
 
 
-def get_context(_xdotool=None):
-    '''return a dictionary of window properties for the currently active
-       window. it is fine to include platform specific information, but
-       at least include title and executable.'''
+def get_context():
+    """
+    Query the system for context information.  This data is typically passed
+    back to the aenea client so that it may use it in Dragonfly grammars.
+    Specifically, this data will be used when Dragonfly's grammars perform
+    context matching to decide which grammars should be activated.
+    :return: various properties related to the current active window
+      All possible return keys are demostrated below:
 
-    flush_xdotool(_xdotool)
-    window_id, window_title = get_active_window()
-    if window_id is None:
+      {
+          'id': 1234,             # window id
+          'cls_name': 'foo',      # WM_CLASS name
+          'cls': 'bar',           # WM_CLASS
+          'title': 'baz',         # WM_NAME
+          'client_machine': 'me', # WM_CLIENT_MACHINE
+          'name': 'baz',          # WM_NAME,
+          'locale': 'x',          # WM_LOCALE_NAME
+          'pid': 123,             # _NET_WM_PID
+          'type': '543',          # x11 atom for _NET_WM_WINDOW_TYPE
+          'role': '...',          # WM_WINDOW_ROLE
+          'desktop': '0',         # _NET_WM_DESKTOP
+      }
+    :rtype dict
+    """
+    try:
+        window_id = libxdo.get_focused_window_sane()
+        window = display.create_resource_object('window', window_id)
+    except Exception as error:
+        logger.error('failed to get active window error=%s', error)
         return {}
 
-    properties = {
-        'id': window_id,
-        'title': window_title,
-        }
-    for line in read_command('-id %s' % window_id, 'xprop').split('\n'):
-        split = line.split(' = ', 1)
-        if len(split) == 2:
-            rawkey, value = split
-            if split[0] in _XPROP_PROPERTIES:
-                property_value = value[1:-1] if '(STRING)' in rawkey else value
-                properties[_XPROP_PROPERTIES[rawkey]] = property_value
-            elif rawkey == 'WM_CLASS(STRING)':
-                window_class_name, window_class = value.split('", "')
-                properties['cls_name'] = window_class_name[1:]
-                properties['cls'] = window_class[:-1]
+    properties = {'id': window_id}
 
-    # Sigh...
-    properties['executable'] = None
-    properties['executable'] = None
-    if 'pid' in properties:
-        try:
-            proc_command = '/proc/%s/exe' % properties['pid']
-            properties['executable'] = os.readlink(proc_command)
-        except OSError:
-            ps = read_command('%s' % properties['pid'], executable='ps')
-            ps = ps.split('\n')[1:]
-            if ps:
-                try:
-                    properties['executable'] = ps[0].split()[4]
-                except Exception:
-                    pass
+    window_class = window.get_wm_class()
+    if window_class is not None:
+        properties['cls_name'] = window_class[1]
+        properties['cls'] = window_class[0]
+
+    window_title = window.get_wm_name()
+    if window_title is not None:
+        properties['title'] = window_title
+
+    # get additional window properties via xlib.  if the window does not have
+    # the property then omit it from <properties>.
+    for atom_name, atom in _X_ATOMS.items():
+        queried_property = window.get_full_property(atom, 0)
+        if queried_property is not None:
+            value = queried_property.value
+            if type(value) == array.array:
+                value = value.tolist()
+                if not len(value):
+                    continue
+                value = value[0]
+            properties[_X_PROPERTIES[atom_name]] = str(value)
+
+    # get process related context info.  if we cannot get this information
+    # then omit it from <properties>.
+    try:
+        pid = libxdo.get_pid_window(window_id)
+        properties['pid'] = pid
+        process = psutil.Process(pid)
 
         try:
-            cmdline_path = '/proc/%s/cmdline' % properties['pid']
-            with open(cmdline_path) as fd:
-                properties['cmdline'] = fd.read().replace('\x00', ' ').strip()
-        except OSError:
+            properties['executable'] = process.exe()
+        except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
             pass
-    else:
-        logger.warn('pid not set. properties: %s' % properties)
+        try:
+            properties['cmdline'] = process.cmdline()
+        except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
+            pass
+    except Exception as e:
+        pass
 
     return properties
 
