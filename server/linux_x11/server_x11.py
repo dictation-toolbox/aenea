@@ -22,6 +22,7 @@ import subprocess
 import sys
 import time
 import array
+from warnings import warn
 
 import jsonrpclib
 import jsonrpclib.SimpleJSONRPCServer
@@ -334,37 +335,54 @@ def get_context():
     return properties
 
 
-def key_press(
-        key=None,
-        modifiers=(),
-        direction='press',
-        count=1,
-        count_delay=None,
-        _xdotool=None
-        ):
-    '''press a key possibly modified by modifiers. direction may be
-       'press', 'down', or 'up'. modifiers may contain 'alt', 'shift',
-       'control', 'super'. this X11 server also supports 'hyper',
-       'meta', and 'flag' (same as super). count is number of times to
-       press it. count_delay delay in ms between presses.'''
+def key_press(key=None, modifiers=(), direction='press', count=1,
+              count_delay=None, _xdotool=None):
+    """
+    Press a key possibly modified by modifiers. direction may be 'press',
+    'down', or 'up'. modifiers may contain 'alt', 'shift', 'control', 'super'.
+    This X11 server also supports 'hyper', 'meta', and 'flag' (same as super).
+    Count is number of times to press it. count_delay delay in ms between
+    presses.
+    :param str key: Key to press. Valid values: _KEY_TRANSLATION.keys()
+    :param modifiers: Key modifiers. Valid values: _MOD_TRANSLATION.keys()
+    :type modifiers: list of str
+    :param str direction: Direction of key press.  Valid values:
+      _KEY_PRESSES.keys()
+    :param int count: Number of times to perform this key press.
+    :param int count_delay: Delay between repeated keystrokes in milliseconds.
+    :param _xdotool: Deprecated.  Here for backwards compatibility only!
+    :return:
+    """
     assert key is not None
 
-    if count_delay is None or count < 2:
-        delay = ''
-    else:
-        delay = '--delay %i ' % count_delay
-
-    modifiers = [_MOD_TRANSLATION.get(mod, mod) for mod in modifiers]
-    key_to_press = _KEY_TRANSLATION.get(key, key)
-
-    keys = ['keydown ' + k for k in modifiers]
-    keys.extend(['key%s %s' % (_KEY_PRESSES[direction], key_to_press)] * count)
-    keys.extend('keyup ' + k for k in reversed(modifiers))
-
     if _xdotool is not None:
-        _xdotool.extend(keys)
-    else:
-        run_command(delay + ' '.join(keys))
+        warn('_xdotool parameter deprecated', DeprecationWarning)
+
+    delay_millis = 0 if count_delay is None or count == 1 else count_delay
+    delay_micros = delay_millis * 1000
+    modifiers = [_MOD_TRANSLATION.get(mod, mod) for mod in modifiers]
+    key = _KEY_TRANSLATION.get(key, key)
+
+    # TODO: We can distill this entire loop down to a single libxdo function
+    # call when we figure out how to properly user charcode_t entities from
+    # libxdo.
+    for _ in range(0, count):
+        # modifiers down
+        libxdo.send_keysequence_window_down(
+            0, '+'.join(modifiers), delay_micros)
+
+        if direction == 'press':
+            libxdo.send_keysequence_window(0, key, delay_micros)
+        elif direction == 'up':
+            libxdo.send_keysequence_window_up(0, key, delay_micros)
+        elif direction == 'down':
+            libxdo.send_keysequence_window_down(0, key, delay_micros)
+
+        # modifiers up
+        libxdo.send_keysequence_window_up(
+            0, '+'.join(reversed(modifiers)), delay_micros)
+
+        time.sleep(delay_millis / 1000)  # emulate xdotool sleep
 
 
 def write_text(text, paste=False, _xdotool=None):
@@ -493,7 +511,7 @@ def notify(message):
         subprocess.Popen(['notify-send', message])
     except Exception as e:
         logger.warn('failed to start notify-send process: %s' % e)
-        
+
 
 def server_info(_xdotool=None):
     flush_xdotool(_xdotool)
