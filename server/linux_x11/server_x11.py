@@ -351,7 +351,7 @@ def key_press(key=None, modifiers=(), direction='press', count=1,
     :param int count: Number of times to perform this key press.
     :param int count_delay: Delay between repeated keystrokes in milliseconds.
     :param _xdotool: Deprecated.  Here for backwards compatibility only!
-    :return:
+    :return: This function always returns None
     """
     assert key is not None
 
@@ -394,8 +394,8 @@ def write_text(text, paste=False, _xdotool=None):
     :param str text: Text to send to the current active window.
     :param bool paste: If True, text will be written to the current window
      using xsel and a middle click.
-    :param _xdotool:
-    :return:
+    :param _xdotool: Deprecated.
+    :return: This function always returns None
     """
 
     # Workaround for https://github.com/jordansissel/xdotool/pull/29
@@ -413,7 +413,6 @@ def write_text(text, paste=False, _xdotool=None):
             #     middle click?
             #     if not, we may need a blacklist of buggy programs.
             click_mouse(2, _xdotool=_xdotool)
-            flush_xdotool(_xdotool)
 
             # nuke the text we selected
             run_command('-c', executable='xsel')
@@ -424,37 +423,43 @@ def write_text(text, paste=False, _xdotool=None):
             libxdo.enter_text_window(0, text, config.XDOTOOL_DELAY*1000)
 
 
-def click_mouse(
-        button,
-        direction='click',
-        count=1,
-        count_delay=None,
-        _xdotool=None
-        ):
-
-    '''click the mouse button specified. button maybe one of 'right',
-       'left', 'middle', 'wheeldown', 'wheelup'. This X11 server will
-       also accept a number.'''
-
-    if count_delay is None or count < 2:
-        delay = ''
-    else:
-        delay = '--delay %i ' % count_delay
-
-    repeat = '' if count == 1 else '--repeat %i' % count
-
-    try:
-        button = _MOUSE_BUTTONS[button]
-    except KeyError:
-        button = int(button)
-
-    command = ('%s %s %s %s' %
-               (_MOUSE_CLICKS[direction], delay, repeat, button))
-
+def click_mouse(button, direction='click', count=1, count_delay=None,
+                _xdotool=None):
+    """
+    Click the mouse button specified at the current location.
+    :param button: Mouse button to click. One of _MOUSE_BUTTONS.keys()
+      or an int corresponding to a libxdo mouse button code.
+    :type button: str or int
+    :param str direction: Direction of 'up', 'down', 'click'  One of
+      _MOUSE_CLICKS.keys().
+    :param int count: Number of times to repeat this click.
+    :param int count_delay: Delay (in milliseconds) between mouse clicks.
+    :param _xdotool: Deprecated.
+    :return: This function always returns None
+    """
     if _xdotool is not None:
-        _xdotool.append(command)
+        warn('_xdotool parameter deprecated', DeprecationWarning)
+
+    delay_millis = 0 if count_delay is None or count < 2 else count_delay
+
+    if button in _MOUSE_BUTTONS:
+        button = _MOUSE_BUTTONS[button]
     else:
-        run_command(command)
+        try:
+            button = int(button)
+        except ValueError:
+            raise ValueError('invalid "button" parameter: "%s"' % button)
+
+    for _ in range(0, count):
+        if direction == 'click':
+            libxdo.click_window(0, button)
+        elif direction == 'down':
+            libxdo.mouse_down(0, button)
+        elif direction == 'up':
+            libxdo.mouse_up(0, direction)
+        else:
+            raise ValueError('invalid "direction" parameter: "%s"' % direction)
+        time.sleep(delay_millis / 1000)
 
 
 def move_mouse(
