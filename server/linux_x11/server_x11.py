@@ -266,7 +266,7 @@ def get_context():
     Specifically, this data will be used when Dragonfly's grammars perform
     context matching to decide which grammars should be activated.
     :return: various properties related to the current active window
-      All possible return keys are demostrated below:
+      All possible return keys are demonstrated below:
 
       {
           'id': 1234,             # window id
@@ -386,10 +386,17 @@ def key_press(key=None, modifiers=(), direction='press', count=1,
 
 
 def write_text(text, paste=False, _xdotool=None):
-    '''send text formatted exactly as written to active window. If paste
-       is True, will use X11 PRIMARY clipboard to paste the text instead
-       of typing it. See config.ENABLE_XSEL documentation for more
-       information on this.'''
+    """
+    Send text formatted exactly as written to active window. If paste
+    is True, will use X11 PRIMARY clipboard to paste the text instead
+    of typing it. See config.ENABLE_XSEL documentation for more
+    information on this.
+    :param str text: Text to send to the current active window.
+    :param bool paste: If True, text will be written to the current window
+     using xsel and a middle click.
+    :param _xdotool:
+    :return:
+    """
 
     # Workaround for https://github.com/jordansissel/xdotool/pull/29
     if text:
@@ -414,12 +421,7 @@ def write_text(text, paste=False, _xdotool=None):
             # restore the previous clipboard contents
             run_command('-x', executable='xsel')
         else:
-            flush_xdotool(_xdotool)
-
-            write_command(
-                text,
-                arguments='type --file - --delay %d' % config.XDOTOOL_DELAY
-            )
+            libxdo.enter_text_window(0, text, config.XDOTOOL_DELAY*1000)
 
 
 def click_mouse(
