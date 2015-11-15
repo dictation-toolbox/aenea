@@ -1,4 +1,5 @@
 psutil==3.0.0
 python-xlib==0.15rc1
-python-libxdo==0.1a
+python-libxdo==0.1.1a0
 yapsy==1.10.423
+jsonrpclib==0.1.3
