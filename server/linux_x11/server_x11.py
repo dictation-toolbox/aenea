@@ -239,18 +239,31 @@ def get_active_window(_xdotool=None):
         return None, None
 
 
-def get_geometry(window_id=None, _xdotool=None):
-    flush_xdotool(_xdotool)
+def get_geometry(window_id=None):
+    """
+    Get locations and size information of a window
+    :param int window_id:
+    :return: Window location and size info. Example:
+      {
+        'y': 154,
+        'x': 81,
+        'screen': None,
+        'width': 1116,
+        'height': 458
+      }
+    :rtype: dict
+    """
     if window_id is None:
-        window_id, _ = get_active_window()
-    geometry = read_command('getwindowgeometry --shell %i' % window_id)
-    geometry = geometry.strip().split('\n')
-    geo = dict([val.lower()
-               for val in line.split('=')]
-               for line in geometry)
-    geo = dict((key, int(value)) for (key, value) in geo.iteritems())
-    relevant_keys = 'x', 'y', 'width', 'height', 'screen'
-    return dict((key, geo[key]) for key in relevant_keys)
+        window_id = libxdo.get_focused_window_sane()
+    window_location = libxdo.get_window_location(window_id)
+    window_size = libxdo.get_window_size(window_id)
+    return {
+        'x': int(window_location.x),
+        'y': int(window_location.y),
+        'screen': window_location.screen.display,
+        'height': int(window_size.height),
+        'width': int(window_size.width),
+    }
 
 
 def transform_relative_mouse_event(event):
@@ -462,22 +475,24 @@ def click_mouse(button, direction='click', count=1, count_delay=None,
         time.sleep(delay_millis / 1000)
 
 
-def move_mouse(
-        x,
-        y,
-        reference='absolute',
-        proportional=False,
-        phantom=None,
-        _xdotool=None
-        ):
-    '''move the mouse to the specified coordinates. reference may be one
+def move_mouse(x, y, reference='absolute', proportional=False, phantom=None,
+               _xdotool=None):
+    """
+    Move the mouse to the specified coordinates. reference may be one
     of 'absolute', 'relative', or 'relative_active'. if phantom is not
     None, it is a button as click_mouse. If possible, click that
     location without moving the mouse. If not, the server will move the
     mouse there and click. Currently, phantom only works with absolute
     moves. Negative coordinates are allowed for all references; in the
-    case of absolute they will be clamped to 0.'''
-
+    case of absolute they will be clamped to 0.
+    :param x:
+    :param y:
+    :param reference:
+    :param proportional:
+    :param phantom:
+    :param _xdotool:
+    :return:
+    """
     geo = get_geometry()
     if proportional:
         x = geo['width'] * x
