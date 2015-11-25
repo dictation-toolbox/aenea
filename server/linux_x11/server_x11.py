@@ -266,12 +266,6 @@ def get_geometry(window_id=None):
     }
 
 
-def transform_relative_mouse_event(event):
-    geo = get_geometry()
-    dx, dy = map(int, map(float, event.split()))
-    return [('mousemove', '%i %i' % (geo['x'] + dx, geo['y'] + dy))]
-
-
 def get_context():
     """
     Query the system for context information.  This data is typically passed
@@ -475,48 +469,47 @@ def click_mouse(button, direction='click', count=1, count_delay=None,
         time.sleep(delay_millis / 1000)
 
 
-def move_mouse(x, y, reference='absolute', proportional=False, phantom=None,
-               _xdotool=None):
+def move_mouse(x, y, reference='absolute', proportional=False, phantom=None):
     """
-    Move the mouse to the specified coordinates. reference may be one
-    of 'absolute', 'relative', or 'relative_active'. if phantom is not
-    None, it is a button as click_mouse. If possible, click that
-    location without moving the mouse. If not, the server will move the
-    mouse there and click. Currently, phantom only works with absolute
-    moves. Negative coordinates are allowed for all references; in the
-    case of absolute they will be clamped to 0.
+    Move the mouse to the specified coordinates. reference may be one of
+    'absolute', 'relative', or 'relative_active'. if phantom is not None, it
+    is a button as click_mouse. If possible, click that location without moving
+    the mouse. If not, the server will move the mouse there and click.
+    Currently, phantom only works with absolute moves. Negative coordinates are
+    allowed for all references; in the case of absolute they will be clamped to
+    0.
+
+    absolute
+
     :param x:
     :param y:
     :param reference:
     :param proportional:
     :param phantom:
-    :param _xdotool:
     :return:
     """
+    original_location = libxdo.get_mouse_location()
     geo = get_geometry()
+
     if proportional:
         x = geo['width'] * x
         y = geo['height'] * y
-    command = _MOUSE_MOVE_COMMANDS[reference]
-    if command == 'mousemove_active':
-        command = 'mousemove --window %i' % get_active_window()[0]
 
-    if x <= 0 or y <= 0:
-        commands = ['%s -- %f %f' % (command, x, y)]
+    if reference == 'absolute':
+        x = x if x > 0 else x
+        y = y if y > 0 else y
+        libxdo.move_mouse(x, y)
+    elif reference == 'relative_active':
+        window_location = libxdo.get_window_location(libxdo.get_active_window())
+        libxdo.move_mouse(window_location.x + x, window_location.y + y)
+    elif reference == 'relative':
+        libxdo.move_mouse_relative(x, y)
     else:
-        commands = ['%s %f %f' % (command, x, y)]
+        raise ValueError('invalid "reference" parameter "%s"' % reference)
+
     if phantom is not None:
-        commands.append('click %s' % _MOUSE_BUTTONS[phantom])
-        commands.append('mousemove restore')
-
-    # To avoid headaches down the road with argparse, we don't chain commands
-    # if we need to use -- since it would block future flags from being
-    # interpreted.
-    if _xdotool is not None and x >= 0 and y >= 0:
-        _xdotool.extend(commands)
-    else:
-        flush_xdotool(_xdotool)
-        run_command(' '.join(commands))
+        x.click_window(0, phantom)
+        x.move_mouse(original_location.x, original_location.y)
 
 
 def pause(amount, _xdotool=None):
