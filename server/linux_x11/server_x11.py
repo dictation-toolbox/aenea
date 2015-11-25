@@ -206,18 +206,6 @@ def write_command(message, arguments='type --file -', executable='xdotool'):
         fd.write(message)
 
 
-def get_active_window():
-    """Returns the window id and title of the active window."""
-
-    window_id = read_command('getactivewindow')
-    if window_id:
-        window_id = int(window_id)
-        window_title = read_command('getwindowname %i' % window_id).strip()
-        return window_id, window_title
-    else:
-        return None, None
-
-
 def get_geometry(window_id=None):
     """
     Get locations and size information of a window
@@ -309,14 +297,14 @@ def get_context():
 
         try:
             properties['executable'] = process.exe()
-        except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
         try:
             properties['cmdline'] = process.cmdline()
-        except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
     except Exception as e:
-        pass
+        logger.error('failed to get process context: %s' % e)
 
     return properties
 
@@ -336,7 +324,6 @@ def key_press(key=None, modifiers=(), direction='press', count=1,
       _KEY_PRESSES.keys()
     :param int count: Number of times to perform this key press.
     :param int count_delay: Delay between repeated keystrokes in milliseconds.
-    :param _xdotool: Deprecated.  Here for backwards compatibility only!
     :return: This function always returns None
     """
     assert key is not None
@@ -368,7 +355,7 @@ def key_press(key=None, modifiers=(), direction='press', count=1,
         time.sleep(delay_millis / 1000)  # emulate xdotool sleep
 
 
-def write_text(text, paste=False, _xdotool=None):
+def write_text(text, paste=False):
     """
     Send text formatted exactly as written to active window. If paste
     is True, will use X11 PRIMARY clipboard to paste the text instead
@@ -377,7 +364,6 @@ def write_text(text, paste=False, _xdotool=None):
     :param str text: Text to send to the current active window.
     :param bool paste: If True, text will be written to the current window
      using xsel and a middle click.
-    :param _xdotool: Deprecated.
     :return: This function always returns None
     """
 
@@ -447,22 +433,24 @@ def click_mouse(button, direction='click', count=1, count_delay=None,
 
 def move_mouse(x, y, reference='absolute', proportional=False, phantom=None):
     """
-    Move the mouse to the specified coordinates. reference may be one of
-    'absolute', 'relative', or 'relative_active'. if phantom is not None, it
-    is a button as click_mouse. If possible, click that location without moving
-    the mouse. If not, the server will move the mouse there and click.
-    Currently, phantom only works with absolute moves. Negative coordinates are
-    allowed for all references; in the case of absolute they will be clamped to
-    0.
+    Move the mouse to the specified coordinates.
+    :param x: x coordinate for move
+    :param y: y coordinate for move
+    :param str reference: One of 'absolute', 'relative' or 'relative_active':
 
-    absolute
+      - absolute: Move the mouse to the absolute position x, y.  x and y will
+        be set to 0 if they are negative.
+      - relative: Move the mouse relative to its current location. x and y may
+        be negative integers.
+      - relative_active: Move the mouse relative to the current active window.
+        0,0 being the top left corner of with window.
 
-    :param x:
-    :param y:
-    :param reference:
     :param proportional:
-    :param phantom:
-    :return:
+    :param phantom: If provided, this parameter should be one of
+      _MOUSE_BUTTONS.keys(). Move to the desired location, click the <phantom>
+      button and restore the mouse to the original location.
+    :type phantom: str or None
+    :return: This function always returns None.
     """
     original_location = libxdo.get_mouse_location()
     geo = get_geometry()
@@ -484,17 +472,25 @@ def move_mouse(x, y, reference='absolute', proportional=False, phantom=None):
         raise ValueError('invalid "reference" parameter "%s"' % reference)
 
     if phantom is not None:
-        libxdo.click_window(0, phantom)
+        libxdo.click_window(0, _MOUSE_BUTTONS[phantom])
         libxdo.move_mouse(original_location.x, original_location.y)
 
 
-def pause(amount):
-    """pause amount in ms."""
-    time.sleep(amount / 1000.0)
+def pause(millis):
+    """
+    Pause command execution.
+    :param int millis: number of milliseconds to sleep for
+    :return: This function always returns None.
+    """
+    time.sleep(millis / 1000.0)
 
 
 def notify(message):
-    """Send a message to the notification daemon via notify-send."""
+    """
+    Send a message to the notification daemon via notify-send.
+    :param str message: message to send with notify-send
+    :return: This function always returns None.
+    """
     try:
         subprocess.Popen(['notify-send', message])
     except Exception as e:
@@ -520,10 +516,20 @@ def list_rpc_commands():
 
 
 def multiple_actions(actions):
-    '''execute multiple rpc commands, aborting on any error. will not
-       return anything ever. actions is an array of objects, possessing
-       'method', 'params', and 'optional' keys. See also JSON-RPC
-       multicall.  Guaranteed to execute in specified order.'''
+    """
+    Execute multiple rpc commands, aborting on any error. Guaranteed to
+    execute in specified order. See also JSON-RPC multicall.
+    :param list actions:  List of dicts.  Each dictionary must provide
+      "method", "optional", and "parameters" keys. e.g.
+      ..code python
+        {
+            'method': 'key_press',
+            'parameters': None,
+            'optional': {'key': 'a', 'direction': 'press', 'count': 2}
+        }
+    :return: This function always returns None
+    :rtype: None
+    """
 
     for (method, parameters, optional) in actions:
         commands = list_rpc_commands()
@@ -533,7 +539,6 @@ def multiple_actions(actions):
             # Multicall except with sequential ordering and abort,
             # we enforce it here.
             assert not (parameters and optional)
-
             commands[method](*parameters, **optional)
         else:
             break
