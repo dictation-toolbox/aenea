@@ -63,33 +63,13 @@ except ImportError, e:
         )
         yapsy = None
 
+
 _MOUSE_BUTTONS = {
     'left': 1,
     'middle': 2,
     'right': 3,
     'wheelup': 4,
     'wheeldown': 5
-    }
-
-
-_MOUSE_CLICKS = {
-    'click': 'click',
-    'down': 'mousedown',
-    'up': 'mouseup'
-    }
-
-
-_KEY_PRESSES = {
-    'press': '',
-    'up': 'up',
-    'down': 'down'
-    }
-
-
-_MOUSE_MOVE_COMMANDS = {
-    'absolute': 'mousemove',
-    'relative': 'mousemove_relative',
-    'relative_active': 'mousemove_active'
     }
 
 
@@ -226,10 +206,9 @@ def write_command(message, arguments='type --file -', executable='xdotool'):
         fd.write(message)
 
 
-def get_active_window(_xdotool=None):
-    '''Returns the window id and title of the active window.'''
+def get_active_window():
+    """Returns the window id and title of the active window."""
 
-    flush_xdotool(_xdotool)
     window_id = read_command('getactivewindow')
     if window_id:
         window_id = int(window_id)
@@ -343,7 +322,7 @@ def get_context():
 
 
 def key_press(key=None, modifiers=(), direction='press', count=1,
-              count_delay=None, _xdotool=None):
+              count_delay=None):
     """
     Press a key possibly modified by modifiers. direction may be 'press',
     'down', or 'up'. modifiers may contain 'alt', 'shift', 'control', 'super'.
@@ -361,9 +340,6 @@ def key_press(key=None, modifiers=(), direction='press', count=1,
     :return: This function always returns None
     """
     assert key is not None
-
-    if _xdotool is not None:
-        warn('_xdotool parameter deprecated', DeprecationWarning)
 
     delay_millis = 0 if count_delay is None or count == 1 else count_delay
     delay_micros = delay_millis * 1000
@@ -419,7 +395,7 @@ def write_text(text, paste=False, _xdotool=None):
             # TODO: can we do this even in programs that don't have a
             #     middle click?
             #     if not, we may need a blacklist of buggy programs.
-            click_mouse(2, _xdotool=_xdotool)
+            click_mouse(2)
 
             # nuke the text we selected
             run_command('-c', executable='xsel')
@@ -512,31 +488,21 @@ def move_mouse(x, y, reference='absolute', proportional=False, phantom=None):
         x.move_mouse(original_location.x, original_location.y)
 
 
-def pause(amount, _xdotool=None):
-    '''pause amount in ms.'''
-    if _xdotool is not None:
-        _xdotool.append('sleep %f' % (amount / 1000.))
-    else:
-        time.sleep(amount / 1000.)
+def pause(amount):
+    """pause amount in ms."""
+    time.sleep(amount / 1000.0)
 
 
 def notify(message):
-    '''Send a message to the notification daemon via notify-send.'''
+    """Send a message to the notification daemon via notify-send."""
     try:
         subprocess.Popen(['notify-send', message])
     except Exception as e:
         logger.warn('failed to start notify-send process: %s' % e)
 
 
-def server_info(_xdotool=None):
-    flush_xdotool(_xdotool)
+def server_info():
     return _SERVER_INFO
-
-
-def flush_xdotool(actions):
-    if actions:
-        run_command(' '.join(actions))
-        del actions[:]
 
 
 def list_rpc_commands():
@@ -548,7 +514,7 @@ def list_rpc_commands():
         'move_mouse': move_mouse,
         'server_info': server_info,
         'pause': pause,
-        'notify' : notify
+        'notify': notify
         }
     return _RPC_COMMANDS
 
@@ -559,7 +525,6 @@ def multiple_actions(actions):
        'method', 'params', and 'optional' keys. See also JSON-RPC
        multicall.  Guaranteed to execute in specified order.'''
 
-    xdotool = []
     for (method, parameters, optional) in actions:
         commands = list_rpc_commands()
         if method in commands:
@@ -569,10 +534,9 @@ def multiple_actions(actions):
             # we enforce it here.
             assert not (parameters and optional)
 
-            commands[method](*parameters, _xdotool=xdotool, **optional)
+            commands[method](*parameters, **optional)
         else:
             break
-    flush_xdotool(xdotool)
 
 
 def setup_server(host, port):
