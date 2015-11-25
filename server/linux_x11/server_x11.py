@@ -484,8 +484,8 @@ def move_mouse(x, y, reference='absolute', proportional=False, phantom=None):
         raise ValueError('invalid "reference" parameter "%s"' % reference)
 
     if phantom is not None:
-        x.click_window(0, phantom)
-        x.move_mouse(original_location.x, original_location.y)
+        libxdo.click_window(0, phantom)
+        libxdo.move_mouse(original_location.x, original_location.y)
 
 
 def pause(amount):
