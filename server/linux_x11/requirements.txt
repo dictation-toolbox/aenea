@@ -2,4 +2,4 @@ psutil==3.0.0
 python-xlib==0.15rc1
 yapsy==1.10.423
 jsonrpclib==0.1.3
--e git+https://github.com/rshk/python-libxdo.git#egg=python-libxdo
+python-libxdo==0.1.1a0
