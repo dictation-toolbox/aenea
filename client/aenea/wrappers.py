@@ -21,78 +21,135 @@
    action.execute() or context.matches() is called  is what determines what
    happens.'''
 
+# TODO(calmofthestorm) See if we can combine these lists.
 try:
-    import dragonfly
+    from dragonfly import (
+       Grammar,
+       ActionBase,
+       ActionError,
+       Alternative,
+       AppContext,
+       Choice,
+       Clipboard,
+       Compound,
+       CompoundRule,
+       Config,
+       ConnectionGrammar,
+       Context,
+       DictList,
+       DictListRef,
+       Dictation,
+       Digits,
+       DigitsRef,
+       DynStrActionBase,
+       ElementBase,
+       Empty,
+       FocusWindow,
+       FormatState,
+       Function,
+       HardwareInput,
+       Integer,
+       IntegerRef,
+       Item,
+       Key,
+       Keyboard,
+       KeyboardInput,
+       List,
+       ListBase,
+       ListRef,
+       Literal,
+       MappingRule,
+       Mimic,
+       Monitor,
+       Mouse,
+       MouseInput,
+       Number,
+       NumberRef,
+       Optional,
+       Paste,
+       Pause,
+       Playback,
+       PlaybackHistory,
+       Point,
+       RecognitionHistory,
+       RecognitionObserver,
+       Rectangle,
+       Repeat,
+       Repetition,
+       Rule,
+       RuleRef,
+       Section,
+       Sequence,
+       Text,
+       Typeable,
+       WaitWindow,
+       Window,
+       Word
+       )
 except ImportError:
-    import aenea.dragonfly_mock as dragonfly
-
-try:
-   from dragonfly import (
-      Grammar,
-      ActionBase,
-      ActionError,
-      Alternative,
-      AppContext,
-      Choice,
-      Clipboard,
-      Compound,
-      CompoundRule,
-      Config,
-      ConnectionGrammar,
-      Context,
-      DictList,
-      DictListRef,
-      Dictation,
-      Digits,
-      DigitsRef,
-      DynStrActionBase,
-      ElementBase,
-      Empty,
-      FocusWindow,
-      FormatState,
-      Function,
-      HardwareInput,
-      Integer,
-      IntegerRef,
-      Item,
-      Key,
-      Keyboard,
-      KeyboardInput,
-      List,
-      ListBase,
-      ListRef,
-      Literal,
-      MappingRule,
-      Mimic,
-      Monitor,
-      Mouse,
-      MouseInput,
-      Number,
-      NumberRef,
-      Optional,
-      Paste,
-      Pause,
-      Playback,
-      PlaybackHistory,
-      Point,
-      RecognitionHistory,
-      RecognitionObserver,
-      Rectangle,
-      Repeat,
-      Repetition,
-      Rule,
-      RuleRef,
-      Section,
-      Sequence,
-      Text,
-      Typeable,
-      WaitWindow,
-      Window,
-      Word
-      )
-except ImportError:
-   # Suppress so we can import on Linux.
-   pass
+    from aenea.dragonfly_mock import (
+       Grammar,
+       ActionBase,
+       ActionError,
+       Alternative,
+       AppContext,
+       Choice,
+       Clipboard,
+       Compound,
+       CompoundRule,
+       Config,
+       ConnectionGrammar,
+       Context,
+       DictList,
+       DictListRef,
+       Dictation,
+       Digits,
+       DigitsRef,
+       DynStrActionBase,
+       ElementBase,
+       Empty,
+       FocusWindow,
+       FormatState,
+       Function,
+       HardwareInput,
+       Integer,
+       IntegerRef,
+       Item,
+       Key,
+       Keyboard,
+       KeyboardInput,
+       List,
+       ListBase,
+       ListRef,
+       Literal,
+       MappingRule,
+       Mimic,
+       Monitor,
+       Mouse,
+       MouseInput,
+       Number,
+       NumberRef,
+       Optional,
+       Paste,
+       Pause,
+       Playback,
+       PlaybackHistory,
+       Point,
+       RecognitionHistory,
+       RecognitionObserver,
+       Rectangle,
+       Repeat,
+       Repetition,
+       Rule,
+       RuleRef,
+       Section,
+       Sequence,
+       Text,
+       Typeable,
+       WaitWindow,
+       Window,
+       Word
+       )
 
 
 import aenea.config
@@ -112,29 +169,29 @@ def ensure_execution_context(data):
     if '_proxy_context' not in data:
         data['_proxy_context'] = aenea.proxy_contexts._get_context()
     if '_context' not in data:
-        data['_context'] = dragonfly.Window.get_foreground()
+        data['_context'] = Window.get_foreground()
     return data
 
 
-class NoAction(dragonfly.ActionBase):
+class NoAction(ActionBase):
     '''Does nothing. Useful for constructing compound actions.'''
     def execute(self, data=None):
         pass
 
 
-class AlwaysContext(dragonfly.Context):
+class AlwaysContext(Context):
     '''Always matches. Useful for constructing compound contexts.'''
     def matches(self, windows_executable, windows_title, windows_handle):
         return True
 
 
-class NeverContext(dragonfly.Context):
+class NeverContext(Context):
     '''Never matches. Useful for constructing compound contexts.'''
     def matches(self, windows_executable, windows_title, windows_handle):
         return False
 
 
-class AeneaContext(dragonfly.Context):
+class AeneaContext(Context):
     '''A context that delegates to either a local or proxy context object
        as appropriate. See also ProxyPlatformContext; which matches one of
        several contexts via proxy based on the OS on the other end.'''
@@ -148,7 +205,7 @@ class AeneaContext(dragonfly.Context):
                hasattr(local_context, '__call__'))
         self._proxy_context = proxy_context
         self._local_context = local_context
-        dragonfly.Context.__init__(self)
+        Context.__init__(self)
 
     def matches(self, executable, title, handle):
         if aenea.config.PLATFORM == 'proxy':
@@ -161,7 +218,7 @@ class AeneaContext(dragonfly.Context):
             return context(executable, title, handle)
 
 
-class AeneaAction(dragonfly.ActionBase):
+class AeneaAction(ActionBase):
     '''Performs one action when config.PLATFORM is proxy, another for local.
        Useful for things that need to break out of the grammar system (eg,
        to query the filesystem to provide shell autocomplete), as well as
@@ -176,7 +233,7 @@ class AeneaAction(dragonfly.ActionBase):
                hasattr(local_action, '__call__'))
         self._proxy_action = proxy_action
         self._local_action = local_action
-        dragonfly.ActionBase.__init__(self)
+        ActionBase.__init__(self)
 
     def execute(self, data=None):
         data = ensure_execution_context(data)
@@ -190,16 +247,16 @@ class AeneaAction(dragonfly.ActionBase):
             action(data)
 
 
-class AeneaDynStrActionBase(dragonfly.DynStrActionBase):
+class AeneaDynStrActionBase(DynStrActionBase):
     def __init__(self, proxy, local, spec=None, static=False):
         self._proxy = proxy
         self._local = local
-        dragonfly.DynStrActionBase.__init__(self, spec=spec, static=static)
+        DynStrActionBase.__init__(self, spec=spec, static=static)
 
     def _execute(self, data=None):
         # Crude, but better than copy-pasting the execute code.
         self._data = ensure_execution_context(data)
-        dragonfly.DynStrActionBase._execute(self, data)
+        DynStrActionBase._execute(self, data)
 
     def get_data(self):
         '''Returns the execution data.'''
@@ -217,7 +274,7 @@ class AeneaDynStrActionBase(dragonfly.DynStrActionBase):
             return self._local._execute_events(commands[1])
 
 
-class ContextAction(dragonfly.ActionBase):
+class ContextAction(ActionBase):
     '''Take a different action depending on which context is currently
        active.'''
     def __init__(self, default=None, actions=[]):
