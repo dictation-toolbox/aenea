@@ -31,10 +31,6 @@ class ActionBase(object):
 class DynStrActionBase(ActionBase):
     pass
 
-
-class Context(object):
-    pass
-
 DictList = lambda name: dict()
 List = lambda name: list()
 
@@ -67,3 +63,169 @@ class AppContext(object):
 
     def matches(self, *a, **kw):
        return True
+
+
+class Grammar:
+   pass
+
+class ActionError:
+   pass
+
+class Alternative:
+   pass
+
+class Clipboard:
+   pass
+
+class Compound:
+   pass
+
+class CompoundRule:
+   pass
+
+class Config:
+   pass
+
+class ConnectionGrammar:
+   pass
+
+class Context:
+   pass
+
+class DictList:
+   pass
+
+class DictListRef:
+   pass
+
+class Dictation:
+   pass
+
+class Digits:
+   pass
+
+class DigitsRef:
+   pass
+
+class ElementBase:
+   pass
+
+class Empty:
+   pass
+
+class FocusWindow:
+   pass
+
+class FormatState:
+   pass
+
+class Function:
+   pass
+
+class HardwareInput:
+   pass
+
+class Integer:
+   pass
+
+class IntegerRef:
+   pass
+
+class Item:
+   pass
+
+class Key:
+   pass
+
+class Keyboard:
+   pass
+
+class KeyboardInput:
+   pass
+
+class List:
+   pass
+
+class ListBase:
+   pass
+
+class ListRef:
+   pass
+
+class Literal:
+   pass
+
+class MappingRule:
+   pass
+
+class Mimic:
+   pass
+
+class Monitor:
+   pass
+
+class Mouse:
+   pass
+
+class MouseInput:
+   pass
+
+class Number:
+   pass
+
+class NumberRef:
+   pass
+
+class Optional:
+   pass
+
+class Paste:
+   pass
+
+class Pause:
+   pass
+
+class Playback:
+   pass
+
+class PlaybackHistory:
+   pass
+
+class Point:
+   pass
+
+class RecognitionHistory:
+   pass
+
+class RecognitionObserver:
+   pass
+
+class Rectangle:
+   pass
+
+class Repeat:
+   pass
+
+class Rule:
+   pass
+
+class RuleRef:
+   pass
+
+class Section:
+   pass
+
+class Sequence:
+   pass
+
+class Text:
+   pass
+
+class Typeable:
+   pass
+
+class WaitWindow:
+   pass
+
+class Word:
+   pass

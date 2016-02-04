@@ -21,8 +21,7 @@ import os
 from aenea.alias import Alias
 import aenea.config
 from proxy_contexts import ProxyAppContext
-from wrappers import NeverContext
-from dragonfly import AppContext
+from wrappers import NeverContext, AppContext
 
 
 class ConfigWatcher(object):
