@@ -39,7 +39,11 @@ class AeneaServer(object):
          context and emulate input.
         :param SimpleJSONRPCServer server: rpcs from <rpc_impl> will be attached
           to this server.
-        :param plugins: yapsy plugin objects.  Plugin objects should
+        :param plugins: yapsy plugin objects.  Plugin objects are required to
+          implement a single method "register_rpcs(server)" where server is
+          an instance of SimpleJSONRPCServer.  It is up to the plugin developer
+          to register new RPCs in this method with a call to
+          "server.register_function(...)"
         :param logger:
         """
         self.logger = logger or logging.getLogger(self.__class__.__name__)
