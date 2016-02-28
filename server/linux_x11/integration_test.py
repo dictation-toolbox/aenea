@@ -1,7 +1,6 @@
 #!/usr/bin/python2
 
 import jsonrpclib
-import os
 import sys
 import threading
 import time
@@ -15,7 +14,9 @@ WINDOW_NAME = 'Aenea X11 server integration test'
 CLS_NAME = 'aenea'
 CLS = 'IntegrationTest'
 
+
 class Proxy(object):
+
     def __init__(self, host, port):
         self.server = jsonrpclib.Server('http://%s:%i' % (host, port))
 
@@ -24,6 +25,7 @@ class Proxy(object):
 
 
 class BatchProxy(object):
+
     def __init__(self):
         self._commands = []
 
@@ -35,6 +37,7 @@ class BatchProxy(object):
 
 
 class Window(object):
+
     def __init__(self, display):
         self.display = display
         self.objects = []
@@ -47,14 +50,14 @@ class Window(object):
             Xlib.X.InputOutput,
             Xlib.X.CopyFromParent,
 
-            background_pixel = self.screen.white_pixel,
-            event_mask = (Xlib.X.ButtonPressMask |
-                          Xlib.X.ButtonReleaseMask |
-                          Xlib.X.KeyPressMask |
-                          Xlib.X.KeyReleaseMask |
-                          Xlib.X.PointerMotionMask),
-            colormap = Xlib.X.CopyFromParent,
-            )
+            background_pixel=self.screen.white_pixel,
+            event_mask=(Xlib.X.ButtonPressMask |
+                        Xlib.X.ButtonReleaseMask |
+                        Xlib.X.KeyPressMask |
+                        Xlib.X.KeyReleaseMask |
+                        Xlib.X.PointerMotionMask),
+            colormap=Xlib.X.CopyFromParent,
+        )
 
         self.WM_DELETE_WINDOW = self.display.intern_atom('WM_DELETE_WINDOW')
         self.WM_PROTOCOLS = self.display.intern_atom('WM_PROTOCOLS')
@@ -98,11 +101,12 @@ class Window(object):
             if e.type == type:
                 return e
             else:
-                assert False, str(('Unexpected event type', e.type, Xlib.X.KeyPress))
-
+                assert False
 
     def keysym(self, key_event):
-        return self.display.lookup_string(self.display.keycode_to_keysym(key_event.detail, key_event.state))
+        keysym = self.display.keycode_to_keysym(key_event.detail,
+                                                key_event.state)
+        return self.display.lookup_string(keysym)
 
 
 def test_get_context(rpc, window):
@@ -145,11 +149,11 @@ def test_key_press(rpc, window):
     # Automatic shifting
     window.set_event_mask([Xlib.X.KeyPress])
     rpc.key_press(key='a', modifiers=['shift'])
-    window.wait_event(Xlib.X.KeyPress) # shift down
+    window.wait_event(Xlib.X.KeyPress)  # shift down
     assert window.keysym(window.wait_event(Xlib.X.KeyPress)) == 'A'
     window.set_event_mask([Xlib.X.KeyPress, Xlib.X.KeyRelease])
     assert window.keysym(window.wait_event(Xlib.X.KeyRelease)) == 'A'
-    window.wait_event(Xlib.X.KeyRelease) # shift up
+    window.wait_event(Xlib.X.KeyRelease)  # shift up
 
     # Repeat
     rpc.key_press(key='x', count=5)
@@ -194,7 +198,8 @@ def test_click_mouse(rpc, window):
 
 
 def test_move_mouse(rpc, window):
-    # TODO: figure out a way to test the other modes of movement (e.g. proportional)
+    # TODO: figure out a way to test the other modes of movement (e.g.
+    # proportional) -- maybe xvfb?
     window.set_event_mask([Xlib.X.MotionNotify])
 
     # Record the initial position so we know where the window is.
@@ -221,7 +226,8 @@ def test_move_mouse(rpc, window):
 
 
 def test_mouse_drag(rpc, window):
-    window.set_event_mask([Xlib.X.MotionNotify, Xlib.X.ButtonPress, Xlib.X.ButtonRelease])
+    window.set_event_mask(
+        [Xlib.X.MotionNotify, Xlib.X.ButtonPress, Xlib.X.ButtonRelease])
 
     rpc.click_mouse(button='left', direction='down')
     assert window.wait_event(Xlib.X.ButtonPress).detail == 1
@@ -273,7 +279,7 @@ def test_multiple_actions(sync_rpc, window):
     assert window.keysym(window.wait_event(Xlib.X.KeyPress)) == 'b'
     assert time.time() - ts >= 0.134, time.time() - ts
     ts = time.time()
-    drag_event = window.wait_event(Xlib.X.MotionNotify)
+    window.wait_event(Xlib.X.MotionNotify)
     assert time.time() - ts >= 0.192
     ts = time.time()
     assert window.keysym(window.wait_event(Xlib.X.KeyPress)) == 'c'
@@ -299,7 +305,10 @@ if __name__ == '__main__':
 
     communication = Proxy(config.HOST, config.PORT)
 
-    print 'Maximize the test window on your primary monitor, put the mouse in the center, select the window, and then hit space to begin the automated test.'
+    print 'Start the server, maximize the test window on your primary monitor, '
+    print 'put the mouse in the center, select the window, and then hit space '
+    print 'to begin the automated test.'
+    print
     window.set_event_mask([Xlib.X.KeyPress, Xlib.X.KeyRelease])
     for event in window.events:
         if event.type == Xlib.X.KeyRelease and window.keysym(event) == ' ':
