@@ -1,0 +1,329 @@
+import abc
+import time
+import logging
+import logging.config
+
+from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
+
+
+class AeneaServer(object):
+    """
+    AeneaServer is a jsonrpc server that exposes emulated keyboard/mouse input
+    over the network.  Takes care of the JSON RPC protocol that Aenea is built
+    on top of and handles dispatching RPCs to the appropriate action.
+    """
+    def __init__(self, rpc_impl, server, plugins=tuple(), logger=None):
+        """
+        :param rpc_impl: Object that implements all AbstractAeneaPlatformRpc
+         methods.  This is where the platform specific magic happens to gather
+         context and emulate input.
+        :param SimpleJSONRPCServer server: rpcs from <rpc_impl> will be attached
+          to this server.
+        :param plugins: yapsy plugin objects.  Plugin objects are required to
+          implement a single method "register_rpcs(server)" where server is
+          an instance of SimpleJSONRPCServer.  It is up to the plugin developer
+          to register new RPCs in this method with a call to
+          "server.register_function(...)"
+        :param logger:
+        """
+        self.logger = logger or logging.getLogger(self.__class__.__name__)
+        self.server = server
+
+        for rpc_func, rpc_name in rpc_impl.rpc_commands.items():
+            self.server.register_function(rpc_name, rpc_func)
+        self.server.register_function(self.multiple_actions, 'multiple_actions')
+
+        for plugin in plugins:
+            plugin.register_rpcs(self.server)
+
+    @classmethod
+    def from_config(cls, platform_rpcs, config):
+        """
+        Create an AeneaServer instance from config
+        :param platform_rpcs: Concrete instance of AbstractAeneaPlatformRpc
+        :param config: Aenea configuration parameters.  This is generally
+         Aenea's config.py module.
+        :return: AeneaServer instance
+        :rtype: AeneaServer
+        """
+        AeneaLoggingManager.configure(
+                level=getattr(config, 'LOG_LEVEL', None),
+                log_file=getattr(config, 'LOG_FILE', None))
+        logger = logging.getLogger(AeneaLoggingManager.aenea_logger_name)
+
+        rpc_server = SimpleJSONRPCServer((config.HOST, config.PORT))
+
+        # TODO: dynamically load/instantiate platform_rpcs from config instead
+        # of requiring it as an explicit argument
+
+        plugins = AeneaPluginLoader(logger).get_plugins(
+                getattr(config, 'PLUGIN_DIR', None))
+
+        return cls(platform_rpcs, rpc_server, plugins=plugins, logger=logger)
+
+    def serve_forever(self):
+        self.server.serve_forever()
+
+    def multiple_actions(self, actions):
+        """
+        Execute multiple rpc commands, aborting on any error. Guaranteed to
+        execute in specified order. See also JSON-RPC multicall.
+        :param list actions:  List of dicts.  Each dictionary must provide
+          "method", "optional", and "parameters" keys. e.g.
+          ..code python
+            {
+                'method': 'key_press',
+                'parameters': None,
+                'optional': {'key': 'a', 'direction': 'press', 'count': 2}
+            }
+        :return: This function always returns None
+        :rtype: None
+        """
+
+        for (method, parameters, optional) in actions:
+            if method in self.server.funcs:
+                # JSON-RPC forbids specifying both optional and parameters.
+                # Since multiple_actions is trying to mimic something like
+                # Multicall except with sequential ordering and abort,
+                # we enforce it here.
+                assert not (parameters and optional)
+                self.server.funcs[method](*parameters, **optional)
+            else:
+                break
+
+
+class AbstractAeneaPlatformRpcs(object):
+    """
+    Interface that defines Aenea's supported RPCs.  This is where the platform
+    specific magic happens for each of Aenea's server distros. Concrete
+    subclasses must provide implementations for server_info, get_context,
+    and rpc_commands.
+    """
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, logger=None):
+        self.logger = logger or logging.getLogger(self.__class__.__name__)
+
+    @property
+    def rpc_commands(self):
+        """
+        Returns a dict of RPCs to be exposed to clients.
+        :return: dict of {<rpc_name>: <rpc_callable>}
+        :rtype: dict
+        """
+        return {
+            'server_info': self.server_info,
+            'get_context': self.get_context,
+            'key_press': self.key_press,
+            'write_text': self.write_text,
+            'click_mouse': self.click_mouse,
+            'move_mouse': self.move_mouse,
+            'pause': self.pause,
+            'notify': self.notify,
+        }
+
+    @abc.abstractmethod
+    def server_info(self):
+        """
+        Return arbitrary server information to the aenea client.
+        :return:
+        :rtype: dict
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_context(self):
+        """
+        Query the system for context information.  This data is typically passed
+        back to the aenea client so that it may use it in Dragonfly grammars.
+        Specifically, this data will be used when Dragonfly's grammars perform
+        context matching to decide which grammars should be activated.
+        :return: various properties related to the current active window
+        """
+        raise NotImplementedError()
+
+    def key_press(self, key=None, modifiers=(), direction='press', count=1,
+                  count_delay=None):
+        """
+        Press a key possibly modified by modifiers. direction may be 'press',
+        'down', or 'up'. modifiers may contain 'alt', 'shift', 'control',
+        'super'.
+        :param str key: Key to press.
+        :param modifiers: Key modifiers.
+        :type modifiers: list of str.
+        :param str direction: Direction of key press.
+        :param int count: Number of times to perform this key press.
+        :param int count_delay: Delay between repeated keystrokes in
+         milliseconds.
+        :return: This function always returns None
+        """
+        raise NotImplementedError()
+
+    def write_text(self, text):
+        """
+        Send text formatted exactly as written to active window.
+        :param str text: Text to send to the current active window.
+        :return: This function always returns None
+        """
+        raise NotImplementedError()
+
+    def click_mouse(self, button, direction='click', count=1, count_delay=None):
+        """
+        Click the mouse button specified at the current location.
+        :param button: Mouse button to click.
+        :type button: str or int
+        :param str direction: Direction of 'up', 'down', 'click'
+        :param int count: Number of times to repeat this click.
+        :param int count_delay: Delay in milliseconds between mouse clicks.
+        :return: This function always returns None
+        """
+        raise NotImplementedError()
+
+    def move_mouse(self, x, y, reference='absolute', proportional=False,
+                   phantom=None):
+        """
+        Move the mouse to the specified coordinates.
+        :param x: x coordinate for move
+        :param y: y coordinate for move
+        :param str reference: One of 'absolute', 'relative' or
+         'relative_active':
+
+          - absolute: Move the mouse to the absolute position x, y.  x and y
+           will be set to 0 if they are negative.
+          - relative: Move the mouse relative to its current location. x and y
+           may be negative integers.
+          - relative_active: Move the mouse relative to the current active
+           window. 0,0 being the top left corner of with window.
+
+        :param proportional:
+        :param phantom: If provided, move to the desired location, click the
+         <phantom> button and restore the mouse to the original location.
+        :type phantom: str or None
+        :return: This function always returns None.
+        """
+        raise NotImplementedError()
+
+    def pause(self, amount):
+        """
+        Pause command execution.
+        :param int amount: number of milliseconds to sleep for.
+        :return: This function always returns None.
+        """
+        # we can get away with a concrete impl here because python provides
+        # cross platform sleep.
+        time.sleep(amount / 1000.0)
+
+    def notify(self, message):
+        """
+        Send a message to the desktop to be displayed in a notification window.
+        :param str message: message to send to the desktop.
+        :return: This function always returns None.
+        """
+        raise NotImplementedError()
+
+
+class AeneaPluginLoader(object):
+    """
+    Manages loading Aenea server plugins.
+    """
+    def __init__(self, logger=None):
+        self.logger = logger or logging.getLogger(self.__class__.__name__)
+
+    def get_plugins(self, plugin_path=None):
+        """
+        Get plugins from a given location.
+        :param plugin_path: Path to directory containing yapsy Aenea server
+         plugins.
+        :return: All plugins loaded found in plugin_path
+        :rtype: List of yapsy plugins
+        """
+        if plugin_path is None:
+            return []
+
+        try:
+            import yapsy
+            import yapsy.PluginManager
+        except ImportError:
+            self.logger.warn(
+                'Cannot import yapsy; optional server plugin support won\'t '
+                'work. You don\'t need this unless you want to use plugins, '
+                'which are not necessary for basic operation.')
+            return []
+
+        plugin_manager = yapsy.PluginManager.PluginManager()
+        plugin_manager.setPluginPlaces(plugin_path)
+        plugin_manager.collectPlugins()
+
+        plugins = []
+        for plugin_info in plugin_manager.getAllPlugins():
+            self.logger.debug('Loading plugin "%s"' % plugin_info.name)
+            plugin_manager.activatePluginByName(plugin_info.name)
+            plugin = plugin_info.plugin_object
+
+            # TODO: duck type checking for a callable register_rpcs attribute on
+            # plugin should go here.
+
+            plugins.append(plugin)
+
+        return plugins
+
+
+class AeneaLoggingManager(object):
+    """
+    Handles generating and configuring basic logging support for Aenea
+    """
+    aenea_logger_name = 'aenea'
+
+    default_config = {
+        'version': 1,
+        'formatters': {
+            'generic': {
+                'format': '%(asctime)s [%(levelname)-6s] [%(name)-s] %(message)s'
+            }
+        },
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'level': 'DEBUG',
+                'formatter': 'generic'
+            }
+        },
+        'loggers': {
+            'root': {
+                'level': 'DEBUG',
+                'handlers': [],
+                'propagate': True
+            },
+            aenea_logger_name: {
+                'level': 'DEBUG',
+                'handlers': ['console']
+            }
+        }
+    }
+
+    @classmethod
+    def configure(cls, level=None, log_file=None):
+        """
+        Configure logging.
+        :param str level: python logging level. e.g. 'INFO' | 'DEBUG'
+        :param str log_file: location of log file to write to..
+        :return: None
+        :type: None
+        """
+        level = level or 'DEBUG'
+        config = cls.default_config.copy()
+        config['handlers']['console']['level'] = level
+
+        if log_file is not None:
+            config['handlers']['file'] = {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'formatter': 'generic',
+                'level': level,
+                'filename': log_file,
+                'mode': 'a',
+                'backupCount': 3
+            }
+            config['loggers'][cls.aenea_logger_name]['handlers'].append('file')
+
+        logging.config.dictConfig(config)
