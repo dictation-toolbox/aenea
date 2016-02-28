@@ -445,7 +445,15 @@ def move_mouse(x, y, reference='absolute', proportional=False, phantom=None):
       - relative_active: Move the mouse relative to the current active window.
         0,0 being the top left corner of with window.
 
-    :param proportional:
+    :param proportional: Move the mouse to a "proportional" location within a
+      window relative to it's geometry.  The following example would move the
+      mouse centered vertically and to the right of center in the current
+      window.
+
+      ..code: python
+
+        move_mouse(0.5, 0.75, proportional=True)
+
     :param phantom: If provided, this parameter should be one of
       _MOUSE_BUTTONS.keys(). Move to the desired location, click the <phantom>
       button and restore the mouse to the original location.
@@ -456,8 +464,8 @@ def move_mouse(x, y, reference='absolute', proportional=False, phantom=None):
     geo = get_geometry()
 
     if proportional:
-        x = geo['width'] * x
-        y = geo['height'] * y
+        x = int(geo['width'] * x)
+        y = int(geo['height'] * y)
 
     if reference == 'absolute':
         x = x if x > 0 else x
