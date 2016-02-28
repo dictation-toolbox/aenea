@@ -268,8 +268,8 @@ def get_context():
 
     window_class = window.get_wm_class()
     if window_class is not None:
-        properties['cls_name'] = window_class[1]
-        properties['cls'] = window_class[0]
+        properties['cls_name'] = window_class[0]
+        properties['cls'] = window_class[1]
 
     window_title = window.get_wm_name()
     if window_title is not None:
