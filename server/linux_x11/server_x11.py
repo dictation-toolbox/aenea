@@ -16,6 +16,9 @@
 #
 # Copyright (2014) Alex Roper
 # Alex Roper <alex@aroper.net>
+from os.path import join, dirname, realpath
+sys.path.append(realpath(join(dirname(__file__), '../../')))
+
 import os
 import sys
 
