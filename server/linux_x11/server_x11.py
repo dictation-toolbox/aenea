@@ -425,7 +425,7 @@ def click_mouse(button, direction='click', count=1, count_delay=None,
         elif direction == 'down':
             libxdo.mouse_down(0, button)
         elif direction == 'up':
-            libxdo.mouse_up(0, direction)
+            libxdo.mouse_up(0, button)
         else:
             raise ValueError('invalid "direction" parameter: "%s"' % direction)
         time.sleep(delay_millis / 1000)
