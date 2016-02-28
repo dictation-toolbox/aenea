@@ -16,14 +16,15 @@
 #
 # Copyright (2014) Alex Roper
 # Alex Roper <alex@aroper.net>
-from os.path import join, dirname, realpath
-sys.path.append(realpath(join(dirname(__file__), '../../')))
-
 import os
 import sys
+from os.path import join, dirname, realpath
+
+# enable server.core imports by adding the root of the aenea project to path
+sys.path.append(realpath(join(dirname(__file__), '../../')))
 
 import config
-from server.core import ServerFactory
+from server.core import AeneaServer
 from server.linux_x11.x11_xdotool import XdotoolPlatformRpcs
 
 if __name__ == '__main__':
@@ -49,5 +50,5 @@ if __name__ == '__main__':
             os._exit(0)
 
     platform_rpcs = XdotoolPlatformRpcs(config)
-    server = ServerFactory.from_config(platform_rpcs, config)
+    server = AeneaServer.from_config(platform_rpcs, config)
     server.serve_forever()

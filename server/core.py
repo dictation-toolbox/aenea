@@ -6,27 +6,6 @@ import logging.config
 from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
 
 
-class ServerFactory(object):
-    @staticmethod
-    def from_config(platform_rpcs, config):
-        AeneaLoggingManager.configure(
-            level=getattr(config, 'LOG_LEVEL', None),
-            log_file=getattr(config, 'LOG_FILE', None))
-        logger = logging.getLogger(AeneaLoggingManager.aenea_logger_name)
-
-        rpc_server = SimpleJSONRPCServer((config.HOST, config.PORT))
-
-        # TODO: dynamically load/instantiate platform_rpcs from config instead
-        # of requiring it as an explicit argument
-
-        plugins = AeneaPluginLoader(logger).get_plugins(
-                getattr(config, 'PLUGIN_DIR', None))
-
-        return AeneaServer(
-            platform_rpcs, rpc_server, plugins=plugins, logger=logger
-        )
-
-
 class AeneaServer(object):
     """
     AeneaServer is a jsonrpc server that exposes emulated keyboard/mouse input
@@ -55,6 +34,31 @@ class AeneaServer(object):
 
         for plugin in plugins:
             plugin.register_rpcs(self.server)
+
+    @classmethod
+    def from_config(cls, platform_rpcs, config):
+        """
+        Create an AeneaServer instance from config
+        :param platform_rpcs: Concrete instance of AbstractAeneaPlatformRpc
+        :param config: Aenea configuration parameters.  This is generally
+         Aenea's config.py module.
+        :return: AeneaServer instance
+        :rtype: AeneaServer
+        """
+        AeneaLoggingManager.configure(
+                level=getattr(config, 'LOG_LEVEL', None),
+                log_file=getattr(config, 'LOG_FILE', None))
+        logger = logging.getLogger(AeneaLoggingManager.aenea_logger_name)
+
+        rpc_server = SimpleJSONRPCServer((config.HOST, config.PORT))
+
+        # TODO: dynamically load/instantiate platform_rpcs from config instead
+        # of requiring it as an explicit argument
+
+        plugins = AeneaPluginLoader(logger).get_plugins(
+                getattr(config, 'PLUGIN_DIR', None))
+
+        return cls(platform_rpcs, rpc_server, plugins=plugins, logger=logger)
 
     def serve_forever(self):
         self.server.serve_forever()
