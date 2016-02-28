@@ -9,7 +9,8 @@ from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
 class AeneaServer(object):
     """
     AeneaServer is a jsonrpc server that exposes emulated keyboard/mouse input
-    over the network.
+    over the network.  Takes care of the JSON RPC protocol that Aenea is built
+    on top of and handles dispatching RPCs to the appropriate action.
     """
     def __init__(self, rpc_impl, server, plugins=tuple(), logger=None):
         """
@@ -223,10 +224,20 @@ class AbstractAeneaPlatformRpcs(object):
 
 
 class AeneaPluginLoader(object):
+    """
+    Manages loading Aenea server plugins.
+    """
     def __init__(self, logger=None):
         self.logger = logger or logging.getLogger(self.__class__.__name__)
 
     def get_plugins(self, plugin_path=None):
+        """
+        Get plugins from a given location.
+        :param plugin_path: Path to directory containing yapsy Aenea server
+         plugins.
+        :return: All plugins loaded found in plugin_path
+        :rtype: List of yapsy plugins
+        """
         if plugin_path is None:
             return []
 
@@ -260,7 +271,7 @@ class AeneaPluginLoader(object):
 
 class AeneaLoggingManager(object):
     """
-    Handles generating/configuring very basic logging support for aenea
+    Handles generating and configuring basic logging support for Aenea
     """
     aenea_logger_name = 'aenea'
 
@@ -293,6 +304,13 @@ class AeneaLoggingManager(object):
 
     @classmethod
     def configure(cls, level=None, log_file=None):
+        """
+        Configure logging.
+        :param str level: python logging level. e.g. 'INFO' | 'DEBUG'
+        :param str log_file: location of log file to write to..
+        :return: None
+        :type: None
+        """
         level = level or 'DEBUG'
         config = cls.default_config.copy()
         config['handlers']['console']['level'] = level
