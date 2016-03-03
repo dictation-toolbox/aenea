@@ -61,7 +61,7 @@ class AeneaServer(object):
         # of requiring it as an explicit argument
 
         plugins = AeneaPluginLoader(logger).get_plugins(
-                getattr(config, 'PLUGIN_DIR', None))
+                getattr(config, 'PLUGIN_PATH', None))
 
         return cls(platform_rpcs, rpc_server, plugins=plugins, logger=logger)
 
