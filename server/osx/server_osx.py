@@ -104,8 +104,8 @@ _QUOTED_KEY_TRANSLATION = {
     'hash': '#',
     'hyphen': '-',
     'langle': '<',
-    'lbrace': '[',
-    'lbracket': '{',
+    'lbrace': '{',
+    'lbracket': '[',
     'lparen': '(',
     'minus': '-',
     'percent': '%',
@@ -301,7 +301,7 @@ def get_geometry(window_id=None):
     frame = {'x': p['posn'][0],
             'y': p['posn'][1],
             'width': p['ptsz'][0],
-            'height': p['ptsz'][1]} 
+            'height': p['ptsz'][1]}
 
     return frame  # what to do about screen?
 

@@ -104,10 +104,11 @@ class Alias(object):
         if string not in self._map:
             self._map[string] = []
 
-        self._map[string] += list(alias_strings)
-
         for alias in alias_strings:
-            self._rmap[alias] = string
+            if alias not in self._rmap:
+                # Only add aliases that are not already present in order to avoid duplicate entries.
+                self._map[string].append(alias)
+                self._rmap[alias] = string
         
     def discard(self, string_or_alias):
         """Remove string_or_alias if it is present."""
@@ -127,7 +128,7 @@ class Alias(object):
 
     def _update_regex(self):
         if not self._regex:
-            self._regex = re.compile(r"(?:^| )(?P<string>" + r"|".join(sorted(self.strings(), key = lambda s: (len(s.split()), s), reverse = True)) + r")(?:$| )")
+            self._regex = re.compile(r"(?:^|[ \[\(])(?P<string>" + r"|".join(sorted(self.strings(), key = lambda s: (len(s.split()), s), reverse = True)) + r")(?:$|[ \]\)])")
 
     def spec_for_word(self, word):
         if word in self:
@@ -154,7 +155,7 @@ class Alias(object):
         self._update_regex()
         k = 0 # The end of the previous match.
         open_angle_brackets = 0
-
+        
         while True:
             m = self._regex.search(text[k:])
 
@@ -168,10 +169,10 @@ class Alias(object):
             i += k
             j += k
             open_angle_brackets += text[k:i].count("<") - text[k:i].count(">")
-            assert open_angle_brackets <= 0
+            assert open_angle_brackets >= 0
 
             # Ignore anything inside angle brackets
-            if open_angle_brackets == 0:# and text.find("<", k, i) == -1 and text.find(">", k, i) == -1:
+            if open_angle_brackets == 0:
                 if text[k:i] != "":
                     yield text[k:i]
 
