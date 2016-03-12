@@ -279,7 +279,7 @@ class XdoPlatformRpcs(AbstractAeneaPlatformRpcs):
             elif direction == 'down':
                 self.libxdo.mouse_down(0, button)
             elif direction == 'up':
-                self.libxdo.mouse_up(0, direction)
+                self.libxdo.mouse_up(0, button)
             else:
                 raise ValueError(
                     'invalid "direction" parameter: "%s"' % direction)
