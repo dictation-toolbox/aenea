@@ -323,7 +323,7 @@ class XdoPlatformRpcs(AbstractAeneaPlatformRpcs):
 
         if phantom is not None:
             self.libxdo.click_window(0, _MOUSE_BUTTONS[phantom])
-        self.libxdo.move_mouse(original_location.x, original_location.y)
+            self.libxdo.move_mouse(original_location.x, original_location.y)
 
     def notify(self, message):
         try:
