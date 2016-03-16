@@ -80,7 +80,7 @@ _SERVER_INFO = {
 
 
 _MOD_TRANSLATION = {
-    'alt': 'alt',
+    'alt': 'option',
     'shift': 'shift',
     'control': 'control',
     'super': 'command',
