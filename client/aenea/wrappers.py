@@ -280,6 +280,7 @@ class ContextAction(ActionBase):
     def __init__(self, default=None, actions=[]):
         self.actions = actions
         self.default = default
+        ActionBase.__init__(self)
 
     def add_context(self, context, action):
         self.actions.append((context, action))
