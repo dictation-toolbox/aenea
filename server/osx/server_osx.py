@@ -388,7 +388,7 @@ def key_press(
     if count_delay is None or count < 2:
         delay = ''
     else:
-        delay = 'delay %i ' % (count_delay / 1000.0)
+        delay = 'delay %0.2f ' % count_delay
 
     if modifiers and hasattr(modifiers, 'lower'):
         modifiers = [modifiers]
