@@ -72,8 +72,10 @@ Windows VM Software (versions given are ones I used, others likely work too):
 - Python 2.7.5
 - pywin32-2.1.8
 - dragonfly-0.6.5
-- python-jsonrpclib-0.1.3
+- python-jsonrpclib-0.1.7
 - pyparsing-2.0.1
+
+(a previous version of these instructions recommended python-jsonrpclib-0.1.3, but I ran into a bug in it that was fixed in the later version)
 
 Setup Instructions
 ------------------
@@ -110,7 +112,7 @@ Server (Linux X11)
 
 1) Copy config.py.example to config.py. Edit to suit. The default assumes you are using a host-only adapter for the VM which is NOT the default. Note that the HOST/PORT here must work with those specified in the client-side config (in most cases they will need to be identical).
 
-2) Install the dependencies. Versions I used are in parentheses for reference; you probably don't need these exact versions for it to work. Install jsonrpclib (0.1.3), xdotool (3.20140213.1), xsel (1.2.0; optional but recommended), and yapsy (1.10.223-1; optional but recommended if you want server-side plugin support). Some window managers (xmonad) may require you to enable extended window manager hints for getcontext to work properly. On Awesome, it works out of the box.
+2) Install the dependencies. Versions I used are in parentheses for reference; you probably don't need these exact versions for it to work. Install jsonrpclib (0.1.7), xdotool (3.20140213.1), xsel (1.2.0; optional but recommended), and yapsy (1.10.223-1; optional but recommended if you want server-side plugin support). Some window managers (xmonad) may require you to enable extended window manager hints for getcontext to work properly. On Awesome, it works out of the box.
 
 3) Edit the server's config.py.example to specify the host and port it should listen on.
 
