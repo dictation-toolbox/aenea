@@ -456,14 +456,16 @@ def key_press(
 
 def write_text(text, paste=False):
     '''send text formatted exactly as written to active window.  will use
-       pbpaste clipboard to paste the text instead of typing it.'''
+       simulate keypress typing for maximum compatibility.'''
 
-    logging.debug("text = %s paste = %s" % (text, paste))
+    logging.debug("text = %s" % (text))
     if text:
-        # copy the pasted text to the clipboard
-        write_command(text, arguments='', executable='pbcopy')
-        # paste
-        key_press('v', 'super')
+        script = applescript.AppleScript('''
+        tell application "System Events"
+            keystroke "{text}"
+        end tell
+        '''.format(text=text))
+        script.run()
 
 
 def mouseEvent(type, posx, posy, clickCount=1):
