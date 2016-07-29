@@ -29,6 +29,9 @@ class AeneaServer(object):
         self.logger = logger or logging.getLogger(self.__class__.__name__)
         self.server = server
 
+        self.logger.debug('using {0} for input emulation'.format(
+            rpc_impl.__class__.__name__))
+
         for rpc_func, rpc_name in rpc_impl.rpc_commands.items():
             self.server.register_function(rpc_name, rpc_func)
         self.server.register_function(self.multiple_actions, 'multiple_actions')
@@ -51,17 +54,20 @@ class AeneaServer(object):
                 log_file=getattr(config, 'LOG_FILE', None))
         logger = logging.getLogger(AeneaLoggingManager.aenea_logger_name)
 
-        rpc_server = SimpleJSONRPCServer((config.HOST, config.PORT))
+        rpc_server = SimpleJSONRPCServer(
+                (config.HOST, config.PORT), logRequests=False)
 
         # TODO: dynamically load/instantiate platform_rpcs from config instead
         # of requiring it as an explicit argument
 
         plugins = AeneaPluginLoader(logger).get_plugins(
-                getattr(config, 'PLUGIN_DIR', None))
+                getattr(config, 'PLUGIN_PATH', None))
 
         return cls(platform_rpcs, rpc_server, plugins=plugins, logger=logger)
 
     def serve_forever(self):
+        self.logger.debug(
+            'starting server on {0}:{1}'.format(*self.server.server_address))
         self.server.serve_forever()
 
     def multiple_actions(self, actions):

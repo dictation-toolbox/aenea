@@ -151,8 +151,7 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
     """
     def __init__(self, config, xdotool='xdotool'):
         super(XdotoolPlatformRpcs, self).__init__(
-                logger=logging.getLogger('aenea.XdotoolPlatformRpcs')
-        )
+            logger=logging.getLogger('aenea.XdotoolPlatformRpcs'))
 
         self.xdotool = xdotool
         self.xdotool_delay = getattr(config, 'XDOTOOL_DELAY', 0)

@@ -16,6 +16,7 @@
 #
 # Copyright (2014) Alex Roper
 # Alex Roper <alex@aroper.net>
+import argparse
 import os
 import sys
 from os.path import join, dirname, realpath
@@ -25,30 +26,55 @@ sys.path.append(realpath(join(dirname(__file__), '../../')))
 
 import config
 from server.core import AeneaServer
-from server.linux_x11.x11_xdotool import XdotoolPlatformRpcs
 
-if __name__ == '__main__':
-    if '-d' in sys.argv or '--daemon' in sys.argv:
+
+
+def daemonize():
+    if os.fork() == 0:
+        os.setsid()
         if os.fork() == 0:
-            os.setsid()
-            if os.fork() == 0:
-                os.chdir('/')
-                os.umask(0)
-                # Safe upper bound on number of fds we could
-                # possibly have opened.
-                for fd in range(64):
-                    try:
-                        os.close(fd)
-                    except OSError:
-                        pass
-                os.open(os.devnull, os.O_RDWR)
-                os.dup2(0, 1)
-                os.dup2(0, 2)
-            else:
-                os._exit(0)
+            os.chdir('/')
+            os.umask(0)
+            # Safe upper bound on number of fds we could
+            # possibly have opened.
+            for fd in range(64):
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+            os.open(os.devnull, os.O_RDWR)
+            os.dup2(0, 1)
+            os.dup2(0, 2)
         else:
             os._exit(0)
+    else:
+        os._exit(0)
 
-    platform_rpcs = XdotoolPlatformRpcs(config)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Aenea Linux X11 Server')
+    parser.add_argument(
+        '--daemon', action='store_const', const=True, default=False,
+        required=False, help='If provided the server runs in the background.')
+    parser.add_argument(
+        '--input', action='store', type=str, default='xdotool',
+        choices=('xdotool', 'libxdo'), required=False, dest='impl',
+        help='Aenea Server Input Method.  Providing the default, '
+                    '"xdotool" will make the server shell out to the xdotool '
+                    'program to emulate input. "libxdo" will cause the server '
+                    'to make calls to the xdo library.')
+
+    arguments = parser.parse_args()
+
+    if arguments.impl == 'xdotool':
+        from server.linux_x11.x11_xdotool import XdotoolPlatformRpcs
+        platform_rpcs = XdotoolPlatformRpcs(config)
+    elif arguments.impl == 'libxdo':
+        from server.linux_x11.x11_libxdo import XdoPlatformRpcs
+        platform_rpcs = XdoPlatformRpcs()
+
+    if arguments.daemon:
+        daemonize()
+
     server = AeneaServer.from_config(platform_rpcs, config)
     server.serve_forever()
