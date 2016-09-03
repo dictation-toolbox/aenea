@@ -45,7 +45,6 @@ try:
        ElementBase,
        Empty,
        FocusWindow,
-       FormatState,
        Function,
        HardwareInput,
        Integer,
@@ -83,8 +82,7 @@ try:
        Text,
        Typeable,
        WaitWindow,
-       Window,
-       Word
+       Window
        )
 except ImportError:
     from aenea.dragonfly_mock import (
@@ -109,7 +107,6 @@ except ImportError:
        ElementBase,
        Empty,
        FocusWindow,
-       FormatState,
        Function,
        HardwareInput,
        Integer,
@@ -147,8 +144,7 @@ except ImportError:
        Text,
        Typeable,
        WaitWindow,
-       Window,
-       Word
+       Window
        )
 
 
