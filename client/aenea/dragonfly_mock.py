@@ -116,9 +116,6 @@ class Empty:
 class FocusWindow:
    pass
 
-class FormatState:
-   pass
-
 class Function:
    pass
 
@@ -225,7 +222,4 @@ class Typeable:
    pass
 
 class WaitWindow:
-   pass
-
-class Word:
    pass
