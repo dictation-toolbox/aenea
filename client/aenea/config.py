@@ -20,12 +20,16 @@ import os
 import time
 
 try:
-    import dragonfly
+    import dragonfly, natlinkmain
 except ImportError:
     import dragonfly_mock as dragonfly
 
-
-STARTING_PROJECT_ROOT = 'C:\\NatLink\\NatLink\\MacroSystem'
+try:
+    STARTING_PROJECT_ROOT = natlinkmain.userDirectory
+except (AttributeError, NameError):
+    # AttributeError is for older NatLink that may not have the userDirectory value.
+    # NameError is if the natlinkmain module can't be loaded (e.g., running in tests).
+    STARTING_PROJECT_ROOT = 'C:\\NatLink\\NatLink\\MacroSystem'
 
 _configuration = {
     'project_root': STARTING_PROJECT_ROOT,
