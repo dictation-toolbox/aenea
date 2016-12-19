@@ -30,6 +30,10 @@ except (AttributeError, NameError):
     # AttributeError is for older NatLink that may not have the userDirectory value.
     # NameError is if the natlinkmain module can't be loaded (e.g., running in tests).
     STARTING_PROJECT_ROOT = 'C:\\NatLink\\NatLink\\MacroSystem'
+# userDirectory can be an empty string if unset
+if STARTING_PROJECT_ROOT == '':
+    STARTING_PROJECT_ROOT = 'C:\\NatLink\\NatLink\\MacroSystem'
+
 
 _configuration = {
     'project_root': STARTING_PROJECT_ROOT,
