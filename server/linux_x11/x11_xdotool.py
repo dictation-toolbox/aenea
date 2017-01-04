@@ -264,7 +264,7 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
                 cmdline_path = '/proc/%s/cmdline' % properties['pid']
                 with open(cmdline_path) as fd:
                     properties['cmdline'] = fd.read().replace('\x00', ' ').strip()
-            except OSError:
+            except (IOError, OSError):
                 pass
         else:
             self.logger.warn('pid not set. properties: %s' % properties)
