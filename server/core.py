@@ -1,9 +1,34 @@
 import abc
+import os
+import sys
 import time
+
+from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
+
 import logging
 import logging.config
 
-from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
+
+def _check_access_to_file(filename, name):
+    """
+    Check that a file exists and can be read, printing an error if it cannot
+    be. Returns success.
+    :param filename: Path to the file.
+    :param name: Human-readable name for the file to use to format the error
+      message.
+    """
+    try:
+        with open(filename) as _:
+            _.read()
+        return True
+    except IOError:
+        sys.stderr.write('Unable to open %s file "%s". Disable SSL or provide '
+                         'a valid path.\n' % (name, filename))
+        return False
+
+
+class InvalidConfigurationException(Exception):
+    pass
 
 
 class AeneaServer(object):
@@ -12,6 +37,7 @@ class AeneaServer(object):
     over the network.  Takes care of the JSON RPC protocol that Aenea is built
     on top of and handles dispatching RPCs to the appropriate action.
     """
+
     def __init__(self, rpc_impl, server, plugins=tuple(), logger=None):
         """
         :param rpc_impl: Object that implements all AbstractAeneaPlatformRpc
@@ -34,7 +60,8 @@ class AeneaServer(object):
 
         for rpc_func, rpc_name in rpc_impl.rpc_commands.items():
             self.server.register_function(rpc_name, rpc_func)
-        self.server.register_function(self.multiple_actions, 'multiple_actions')
+        self.server.register_function(
+            self.multiple_actions, 'multiple_actions')
 
         for plugin in plugins:
             plugin.register_rpcs(self.server)
@@ -49,9 +76,24 @@ class AeneaServer(object):
         :return: AeneaServer instance
         :rtype: AeneaServer
         """
+
+        # If SSL is enabled, validate the configuration.
+        if config.USE_SSL:
+            success = True
+            success = _check_access_to_file(
+                config.SSL_PUBLIC_KEY, "server public key") and success
+            success = _check_access_to_file(
+                config.SSL_PRIVATE_KEY, "server private key") and success
+            success = _check_access_to_file(
+                config.SSL_CERTIFICATE_AUTHORITY_PUBLIC_KEY, "certificate authority public key") and success
+
+            if not success:
+                raise InvalidConfigurationException(
+                    'Missing one or more SSL files, and USE_SSL=True. Relative paths are interpreted relative to %s.' % os.getcwd())
+
         AeneaLoggingManager.configure(
-                level=getattr(config, 'LOG_LEVEL', None),
-                log_file=getattr(config, 'LOG_FILE', None))
+            level=getattr(config, 'LOG_LEVEL', None),
+            log_file=getattr(config, 'LOG_FILE', None))
         logger = logging.getLogger(AeneaLoggingManager.aenea_logger_name)
 
         rpc_server = SimpleJSONRPCServer(
@@ -61,7 +103,7 @@ class AeneaServer(object):
         # of requiring it as an explicit argument
 
         plugins = AeneaPluginLoader(logger).get_plugins(
-                getattr(config, 'PLUGIN_PATH', None))
+            getattr(config, 'PLUGIN_DIR', None))
 
         return cls(platform_rpcs, rpc_server, plugins=plugins, logger=logger)
 
@@ -233,6 +275,7 @@ class AeneaPluginLoader(object):
     """
     Manages loading Aenea server plugins.
     """
+
     def __init__(self, logger=None):
         self.logger = logger or logging.getLogger(self.__class__.__name__)
 

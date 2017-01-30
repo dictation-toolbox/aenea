@@ -41,3 +41,9 @@ XDOTOOL_DELAY = 0
 # https://docs.python.org/2/library/logging.html#levels
 #CONSOLE_LOG_LEVEL = 'WARNING'
 #FILE_LOG_LEVEL = 'INFO'
+
+# Confidentiality and Authenticity
+USE_SSL = False
+SSL_PUBLIC_KEY = 'public_key.pem'
+SSL_PRIVATE_KEY = 'private_key.pem'
+SSL_CERTIFICATE_AUTHORITY_PUBLIC_KEY = 'certificate_authority_public_key.pem'
