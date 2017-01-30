@@ -5,5 +5,9 @@
     "use_multiple_actions": true,
     "screen_resolution": [6400, 1440],
     "project_root": "C:\\NatLink\\NatLink\\MacroSystem",
-    "restrict_proxy_to_aenea_client": false
+    "restrict_proxy_to_aenea_client": false,
+    "use_ssl": false,
+    "ssl_public_key": "C:\\NatLink\\NatLink\\MacroSystem\\public_key.pem",
+    "ssl_private_key": "C:\\NatLink\\NatLink\\MacroSystem\\private_key.pem",
+    "ssl_certificate_authority_public_key": "C:\\NatLink\\NatLink\\MacroSystem\\certificate_authority_public_key.pem"
 }

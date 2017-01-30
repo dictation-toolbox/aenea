@@ -25,7 +25,8 @@ from os.path import join, dirname, realpath
 sys.path.append(realpath(join(dirname(__file__), '../../')))
 
 import config
-from server.core import AeneaServer
+import server.core
+import server.linux_x11.x11_xdotool
 
 
 
@@ -76,5 +77,13 @@ if __name__ == '__main__':
     if arguments.daemon:
         daemonize()
 
-    server = AeneaServer.from_config(platform_rpcs, config)
-    server.serve_forever()
+    try:
+        platform_rpcs = server.linux_x11.x11_xdotool.XdotoolPlatformRpcs(
+            config)
+        aenea_server = server.core.AeneaServer.from_config(
+            platform_rpcs, config)
+    except server.core.InvalidConfigurationException as invalid_configuration:
+        sys.stderr.write(str(invalid_configuration) + '\n')
+        sys.exit(-1)
+
+    aenea_server.serve_forever()

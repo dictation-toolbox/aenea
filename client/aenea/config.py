@@ -17,6 +17,7 @@
 
 import json
 import os
+import sys
 import time
 
 try:
@@ -78,6 +79,46 @@ STALE_CONTEXT_DELTA = _configuration.get('stale_context_delta', 0.025)
 
 CONNECT_TIMEOUT = _configuration.get('connect_timeout', 0.1)
 COMMAND_TIMEOUT = _configuration.get('command_timeout', 2)
+
+# Confidentiality and Authenticity
+USE_SSL = _configuration.get('use_ssl', False)
+SSL_PUBLIC_KEY = _configuration.get('ssl_public_key', 'C:\\NatLink\\NatLink\\MacroSystem\\public_key.pem')
+SSL_PRIVATE_KEY = _configuration.get('ssl_private_key', 'C:\\NatLink\\NatLink\\MacroSystem\\private_key.pem')
+SSL_CERTIFICATE_AUTHORITY_PUBLIC_KEY = _configuration.get('ssl_certificate_authority_public_key', 'C:\\NatLink\\NatLink\\MacroSystem\\certificate_authority_public_key.pem')
+
+def _check_access_to_file(filename, name):
+    """
+    Check that a file exists and can be read, printing an error if it cannot
+    be. Returns success.
+    :param filename: Path to the file.
+    :param name: Human-readable name for the file to use to format the error
+      message.
+    """
+    try:
+        with open(filename) as _:
+            _.read()
+        return True
+    except IOError:
+        sys.stderr.write('Unable to open %s file "%s". Disable SSL or provide '
+                         'a valid path.\n' % (name, filename))
+        return False
+
+class InvalidConfigurationException(Exception):
+    pass
+
+if USE_SSL:
+    success = True
+    success = _check_access_to_file(
+        SSL_PUBLIC_KEY, "server public key") and success
+    success = _check_access_to_file(
+        SSL_PRIVATE_KEY, "server private key") and success
+    success = _check_access_to_file(
+        SSL_CERTIFICATE_AUTHORITY_PUBLIC_KEY, "certificate authority public key") and success
+
+    if not success:
+        error = InvalidConfigurationException('Missing one or more SSL files, and USE_SSL=True. Relative paths are interpreted relative to %s.' % os.getcwd())
+        sys.stderr.write(str(error) + '\n')
+        raise error
 
 if _configuration.get('restrict_proxy_to_aenea_client', True):
     proxy_enable_context = dragonfly.AppContext(
