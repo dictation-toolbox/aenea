@@ -2,6 +2,7 @@ import abc
 import os
 import sys
 import time
+import ssl
 
 from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
 
@@ -96,8 +97,24 @@ class AeneaServer(object):
             log_file=getattr(config, 'LOG_FILE', None))
         logger = logging.getLogger(AeneaLoggingManager.aenea_logger_name)
 
-        rpc_server = SimpleJSONRPCServer(
+        if not config.USE_SSL:
+            rpc_server = SimpleJSONRPCServer(
                 (config.HOST, config.PORT), logRequests=False)
+        else:
+            server_ssl = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
+            server_ssl.verify_mode = ssl.CERT_REQUIRED
+            server_ssl.load_cert_chain(
+                certfile=config.SSL_PUBLIC_KEY,
+                keyfile=config.SSL_PRIVATE_KEY)
+            server_ssl.load_verify_locations(
+                config.SSL_CERTIFICATE_AUTHORITY_PUBLIC_KEY)
+            rpc_server = SimpleJSONRPCServer(
+                (config.HOST, config.PORT),
+                logRequests=False,
+                bind_and_activate=False)
+            rpc_server.socket = server_ssl.wrap_socket(rpc_server.socket)
+            rpc_server.server_bind()
+            rpc_server.server_activate()
 
         # TODO: dynamically load/instantiate platform_rpcs from config instead
         # of requiring it as an explicit argument

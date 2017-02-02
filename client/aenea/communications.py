@@ -19,6 +19,7 @@ import httplib
 import jsonrpclib
 import socket
 import time
+import ssl
 
 import aenea.config
 import aenea.configuration
@@ -36,6 +37,36 @@ def set_server_address(address):
     _server_config['host'], _server_config['port'] = address
     _server_config.write()
 
+class _ImpatientSafeTransport(jsonrpclib.jsonrpc.SafeTransport):
+    '''Encrypted transport for jsonrpclib that supports a timeout.'''
+    def __init__(self, context, timeout=None):
+        self._timeout = timeout
+        jsonrpclib.jsonrpc.SafeTransport.__init__(self, context)
+
+    def make_connection(self, host):
+        if self._connection and host == self._connection[0]:
+            return self._connection[1]
+        # create a HTTPS connection object from a host descriptor
+        # host may be a string, or a (host, x509-dict) tuple
+        try:
+            HTTPS = httplib.HTTPSConnection
+        except AttributeError:
+            raise NotImplementedError(
+                "your version of httplib doesn't support HTTPS"
+                )
+        else:
+            chost, self._extra_headers, x509 = self.get_host_info(host)
+            if self._timeout is None:
+                self._connection = host, HTTPS(
+                    chost, None, context=self.context, **(x509 or {}))
+            else:
+                self._connection = host, HTTPS(
+                    chost,
+                    None,
+                    context=self.context,
+                    timeout=self._timeout,
+                    **(x509 or {}))
+            return self._connection[1]
 
 class _ImpatientTransport(jsonrpclib.jsonrpc.Transport):
     '''Transport for jsonrpclib that supports a timeout.'''
@@ -69,7 +100,19 @@ class Proxy(object):
         self._address = None
         self.last_connect_good = False
         self._last_failed_connect = 0
-        self._transport = _ImpatientTransport(aenea.config.COMMAND_TIMEOUT)
+        if not aenea.config.USE_SSL:
+            self._transport = _ImpatientTransport(
+                aenea.config.COMMAND_TIMEOUT)
+        else:
+            ssl_client = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
+            ssl_client.verify_mode = ssl.CERT_REQUIRED
+            ssl_client.load_cert_chain(
+                certfile=aenea.config.SSL_PUBLIC_KEY,
+                keyfile=aenea.config.SSL_PRIVATE_KEY)
+            ssl_client.load_verify_locations(
+                aenea.config.SSL_CERTIFICATE_AUTHORITY_PUBLIC_KEY)
+            self._transport = _ImpatientSafeTransport(
+                ssl_client, aenea.config.COMMAND_TIMEOUT)
 
     def _execute_batch(self, batch, use_multiple_actions=False):
         self._refresh_server()

@@ -9,4 +9,5 @@ setup(
     author_email='alex@aroper.net',
     python_requires='>=2.7,<3',
     packages=['aenea'],
-    install_requires=['dragonfly'])
+    entry_points={'console_scripts': ['aenea_cert = cert_manager:start']},
+    install_requires=['dragonfly', 'pyopenssl', 'jsonrpclib', 'pyparsing'])

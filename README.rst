@@ -146,7 +146,7 @@ Enable access for assistive devices in your system preferences
 
 
 Aenea client-side library
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 At this point, the folder C:\\NatLink\\NatLink\\MacroSystem should contain a folder named core.
 
 0) Copy aenea/client/aenea into C:\\NatLink\\NatLink\\MacroSystem.
@@ -207,6 +207,34 @@ Non-exhaustive list of Dragonfly modules that should work (with the above change
 - kbbreak
 - firefox (except save_now command)
 - audacity
+
+Using SSL
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Configuring SSL:
+TODO
+
+Creating certificates:
+
+First create a certificate authority::
+
+        $ aenea_cert root my_root
+
+This created the files ``my_root.key`` and ``my_root.pem``.
+
+Now create a server certificate::
+
+        $ aenea_cert --root my_root --ip 192.168.1.78 server my_server
+
+This created the files ``my_server.key`` and ``my_server.crt``.
+
+Now create a client certificate::
+
+        $ aenea_cert --root my_root client my_client
+
+This created the files ``my_client.key`` and ``my_client.crt``.
+
+Now move your client certificates together with a copy of the my_root.pem file to the MacroSystem directory. Move your server certificates together with a copy of the my_root.pem file to the path you specified in configuration on the server. Backup your root certificates carefully, you need them to make new certificates. Also make sure no one can get to your certificates, just like you would protect passwords.
 
 Writing Your Own Modules
 ----------------------------
