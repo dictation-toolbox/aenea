@@ -322,6 +322,7 @@ class XdoPlatformRpcs(AbstractAeneaPlatformRpcs):
             raise ValueError('invalid "reference" parameter "%s"' % reference)
 
         if phantom is not None:
+
             self.libxdo.click_window(0, _MOUSE_BUTTONS[phantom])
             self.libxdo.move_mouse(original_location.x, original_location.y)
 
@@ -330,3 +331,4 @@ class XdoPlatformRpcs(AbstractAeneaPlatformRpcs):
             subprocess.Popen(['notify-send', message])
         except Exception as e:
             self.logger.warn('failed to start notify-send process: %s' % e)
+
