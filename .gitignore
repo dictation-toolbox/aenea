@@ -3,4 +3,3 @@
 client/util/personal.py
 client/util/config.py
 server/linux_x11/config.py
-.idea
