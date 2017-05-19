@@ -429,9 +429,6 @@ def key_press(
             key_to_press = _KEYCODE_TRANSLATION.get(key.lower(), None)
             command = 'key code "{0}"'.format(key_to_press)
 
-    if key_to_press is None:
-        raise RuntimeError("Don't know how to handle keystroke {0}".format(key))
-
     if modifiers:
         elems = map(lambda s: "%s down" % s, modifiers)
         key_command = "%s using {%s} " % (command, ', '.join(elems))
