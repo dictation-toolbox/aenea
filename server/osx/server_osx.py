@@ -270,9 +270,22 @@ def get_active_window():
             set frontApp to first application process whose frontmost is true
             set frontAppName to name of frontApp
             tell process frontAppName
-                tell (1st window whose value of attribute "AXMain" is true)
-                    set windowTitle to value of attribute "AXTitle"
-                end tell
+                set mainWindow to missing value
+                repeat with win in windows
+                    if attribute "AXMain" of win is true then
+                        set mainWindow to win
+                        exit repeat
+                    end if
+                end repeat
+                if mainWindow is missing value then
+                    tell application "System Events"
+                        set windowTitle to name of first window of process frontAppName
+                    end tell
+                else
+                    tell mainWindow
+                        set windowTitle to value of attribute "AXMain"
+                    end tell
+                end if
             end tell
         end tell
 
