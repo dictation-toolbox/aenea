@@ -32,9 +32,9 @@ from aenea.wrappers import *
 
 
 class Key(AeneaDynStrActionBase):
-    def __init__(self, spec):
+    def __init__(self, spec, **kwargs):
         proxy = aenea.proxy_actions.ProxyKey(spec)
-        local = dragonfly.Key(spec)
+        local = dragonfly.Key(spec, **kwargs)
         AeneaDynStrActionBase.__init__(
             self,
             proxy,

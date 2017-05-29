@@ -268,7 +268,6 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
                 pass
         else:
             self.logger.warn('pid not set. properties: %s' % properties)
-
         return properties
 
     def pause(self, amount, _xdotool=None):
@@ -401,10 +400,10 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
         key_to_press = _KEY_TRANSLATION.get(key, key)
 
         keys = ['keydown ' + k for k in modifiers]
-        keys.extend(['key%s %s' % (_KEY_PRESSES[direction], key_to_press)] * count)
+        keys.extend(['key%s %s %s' % (_KEY_PRESSES[direction], delay, key_to_press)] * count)
         keys.extend('keyup ' + k for k in reversed(modifiers))
 
         if _xdotool is not None:
             _xdotool.extend(keys)
         else:
-            self.run_command(delay + ' '.join(keys))
+            self.run_command(' '.join(keys))
