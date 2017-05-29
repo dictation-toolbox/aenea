@@ -75,10 +75,13 @@ _SERVER_INFO = {
 
 _MOD_TRANSLATION = {
     'alt': 'alt',
-    'shift': 'shift',
+    'command': 'command',
+    'cmd': 'command',
     'control': 'control',
+    'ctrl': 'control',
+    'shift': 'shift',
     'super': 'command',
-    'command': 'command'
+    'win': 'command',
     }
 
 # The key maps are broken up into different sections because AppleScript has
@@ -125,14 +128,18 @@ _QUOTED_KEY_TRANSLATION = {
 
 _MODIFIER_KEY_DIRECT = {
     # modifiers
+    'alt': 'option',
     'command': 'command',
-    'shift': 'shift',
-    'option': 'option',
+    'cmd': 'command',
     'control': 'control',
-    'rightshift': 'rightshift',
-    'rightoption': 'rightoption',
+    'ctrl': 'control',
+    'function': 'function',
+    'option': 'option',
     'rightcontrol': 'rightcontrol',
-    'function': 'function'
+    'rightoption': 'rightoption',
+    'rightshift': 'rightshift',
+    'shift': 'shift',
+    'win': 'command',
     }
 
 # from /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/ \
@@ -389,9 +396,9 @@ def key_press(
        'meta', and 'flag' (same as super). count is number of times to
        press it. count_delay delay in ms between presses.'''
 
-    logging.debug("\nkey = {key} modifiers = {modifiers} " +
-                  "direction = {direction} " +
-                  "count = {count} count_delay = {count_delay} ".
+    logging.debug(("key = {key} modifiers = {modifiers} "
+                  "direction = {direction} "
+                  "count = {count} count_delay = {count_delay}").
                   format(modifiers=modifiers,
                          direction=direction,
                          count=count,
