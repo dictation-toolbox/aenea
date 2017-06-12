@@ -75,7 +75,11 @@ Windows VM Software (versions given are ones I used, others likely work too):
 - python-jsonrpclib-0.1.7
 - pyparsing-2.0.1
 
-(a previous version of these instructions recommended python-jsonrpclib-0.1.3, but I ran into a bug in it that was fixed in the later version)
+Some notes:
+
+- NatLink has some problems on Windows 10 64-bit related to the msvcr100.dll file. It is unclear whether it is the 64-bit or the Windows 10 which resulted in the problem. Therefore it is recommended that you use the version of Windows mentioned above.
+- If you have problems installing NatLink, this page may help http://qh.antenna.nl/unimacro/installation/problemswithinstallation.html
+- A previous version of these instructions recommended python-jsonrpclib-0.1.3, but I ran into a bug in it that was fixed in the later version
 
 Setup Instructions
 ------------------
