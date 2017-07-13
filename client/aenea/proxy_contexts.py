@@ -147,7 +147,8 @@ class ProxyCustomAppContext(dragonfly.Context):
 
 
 def ProxyAppContext(
-        title=VALUE_DONT_CARE,
+        title=VALUE_DONT_CARE,  # active window title, as determined by server
+        app_id=VALUE_DONT_CARE,  # active app name, as determined by server
         cls=VALUE_DONT_CARE,
         cls_name=VALUE_DONT_CARE,
         executable=VALUE_DONT_CARE,
@@ -158,6 +159,7 @@ def ProxyAppContext(
 
     query = {
         'title': title,
+        'id': app_id,
         'cls': cls,
         'cls_name': cls_name,
         'executable': executable
