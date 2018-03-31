@@ -24,8 +24,11 @@ import sys
 
 import dragonfly
 
-# Internal NatLink module for reloading grammars.
-import natlinkmain
+try:
+    # Internal NatLink module for reloading grammars.
+    import natlinkmain
+except ImportError:
+    natlinkmain = None
 
 try:
     import aenea
@@ -92,8 +95,9 @@ def reload_code():
     dir_reload_blacklist = set(["core"])
     macro_dir = "C:\\NatLink\\NatLink\\MacroSystem"
 
-    # Unload all grammars.
-    natlinkmain.unloadEverything()
+    # Unload all grammars if natlinkmain is available.
+    if natlinkmain:
+        natlinkmain.unloadEverything()
 
     # Unload all modules in macro_dir except for those in directories on the
     # blacklist.
@@ -120,8 +124,9 @@ def reload_code():
                 del sys.modules[name]
 
     try:
-        # Reload the top-level modules in macro_dir.
-        natlinkmain.findAndLoadFiles()
+        # Reload the top-level modules in macro_dir if natlinkmain is available.
+        if natlinkmain:
+            natlinkmain.findAndLoadFiles()
     except Exception as e:
         print "reloading failed: {}".format(e)
     else:
