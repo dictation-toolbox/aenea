@@ -175,7 +175,7 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
         self.logger.debug(
                 'echo \'%s\' | %s %s' % (message, executable, arguments))
         with os.popen('%s %s' % (executable, arguments), 'w') as fd:
-            fd.write(message)
+            fd.write(message.encode('utf-8'))
 
     def flush_xdotool(self, actions):
         if actions:
