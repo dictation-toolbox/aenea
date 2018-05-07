@@ -17,21 +17,27 @@
 # Copyright (2014) Alex Roper
 # Alex Roper <alex@aroper.net>
 
+import logging
 import os
+import re
 import sys
 import time
-import re
-
-import jsonrpclib
-import jsonrpclib.SimpleJSONRPCServer
-
-import config
-import logging
-
-# logging.basicConfig(level=logging.DEBUG)
+from os.path import dirname, join, realpath
 
 import applescript
+import jsonrpclib
+import jsonrpclib.SimpleJSONRPCServer
 from Quartz.CoreGraphics import *
+
+import config
+# enable server.core imports by adding the root of the aenea project to path
+sys.path.append(realpath(join(dirname(__file__), '../../')))
+from server.core import AeneaPluginLoader
+
+
+#logging.basicConfig(level=logging.DEBUG)
+
+
 
 _MOUSE_BUTTONS = {
     'left': 1,
@@ -389,9 +395,9 @@ def key_press(
        'meta', and 'flag' (same as super). count is number of times to
        press it. count_delay delay in ms between presses.'''
 
-    logging.debug("\nkey = {key} modifiers = {modifiers} " +
+    logging.debug(("\nkey = {key} modifiers = {modifiers} " +
                   "direction = {direction} " +
-                  "count = {count} count_delay = {count_delay} ".
+                  "count = {count} count_delay = {count_delay} ").
                   format(modifiers=modifiers,
                          direction=direction,
                          count=count,
@@ -594,8 +600,14 @@ def setup_server(host, port):
     server = jsonrpclib.SimpleJSONRPCServer.SimpleJSONRPCServer((host, port))
 
     for command in list_rpc_commands():
+        logging.debug("registered %s", command)
         server.register_function(globals()[command])
     server.register_function(multiple_actions)
+
+    plugins = AeneaPluginLoader(logging.getLogger()).get_plugins(
+        getattr(config, 'PLUGIN_PATH', None))
+    for plugin in plugins:
+        plugin.register_rpcs(server)
 
     return server
 
