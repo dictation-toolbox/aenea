@@ -459,10 +459,7 @@ def write_text(text, paste=False):
     if text:
         script = applescript.AppleScript('''
         tell application "System Events"
-          repeat with i from 1 to count characters of "{text}"
-            keystroke (character i of "{text}")
-            delay 0.0002
-          end repeat
+            keystroke "{text}"
         end tell
         '''.format(text=text))
         script.run()
