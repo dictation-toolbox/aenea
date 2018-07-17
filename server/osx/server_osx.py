@@ -80,7 +80,7 @@ _SERVER_INFO = {
 
 
 _MOD_TRANSLATION = {
-    'alt': 'alt',
+    'alt': 'option',
     'shift': 'shift',
     'control': 'control',
     'super': 'command',
@@ -96,15 +96,15 @@ _QUOTED_KEY_TRANSLATION = {
     'apostrophe': "'",
     'asterisk': '*',
     'at': '@',
-    'backslash': '\\',
+    'backslash': '\\\\',
     'backtick': '`',
-    'bar': '-',
+    'bar': '|',
     'caret': '^',
     'colon': ':',
     'comma': ',',
     'dollar': '$',
     'dot': '.',
-    'dquote': '"',
+    'dquote': '\\\"',
     'equal': '=',
     'exclamation': '!',
     'hash': '#',
@@ -131,10 +131,10 @@ _QUOTED_KEY_TRANSLATION = {
 
 _MODIFIER_KEY_DIRECT = {
     # modifiers
-    'command': 'command',
+    'win': 'command',
     'shift': 'shift',
-    'option': 'option',
-    'control': 'control',
+    'alt': 'option',
+    'ctrl': 'control',
     'rightshift': 'rightshift',
     'rightoption': 'rightoption',
     'rightcontrol': 'rightcontrol',
@@ -429,9 +429,6 @@ def key_press(
             key_to_press = _KEYCODE_TRANSLATION.get(key.lower(), None)
             command = 'key code "{0}"'.format(key_to_press)
 
-    if key_to_press is None:
-        raise RuntimeError("Don't know how to handle keystroke {0}".format(key))
-
     if modifiers:
         elems = map(lambda s: "%s down" % s, modifiers)
         key_command = "%s using {%s} " % (command, ', '.join(elems))
@@ -456,14 +453,16 @@ def key_press(
 
 def write_text(text, paste=False):
     '''send text formatted exactly as written to active window.  will use
-       pbpaste clipboard to paste the text instead of typing it.'''
+       simulate keypress typing for maximum compatibility.'''
 
-    logging.debug("text = %s paste = %s" % (text, paste))
+    logging.debug("text = %s" % (text))
     if text:
-        # copy the pasted text to the clipboard
-        write_command(text, arguments='', executable='pbcopy')
-        # paste
-        key_press('v', 'super')
+        script = applescript.AppleScript('''
+        tell application "System Events"
+            keystroke "{text}"
+        end tell
+        '''.format(text=text))
+        script.run()
 
 
 def mouseEvent(type, posx, posy, clickCount=1):
