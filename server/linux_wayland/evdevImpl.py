@@ -19,6 +19,9 @@ _SERVER_INFO = {
     'server_version': 1
 }
 
+
+# When a key is in this table, we will add the shift key.
+# This should change with the keyboard layout but how to know?
 upper = { '1': evdev.ecodes.ecodes['KEY_1'],
           '2': evdev.ecodes.ecodes['KEY_2'],
           '3': evdev.ecodes.ecodes['KEY_3'],
@@ -42,6 +45,9 @@ upper = { '1': evdev.ecodes.ecodes['KEY_1'],
           '>': evdev.ecodes.KEY_102ND,
 }
 
+# For AZERTY keyboard, this table contains the symbols corresponding to numbers
+# with QWERTY keyboard.
+# This should change with the keyboard layout but how to know?
 lower = { '&': evdev.ecodes.ecodes['KEY_1'],
           'é': evdev.ecodes.ecodes['KEY_2'],
           '"': evdev.ecodes.ecodes['KEY_3'],
@@ -65,6 +71,8 @@ lower = { '&': evdev.ecodes.ecodes['KEY_1'],
           '<': evdev.ecodes.KEY_102ND,
 }
 
+# When a key is in this table, we will add the 'Alt Gr' key.
+# This should change with the keyboard layout but how to know?
 altgr = { '¹': evdev.ecodes.ecodes['KEY_1'],
           '~': evdev.ecodes.ecodes['KEY_2'],
           '#"': evdev.ecodes.ecodes['KEY_3'],
@@ -85,7 +93,14 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 		super(EvdevPlatformRpcs, self).__init__(logger=logging.getLogger('aenea.XdotoolPlatformRpcs'))
 		self.ui = evdev.UInput()
 
-
+	# This function writes letter or a group of letter in the uinput device.
+	# A simple letter will be written as is.
+	# letters/symbols in the tables above are checked
+	# '\r' and '\n' are mapped to enter key
+	# '\t' is mapped to tab key
+	# '\' key must be escaped: '\\'
+	# Special code must be used for special keys. Special code starts with a
+	# '@' symbol. '@' key must be escaped: '@@'
 	def keyMod(self, letters, downNotUp): #down = 1, up = 0
 		escape = False
 		special = False
@@ -133,9 +148,9 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 					'7': evdev.ecodes.KEY_F7,
 					'8': evdev.ecodes.KEY_F8,
 					'9': evdev.ecodes.KEY_F9,
-					'10': evdev.ecodes.KEY_F10,
-					'11': evdev.ecodes.KEY_F11,
-					'12': evdev.ecodes.KEY_F12,
+					'10': evdev.ecodes.KEY_F10, #this cannot work
+					'11': evdev.ecodes.KEY_F11, #this cannot work
+					'12': evdev.ecodes.KEY_F12, #this cannot work
 				}
 				special = False
 				key = switcher.get(letter)
@@ -166,6 +181,7 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 		self.logger.info('get_context Not implemented yet')
 		return {}
 
+	# Convert code coming from client to keymod function code
 	def convert_key(self, key):
 		keys = {
 			'enter' : '\\n',
@@ -239,6 +255,7 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 			return keys[key]
 		return key
 
+	# count is not managed!
 	def key_press(self,
 	              key=None,
 	              modifiers=(),
@@ -270,6 +287,8 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 
 	def write_text(self, text):
 		for letter in text:
+			# this may not work for special keys because we read 'e'
+                        # 'n' 't' 'e' 'r' instead of 'enter'
 			key = self.convert_key(letter)
 			self.keyMod(key, 1)
 			self.keyMod(key, 0)
