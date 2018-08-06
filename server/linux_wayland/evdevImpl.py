@@ -39,6 +39,7 @@ upper = { '1': evdev.ecodes.ecodes['KEY_1'],
           '.': evdev.ecodes.ecodes['KEY_COMMA'],
           '/': evdev.ecodes.ecodes['KEY_DOT'],
           '§': evdev.ecodes.ecodes['KEY_SLASH'],
+          '>': evdev.ecodes.KEY_102ND,
 }
 
 lower = { '&': evdev.ecodes.ecodes['KEY_1'],
@@ -61,6 +62,7 @@ lower = { '&': evdev.ecodes.ecodes['KEY_1'],
           ';': evdev.ecodes.ecodes['KEY_COMMA'],
           ':': evdev.ecodes.ecodes['KEY_DOT'],
           '!': evdev.ecodes.ecodes['KEY_SLASH'],
+          '<': evdev.ecodes.KEY_102ND,
 }
 
 altgr = { '¹': evdev.ecodes.ecodes['KEY_1'],
