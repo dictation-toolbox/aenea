@@ -10,6 +10,75 @@ import config
 import sys
 from server.core import AbstractAeneaPlatformRpcs
 
+from qwerty import Qwerty
+from azerty import Azerty
+
+mappings = { "qwerty" : Qwerty(),
+             "azerty" : Azerty(),
+}
+
+special = { "enter" : evdev.ecodes.KEY_ENTER,
+            "tab" : evdev.ecodes.KEY_TAB,
+            "alt" : evdev.ecodes.KEY_LEFTALT,
+            "win" : evdev.ecodes.KEY_LEFTMETA,
+            "super" : evdev.ecodes.KEY_LEFTMETA,
+            "shift" : evdev.ecodes.KEY_LEFTSHIFT,
+            "control" : evdev.ecodes.KEY_LEFTCTRL,
+            "space" : " ",
+            "plus" : "+",
+            "minus" : "-",
+            "backspace" : evdev.ecodes.KEY_BACKSPACE,
+            "del" : evdev.ecodes.KEY_DELETE,
+            "lbrace" : "{",
+            "rbrace" : "}",
+            "left" : evdev.ecodes.KEY_LEFT,
+            "right" : evdev.ecodes.KEY_RIGHT,
+            "up" : evdev.ecodes.KEY_UP,
+            "down" : evdev.ecodes.KEY_DOWN,
+            "lparen" : "(",
+            "rparen" : ")",
+            "lbracket" : "[",
+            "rbracket" : "]",
+            "colon" : ":",
+            "comma" : ",",
+            "semicolon" : ";",
+            "dot" : ".",
+            "slash" : "/",
+            "hash" : "#",
+            "percent" : "%",
+            "asterisk" : "*",
+            "dollar" : "$",
+            "backslash" : "\\",
+            "apostrophe" : "'",
+            "dquote" : "\"",
+            "rangle" : ">",
+            "langle" : "<",
+            "equal" : "=",
+            "exclamation" : "!",
+            "question" : "?",
+            "bar" : "|",
+            "underscore" : "_",
+            "ampersand" : "&",
+            "at" : "@",
+            "f1" : evdev.ecodes.KEY_F1,
+            "f2" : evdev.ecodes.KEY_F2,
+            "f3" : evdev.ecodes.KEY_F3,
+            "f4" : evdev.ecodes.KEY_F4,
+            "f5" : evdev.ecodes.KEY_F5,
+            "f6" : evdev.ecodes.KEY_F6,
+            "f7" : evdev.ecodes.KEY_F7,
+            "f8" : evdev.ecodes.KEY_F8,
+            "f9" : evdev.ecodes.KEY_F9,
+            "f10" : evdev.ecodes.KEY_F10,
+            "f11" : evdev.ecodes.KEY_F11,
+            "f12" : evdev.ecodes.KEY_F12,
+}
+
+fixed = { "\n" : [evdev.ecodes.KEY_ENTER],
+          " " : [evdev.ecodes.KEY_SPACE],
+          "\t" : [evdev.ecodes.KEY_TAB],
+}
+
 _SERVER_INFO = {
     'window_manager': 'sway',
     'operating_system': 'linux',
@@ -19,160 +88,11 @@ _SERVER_INFO = {
     'server_version': 1
 }
 
-
-# When a key is in this table, we will add the shift key.
-# This should change with the keyboard layout but how to know?
-upper = { '1': evdev.ecodes.ecodes['KEY_1'],
-          '2': evdev.ecodes.ecodes['KEY_2'],
-          '3': evdev.ecodes.ecodes['KEY_3'],
-          '4': evdev.ecodes.ecodes['KEY_4'],
-          '5': evdev.ecodes.ecodes['KEY_5'],
-          '6': evdev.ecodes.ecodes['KEY_6'],
-          '7': evdev.ecodes.ecodes['KEY_7'],
-          '8': evdev.ecodes.ecodes['KEY_8'],
-          '9': evdev.ecodes.ecodes['KEY_9'],
-          '0': evdev.ecodes.ecodes['KEY_0'],
-          '°': evdev.ecodes.ecodes['KEY_MINUS'],
-          '+': evdev.ecodes.ecodes['KEY_EQUAL'],
-          '£': evdev.ecodes.ecodes['KEY_RIGHTBRACE'],
-          'M': evdev.ecodes.ecodes['KEY_SEMICOLON'],
-          '%': evdev.ecodes.ecodes['KEY_APOSTROPHE'],
-          'µ': evdev.ecodes.ecodes['KEY_BACKSLASH'],
-          '?': evdev.ecodes.ecodes['KEY_M'],
-          '.': evdev.ecodes.ecodes['KEY_COMMA'],
-          '/': evdev.ecodes.ecodes['KEY_DOT'],
-          '§': evdev.ecodes.ecodes['KEY_SLASH'],
-          '>': evdev.ecodes.KEY_102ND,
-}
-
-# For AZERTY keyboard, this table contains the symbols corresponding to numbers
-# with QWERTY keyboard.
-# This should change with the keyboard layout but how to know?
-lower = { '&': evdev.ecodes.ecodes['KEY_1'],
-          'é': evdev.ecodes.ecodes['KEY_2'],
-          '"': evdev.ecodes.ecodes['KEY_3'],
-          '\'': evdev.ecodes.ecodes['KEY_4'],
-          '(': evdev.ecodes.ecodes['KEY_5'],
-          '-': evdev.ecodes.ecodes['KEY_6'],
-          'è': evdev.ecodes.ecodes['KEY_7'],
-          '_': evdev.ecodes.ecodes['KEY_8'],
-          'ç': evdev.ecodes.ecodes['KEY_9'],
-          'à': evdev.ecodes.ecodes['KEY_0'],
-          ')': evdev.ecodes.ecodes['KEY_MINUS'],
-          '=': evdev.ecodes.ecodes['KEY_EQUAL'],
-          '$': evdev.ecodes.ecodes['KEY_RIGHTBRACE'],
-          'm': evdev.ecodes.ecodes['KEY_SEMICOLON'],
-          'ù': evdev.ecodes.ecodes['KEY_APOSTROPHE'],
-          '*': evdev.ecodes.ecodes['KEY_BACKSLASH'],
-          ',': evdev.ecodes.ecodes['KEY_M'],
-          ';': evdev.ecodes.ecodes['KEY_COMMA'],
-          ':': evdev.ecodes.ecodes['KEY_DOT'],
-          '!': evdev.ecodes.ecodes['KEY_SLASH'],
-          '<': evdev.ecodes.KEY_102ND,
-}
-
-# When a key is in this table, we will add the 'Alt Gr' key.
-# This should change with the keyboard layout but how to know?
-altgr = { '¹': evdev.ecodes.ecodes['KEY_1'],
-          '~': evdev.ecodes.ecodes['KEY_2'],
-          '#"': evdev.ecodes.ecodes['KEY_3'],
-          '{': evdev.ecodes.ecodes['KEY_4'],
-          '[': evdev.ecodes.ecodes['KEY_5'],
-          '|': evdev.ecodes.ecodes['KEY_6'],
-          '`': evdev.ecodes.ecodes['KEY_7'],
-          '\\': evdev.ecodes.ecodes['KEY_8'],
-          '^': evdev.ecodes.ecodes['KEY_9'],
-          '@': evdev.ecodes.ecodes['KEY_0'],
-          ']': evdev.ecodes.ecodes['KEY_MINUS'],
-          '}': evdev.ecodes.ecodes['KEY_EQUAL'],
-}
-
-
 class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
-	def __init__(self, config):
+	def __init__(self, config, mapping):
 		super(EvdevPlatformRpcs, self).__init__(logger=logging.getLogger('aenea.XdotoolPlatformRpcs'))
+		self.mapping = mappings.get(mapping, "qwerty")
 		self.ui = evdev.UInput()
-
-	# This function writes letter or a group of letter in the uinput device.
-	# A simple letter will be written as is.
-	# letters/symbols in the tables above are checked
-	# '\r' and '\n' are mapped to enter key
-	# '\t' is mapped to tab key
-	# '\' key must be escaped: '\\'
-	# Special code must be used for special keys. Special code starts with a
-	# '@' symbol. '@' key must be escaped: '@@'
-	def keyMod(self, letters, downNotUp): #down = 1, up = 0
-		escape = False
-		special = False
-		for letter in letters:
-			if letter == ' ':
-				key = evdev.ecodes.KEY_SPACE
-			elif letter == '\\':
-				if escape == False:
-					escape = True
-					continue
-				else:
-					key = evdev.ecodes.KEY_8
-			elif letter == '@':
-				if special == False:
-					special = True
-					continue
-				else:
-					key = evdev.ecodes.KEY_0
-			elif escape:
-				switcher = {
-					'r': evdev.ecodes.KEY_ENTER,
-					't': evdev.ecodes.KEY_TAB,
-					'n': evdev.ecodes.KEY_ENTER,
-				}
-				escape = False
-				key = switcher.get(letter)
-			elif special:
-				switcher = {
-					'a': evdev.ecodes.KEY_LEFTALT,
-					'b': evdev.ecodes.KEY_BACKSPACE,
-					'c': evdev.ecodes.KEY_LEFTCTRL,
-					'd': evdev.ecodes.KEY_DELETE,
-					'l': evdev.ecodes.KEY_LEFT,
-					'o': evdev.ecodes.KEY_DOWN,
-					'r': evdev.ecodes.KEY_RIGHT,
-					's': evdev.ecodes.KEY_LEFTSHIFT,
-					'u': evdev.ecodes.KEY_UP,
-					'w': evdev.ecodes.KEY_LEFTMETA,
-					'1': evdev.ecodes.KEY_F1,
-					'2': evdev.ecodes.KEY_F2,
-					'3': evdev.ecodes.KEY_F3,
-					'4': evdev.ecodes.KEY_F4,
-					'5': evdev.ecodes.KEY_F5,
-					'6': evdev.ecodes.KEY_F6,
-					'7': evdev.ecodes.KEY_F7,
-					'8': evdev.ecodes.KEY_F8,
-					'9': evdev.ecodes.KEY_F9,
-					'10': evdev.ecodes.KEY_F10, #this cannot work
-					'11': evdev.ecodes.KEY_F11, #this cannot work
-					'12': evdev.ecodes.KEY_F12, #this cannot work
-				}
-				special = False
-				key = switcher.get(letter)
-			elif letter in upper:
-				key = upper[letter]
-			elif letter in lower:
-				key = lower[letter]
-			elif letter in altgr:
-				key = altgr[letter]
-			else:
-				key = evdev.ecodes.ecodes['KEY_'+letter.upper()]
-
-			if letter.isupper() or letter in upper:
-				self.ui.write(evdev.ecodes.EV_KEY,
-				              evdev.ecodes.KEY_LEFTSHIFT,
-				              downNotUp)
-			if letter in altgr:
-				self.ui.write(evdev.ecodes.EV_KEY,
-				              evdev.ecodes.KEY_RIGHTALT,
-				              downNotUp)
-			self.ui.write(evdev.ecodes.EV_KEY, key, downNotUp)
-
 
 	def server_info(self):
 		return _SERVER_INFO
@@ -181,81 +101,7 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 		self.logger.info('get_context Not implemented yet')
 		return {}
 
-	# Convert code coming from client to keymod function code
-	def convert_key(self, key):
-		keys = {
-			'enter' : '\\n',
-			'tab' : '\\t',
-			'alt' : '@a',
-			'win' : '@w',
-			'super' : '@w',
-			'shift' : '@s',
-			'control' : '@c',
-			'@' : '@@',
-			'\\' : '\\\\',
-			'space' : ' ',
-			'plus' : '+',
-			'minus' : '-',
-			'backspace' : '@b',
-			'del' : '@d',
-			'lbrace' : '{',
-			'rbrace' : '}',
-			'left' : '@l',
-			'right' : '@r',
-			'up' : '@u',
-			'down' : '@o',
-			'lparen' : '(',
-			'rparen' : ')',
-			'lbracket' : '[',
-			'rbracket' : ']',
-			'colon' : ":",
-			'comma' : ',',
-			'semicolon' : ';',
-			'dot' : '.',
-			'slash' : '/',
-			'hash' : '#',
-			'percent' : '%',
-			'asterisk' : '*',
-			'dollar' : '$',
-			'backslash' : '\\\\',
-			'apostrophe' : '\'',
-			'dquote' : '"',
-			'rangle' : '>',
-			'langle' : '<',
-			'equal' : '=',
-			'exclamation' : '!',
-			'question' : '?',
-			'bar' : '|',
-			'underscore' : '_',
-			'ampersand' : '&',
-			'at' : '@@',
-			'f1' : '@1',
-			'f2' : '@2',
-			'f3' : '@3',
-			'f4' : '@4',
-			'f5' : '@5',
-			'f6' : '@6',
-			'f7' : '@7',
-			'f8' : '@8',
-			'f9' : '@9',
-			'f10' : '@10',
-			'f11' : '@11',
-			'f12' : '@12',
-			#clavier français:
-			'a' : 'q',
-			'A' : 'Q',
-			'q' : 'a',
-			'Q' : 'A',
-			'z' : 'w',
-			'w' : 'z',
-			'Z' : 'W',
-			'W' : 'Z',
-		}
-		if key in keys:
-			return keys[key]
-		return key
 
-	# count is not managed!
 	def key_press(self,
 	              key=None,
 	              modifiers=(),
@@ -269,30 +115,82 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 		press it. count_delay delay in ms between presses.'''
 		assert key is not None
 
-		key = self.convert_key(key)
+		delay_millis = 0 if count_delay is None or count == 1 else count_delay
+		modifiers = [special.get(mod) for mod in modifiers]
 
-		if direction == 'press' or direction == 'down':
+		key = special.get(key, key) #convert to usable str or to a key code
+
+		if type(key) is str: #need to convert to key codes
+			keys = fixed.get(key)
+			if keys is None: #not a fixed
+				keys = self.mapping.solo().get(key)
+			if keys is None: #basic key
+				keys = [evdev.ecodes.ecodes['KEY_' + key.upper()]]
+		else:
+			keys = [key]
+
+		for _ in range(0, count):
+			#modifiers down:
 			for m in modifiers:
-				mod = self.convert_key(m)
-				self.keyMod(mod, 1)
-			self.keyMod(key, 1)
+				self.ui.write(evdev.ecodes.EV_KEY, m, 1)
 
-		if direction == 'press' or direction == 'up':
-			self.keyMod(key, 0)
+			#key:
+			for k in keys:
+				if direction == "press" or direction == "down":
+					self.ui.write(evdev.ecodes.EV_KEY, k, 1)
+				if direction == "press" or direction == "up":
+					self.ui.write(evdev.ecodes.EV_KEY, k, 0)
+
+			#modifiers up:
 			for m in modifiers:
-				mod = self.convert_key(m)
-				self.keyMod(mod, 0)
+				self.ui.write(evdev.ecodes.EV_KEY, m, 0)
 
-		self.ui.syn()
+			self.ui.syn()
+			time.sleep(delay_millis / 1000.0)
 
 	def write_text(self, text):
 		for letter in text:
-			# this may not work for special keys because we read 'e'
-                        # 'n' 't' 'e' 'r' instead of 'enter'
-			key = self.convert_key(letter)
-			self.keyMod(key, 1)
-			self.keyMod(key, 0)
+			#check if letter need more than 1 key
+			seq = self.mapping.multi().get(letter)
+
+			if seq is not None:
+				for k in seq:
+					self.ui.write(evdev.ecodes.EV_KEY, k[0], k[1])
+			else:
+				#"standard" letter
+				seq = fixed.get(letter)
+				if seq is None:
+					seq = self.mapping.solo().get(letter)
+				if seq is not None:
+					#fixed key or solo.
+					for k in seq:
+						#keys down:
+						self.ui.write(evdev.ecodes.EV_KEY, k, 1)
+					for k in reversed(seq):
+						#keys up:
+						self.ui.write(evdev.ecodes.EV_KEY, k, 0)
+				else:
+					# standard key:
+					if letter.isupper():
+						#Press shift to have upper letter
+						self.ui.write(evdev.ecodes.EV_KEY,
+						         evdev.ecodes.KEY_LEFTSHIFT,
+						         1)
+
+					k = evdev.ecodes.ecodes['KEY_' + letter.upper()]
+					#press key
+					self.ui.write(evdev.ecodes.EV_KEY,k, 1)
+					#release key
+					self.ui.write(evdev.ecodes.EV_KEY,k, 0)
+
+					if letter.isupper():
+						# shift up
+						self.ui.write(evdev.ecodes.EV_KEY,
+						              evdev.ecodes.KEY_LEFTSHIFT,
+						              0)
 			self.ui.syn()
+			#if no pause, some events are lost, I don't know why
+			time.sleep(0.000001)
 
 
 	def click_mouse(self, button, direction='click', count=1, count_delay=None):

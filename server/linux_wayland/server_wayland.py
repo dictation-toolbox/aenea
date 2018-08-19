@@ -11,6 +11,8 @@ import config
 from server.core import AeneaServer
 from evdevImpl import EvdevPlatformRpcs
 
+MAPPINGS = "qwerty, azerty"
+
 def daemonize():
     if os.fork() == 0:
         os.setsid()
@@ -35,13 +37,22 @@ def daemonize():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Aenea Linux Wayland Server')
-    parser.add_argument(
-        '--daemon', action='store_const', const=True, default=False,
-        required=False, help='If provided the server runs in the background.')
+    parser.add_argument('--daemon',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        required=False,
+                        help='If provided the server runs in the background.')
+    parser.add_argument('--mapping',
+                        action = 'store',
+                        default="qwerty",
+                        required=False,
+                        help='If provided the server uses another keyboard mapping than qwerty. Possible mappings are: {}'.format(MAPPINGS))
 
     arguments = parser.parse_args()
 
-    platform_rpcs = EvdevPlatformRpcs(config)
+    platform_rpcs = EvdevPlatformRpcs(config,
+                                      arguments.mapping)
 
     if arguments.daemon:
         daemonize()
