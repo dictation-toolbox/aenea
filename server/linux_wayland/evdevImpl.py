@@ -129,16 +129,19 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 		else:
 			keys = [key]
 
+		print(keys)
 		for _ in range(0, count):
 			#modifiers down:
 			for m in modifiers:
 				self.ui.write(evdev.ecodes.EV_KEY, m, 1)
 
 			#key:
-			for k in keys:
-				if direction == "press" or direction == "down":
+			if direction == "press" or direction == "down":
+				for k in keys:
 					self.ui.write(evdev.ecodes.EV_KEY, k, 1)
-				if direction == "press" or direction == "up":
+
+			if direction == "press" or direction == "up":
+				for k in keys:
 					self.ui.write(evdev.ecodes.EV_KEY, k, 0)
 
 			#modifiers up:
