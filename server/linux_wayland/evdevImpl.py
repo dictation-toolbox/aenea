@@ -129,7 +129,6 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 		else:
 			keys = [key]
 
-		print(keys)
 		for _ in range(0, count):
 			#modifiers down:
 			for m in modifiers:
