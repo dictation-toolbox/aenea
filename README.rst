@@ -91,7 +91,7 @@ Operating system, Dragon, Natlink, and Dragonfly
 
 0) Install VirtualBox.
 
-1) Install Windows. I gave it 4 GB of RAM, two processors, and a 35 GB dynamically sized hard disk, of which it is using about 10 GB currently. While it's installing, I suggest you skim the Dragonfly documentation at https://code.google.com/p/dragonfly/
+1) Install Windows. It works well with 1 GB of RAM, two processors, and a 35 GB dynamically-sized hard disk, of which it is uses about 17-20 GB. (You can increase the RAM to speed up the installation process, and then lower it later to spare system resources.) While it's installing, I suggest you skim the Dragonfly documentation at https://code.google.com/p/dragonfly/
 
 2) Install Dragon, and create your profile according to their directions. IMPORTANT: Ensure that you select BestMatchIV when creating your profile. Recent versions of Dragon default to BestMatchV, which has substantially worse performance with the sorts of grammars we will be using with Dragonfly. I and others have had problems when creating a profile where only a few seconds into the volume check a pop-up appears complaining about the microphone. To get around this, I memorized the text and continued reading while clicking okay on the dialogue as soon as it appeared. I had to read the text seven or eight times speaking in an unnaturally loud voice to get past this step. You may have to try a few times. I believe this may be a side effect of the USB microphone going through the virtual machine, and as such you may consider creating your profile on a native Windows installation and then moving it over, however I have not tried this. You may also have issues getting past the microphone quality check, as I did, however it worked just fine after that.
 
