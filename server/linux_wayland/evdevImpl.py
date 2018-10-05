@@ -80,17 +80,19 @@ fixed = { "\n" : [evdev.ecodes.KEY_ENTER],
 }
 
 _SERVER_INFO = {
-    'window_manager': 'sway',
-    'operating_system': 'linux',
-    'platform': 'linux',
-    'display': 'Wayland',
-    'server': 'aenea_reference',
-    'server_version': 1
+    "window_manager": "sway",
+    "operating_system": "linux",
+    "platform": "linux",
+    "display": "Wayland",
+    "server": "aenea_reference",
+    "server_version": 1
+}
+
 }
 
 class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 	def __init__(self, config, mapping):
-		super(EvdevPlatformRpcs, self).__init__(logger=logging.getLogger('aenea.XdotoolPlatformRpcs'))
+		super(EvdevPlatformRpcs, self).__init__(logger=logging.getLogger("aenea.XdotoolPlatformRpcs"))
 		self.mapping = mappings.get(mapping, "qwerty")
 		self.ui = evdev.UInput()
 
@@ -98,21 +100,21 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 		return _SERVER_INFO
 
 	def get_context(self):
-		self.logger.info('get_context Not implemented yet')
+		self.logger.info("get_context Not implemented yet")
 		return {}
 
 
 	def key_press(self,
 	              key=None,
 	              modifiers=(),
-	              direction='press',
+	              direction="press",
 	              count=1,
 	              count_delay=None):
-		'''press a key possibly modified by modifiers. direction may be
+		"""press a key possibly modified by modifiers. direction may be
 		'press', 'down', or 'up'. modifiers may contain 'alt', 'shift',
 		'control', 'super'. this X11 server also supports 'hyper',
 		'meta', and 'flag' (same as super). count is number of times to
-		press it. count_delay delay in ms between presses.'''
+		press it. count_delay delay in ms between presses."""
 		assert key is not None
 
 		delay_millis = 0 if count_delay is None or count == 1 else count_delay
@@ -125,7 +127,7 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 			if keys is None: #not a fixed
 				keys = self.mapping.solo().get(key)
 			if keys is None: #basic key
-				keys = [evdev.ecodes.ecodes['KEY_' + key.upper()]]
+				keys = [evdev.ecodes.ecodes["KEY_" + key.upper()]]
 		else:
 			keys = [key]
 
@@ -179,7 +181,7 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 						         evdev.ecodes.KEY_LEFTSHIFT,
 						         1)
 
-					k = evdev.ecodes.ecodes['KEY_' + letter.upper()]
+					k = evdev.ecodes.ecodes["KEY_" + letter.upper()]
 					#press key
 					self.ui.write(evdev.ecodes.EV_KEY,k, 1)
 					#release key
@@ -200,17 +202,17 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 
 	def move_mouse(self,
 	               x, y,
-	               reference='absolute',
+	               reference="absolute",
 	               proportional=False,
 	               phantom=None):
-		self.logger.info('move_mouse Not implemented yet')
+		self.logger.info("move_mouse Not implemented yet")
 
 	def pause(self, amount):
 		time.sleep(amount / 1000.)
 
 	def notify(self, message):
 		try:
-			subprocess.Popen(['notify-send', message])
+			subprocess.Popen(["notify-send", message])
 		except Exception as e:
-			self.logger.warn('failed to start notify-send process: %s' % e)
+			self.logger.warn("failed to start notify-send process: %s" % e)
 
