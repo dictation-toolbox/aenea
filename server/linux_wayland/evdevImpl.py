@@ -88,13 +88,20 @@ _SERVER_INFO = {
     "server_version": 1
 }
 
+buttons = { "right" : evdev.ecodes.BTN_RIGHT,
+            "left" : evdev.ecodes.BTN_LEFT,
+            "middle" : evdev.ecodes.BTN_MIDDLE,
 }
 
 class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
-	def __init__(self, config, mapping):
+	def __init__(self, config, mapping, keyEvent, mouseEvent):
 		super(EvdevPlatformRpcs, self).__init__(logger=logging.getLogger("aenea.XdotoolPlatformRpcs"))
 		self.mapping = mappings.get(mapping, "qwerty")
-		self.ui = evdev.UInput()
+
+		key = evdev.InputDevice(keyEvent)
+		mouse = evdev.InputDevice(mouseEvent)
+
+		self.ui = evdev.UInput.from_device(key, mouse)
 
 	def server_info(self):
 		return _SERVER_INFO
@@ -197,8 +204,34 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 			time.sleep(0.000001)
 
 
-	def click_mouse(self, button, direction='click', count=1, count_delay=None):
-		self.logger.info('click_mouse Not implemented yet')
+	def click_mouse(self, button, direction="click", count=1, count_delay=None):
+		delay_millis = 0 if count_delay is None or count == 1 else count_delay
+		print("click mouse " + button + " " + direction)
+		for _ in range(0, count):
+			b = buttons.get(button)
+			if button == "wheeldown":
+				self.ui.write(evdev.ecodes.EV_REL,
+				              evdev.ecodes.REL_WHEEL,
+				              -1)
+				self.ui.syn()
+			elif button == "wheelup":
+				print("wheelup")
+				self.ui.write(evdev.ecodes.EV_REL,
+				              evdev.ecodes.REL_WHEEL,
+				              1)
+				self.ui.syn()
+			else:
+				if direction == "click" or direction == "down":
+					self.ui.write(evdev.ecodes.EV_KEY,
+					              b,
+					              1)
+					self.ui.syn()
+				if direction == "click" or direction == "up":
+					self.ui.write(evdev.ecodes.EV_KEY,
+					              b,
+					              0)
+					self.ui.syn()
+			time.sleep(delay_millis / 1000.0)
 
 	def move_mouse(self,
 	               x, y,
