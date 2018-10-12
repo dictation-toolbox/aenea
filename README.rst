@@ -71,7 +71,7 @@ Windows VM Software (versions given are ones I used, others likely work too):
 - NatLink 4.1echo
 - Python 2.7.5
 - pywin32-2.1.8
-- dragonfly-0.6.5
+- dragonfly2-0.8.0 (please read https://github.com/Danesprite/dragonfly#installation)
 - python-jsonrpclib-0.1.7
 - pyparsing-2.0.1
 
