@@ -246,11 +246,13 @@ _KEYCODE_TRANSLATION = {
     'help': 114,
     'home': 115,
     'pgup': 116,  # pageup
+    'pageup': 116,  # pageup
     'del': 117,  # forwarddelete
     'f4': 118,
     'end': 119,
     'f2': 120,
     'pgdown': 121,  # pagedown
+    'pagedown': 121,  # pagedown
     'f1': 122,
     'left': 123,  # leftarrow
     'right': 124,  # rightarrow
