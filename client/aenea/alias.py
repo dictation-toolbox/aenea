@@ -17,8 +17,12 @@
 
 import copy
 import re
-from aenea.wrappers import (Alternative,
-                            Literal)
+
+try:
+    import dragonfly
+except ImportError:
+    import dragonfly_mock as dragonfly
+
 
 def _product(choices_product):
     if len(choices_product) == 0:
@@ -119,7 +123,7 @@ class Alias(object):
             for alias in self._map[sora]:
                 del self._rmap[alias]
                 
-            del self._map[string]
+            del self._map[string_or_alias]
 
         if sora in self._rmap:
             string = self._rmap[sora]
@@ -257,4 +261,4 @@ class Alias(object):
         return new_mapping
 
     def make_alternative(self, literal, **kwargs):
-        return Alternative([Literal(equivalent_text) for equivalent_text in self.substitute(literal)] , **kwargs)
+        return dragonfly.Alternative([dragonfly.Literal(equivalent_text) for equivalent_text in self.substitute(literal)] , **kwargs)

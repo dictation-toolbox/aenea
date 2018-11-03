@@ -21,7 +21,11 @@ import os
 from aenea.alias import Alias
 import aenea.config
 from proxy_contexts import ProxyAppContext
-from wrappers import NeverContext, AppContext
+
+try:
+    import dragonfly
+except ImportError:
+    import dragonfly_mock as dragonfly
 
 
 class ConfigWatcher(object):
@@ -196,12 +200,12 @@ def make_local_disable_context(grammar_conf):
     :return: Context
     """
     local_disable_setting = grammar_conf.get('local_disable_context', None)
-    local_disable_context = NeverContext()
+    local_disable_context = dragonfly.NeverContext()
     if local_disable_setting is not None:
         if not isinstance(local_disable_setting, basestring):
             print 'Local disable context may only be a string.'
         else:
-            local_disable_context = AppContext(str(local_disable_setting))
+            local_disable_context = dragonfly.AppContext(str(local_disable_setting))
     return local_disable_context
 
 
@@ -222,7 +226,7 @@ def make_proxy_disable_context(grammar_conf):
     :return: Context
     """
     proxy_disable_setting = grammar_conf.get('proxy_disable_context', None)
-    proxy_disable_context = NeverContext()
+    proxy_disable_context = dragonfly.NeverContext()
     if proxy_disable_setting is not None:
         if isinstance(proxy_disable_setting, dict):
             d = {}

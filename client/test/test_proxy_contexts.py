@@ -25,14 +25,6 @@ def match(ctx):
     return ctx.matches(None, None, None)
 
 
-class TestTrivialContexts(unittest.TestCase):
-    def test_always(self):
-        self.assertTrue(match(AlwaysContext()))
-
-    def test_never(self):
-        self.assertFalse(match(NeverContext()))
-
-
 class TestProxyCustomAppContext(unittest.TestCase):
     @mock.patch('aenea.proxy_contexts._get_context')
     def test_match_method(self, get):
