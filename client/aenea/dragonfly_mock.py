@@ -65,165 +65,159 @@ class AppContext(object):
        return True
 
 
-class Grammar:
+class Grammar(object):
    pass
 
-class ActionError:
+class ActionError(object):
    pass
 
-class Alternative:
+class Alternative(object):
    pass
 
-class Clipboard:
+class Clipboard(object):
    pass
 
-class Compound:
+class Compound(object):
    pass
 
-class CompoundRule:
+class CompoundRule(object):
    pass
 
-class Config:
+class Config(object):
    pass
 
-class ConnectionGrammar:
+class ConnectionGrammar(object):
    pass
 
-class Context:
+class Context(object):
    pass
 
-class DictList:
+class DictListRef(object):
    pass
 
-class DictListRef:
+class Dictation(object):
    pass
 
-class Dictation:
+class Digits(object):
    pass
 
-class Digits:
+class DigitsRef(object):
    pass
 
-class DigitsRef:
+class ElementBase(object):
    pass
 
-class ElementBase:
+class Empty(object):
    pass
 
-class Empty:
+class FocusWindow(object):
    pass
 
-class FocusWindow:
+class Function(object):
    pass
 
-class Function:
+class HardwareInput(object):
    pass
 
-class HardwareInput:
+class Integer(object):
    pass
 
-class Integer:
+class IntegerRef(object):
    pass
 
-class IntegerRef:
+class Item(object):
    pass
 
-class Item:
+class Key(object):
    pass
 
-class Key:
+class Keyboard(object):
    pass
 
-class Keyboard:
+class KeyboardInput(object):
    pass
 
-class KeyboardInput:
+class ListBase(object):
    pass
 
-class List:
+class ListRef(object):
    pass
 
-class ListBase:
+class Literal(object):
    pass
 
-class ListRef:
+class MappingRule(object):
    pass
 
-class Literal:
+class Mimic(object):
    pass
 
-class MappingRule:
+class Monitor(object):
    pass
 
-class Mimic:
+class Mouse(object):
    pass
 
-class Monitor:
+class MouseInput(object):
    pass
 
-class Mouse:
+class Number(object):
    pass
 
-class MouseInput:
+class NumberRef(object):
    pass
 
-class Number:
+class Optional(object):
    pass
 
-class NumberRef:
+class Paste(object):
    pass
 
-class Optional:
+class Pause(object):
    pass
 
-class Paste:
+class Playback(object):
    pass
 
-class Pause:
+class PlaybackHistory(object):
    pass
 
-class Playback:
+class Point(object):
    pass
 
-class PlaybackHistory:
+class RecognitionHistory(object):
    pass
 
-class Point:
+class RecognitionObserver(object):
    pass
 
-class RecognitionHistory:
+class Rectangle(object):
    pass
 
-class RecognitionObserver:
+class Repeat(object):
    pass
 
-class Rectangle:
+class Rule(object):
    pass
 
-class Repeat:
+class RuleRef(object):
    pass
 
-class Rule:
+class Section(object):
    pass
 
-class RuleRef:
+class Sequence(object):
    pass
 
-class Section:
+class Text(object):
    pass
 
-class Sequence:
-   pass
-
-class Text:
-   pass
-
-class Typeable:
+class Typeable(object):
    def __init__(self, *a, **kw):
       '''Just swallow the arguments for now; this class is not currently used
          by tests.'''
 
-class WaitWindow:
+class WaitWindow(object):
    pass
 
 typeables = {
