@@ -1,4 +1,4 @@
-dragonfly >= 0.6.5
+dragonfly2 >= 0.8.0
 jsonrpclib >= 0.1.7
 pyparsing >= 2.0.1
 mock >= 1.3.0
