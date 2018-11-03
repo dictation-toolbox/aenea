@@ -20,7 +20,7 @@ class Qwerty(AbstractKeyboardMapping):
 		         "+" : [evdev.ecodes.KEY_LEFTSHIFT, evdev.ecodes.KEY_EQUAL],
 
 		         "{" : [evdev.ecodes.KEY_LEFTSHIFT, evdev.ecodes.KEY_LEFTBRACE],
-		         "{" : [evdev.ecodes.KEY_LEFTSHIFT, evdev.ecodes.KEY_RIGHTBRACE],
+		         "}" : [evdev.ecodes.KEY_LEFTSHIFT, evdev.ecodes.KEY_RIGHTBRACE],
 		         ":" : [evdev.ecodes.KEY_LEFTSHIFT, evdev.ecodes.KEY_SEMICOLON],
 		         "\"" : [evdev.ecodes.KEY_LEFTSHIFT, evdev.ecodes.KEY_APOSTROPHE],
 		         "|" : [evdev.ecodes.KEY_LEFTSHIFT, evdev.ecodes.KEY_BACKSLASH],

@@ -18,7 +18,7 @@
 import unittest
 import mock
 
-from aenea.proxy_actions import *
+from aenea.proxy_actions import ProxyKey, ProxyMouse, ProxyMousePhantomClick, ProxyText
 
 
 class TestActions(unittest.TestCase):

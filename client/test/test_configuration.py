@@ -15,10 +15,8 @@
 # Copyright (2014) Alex Roper
 # Alex Roper <alex@aroper.net>
 
-import os
 import unittest
 import mock
-import StringIO
 
 import aenea.config
 import aenea.configuration

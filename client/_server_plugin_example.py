@@ -23,8 +23,6 @@
 # This is an example grammar to demonstrate the use of server plugins. It
 # provides a command to call the greet_user rpc added by the example plugin.
 
-import os
-
 import dragonfly
 
 try:

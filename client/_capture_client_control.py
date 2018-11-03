@@ -18,8 +18,6 @@
 # Copyright (2014) Alex Roper
 # Alex Roper <alex@aroper.net>
 
-import os
-
 import dragonfly
 
 try:
