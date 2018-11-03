@@ -1,0 +1,14 @@
+dist: trusty
+language: python
+
+sudo: false
+
+install:
+ - travis_retry pip install --upgrade pip
+ - travis_retry pip install --upgrade six
+ - travis_retry pip install --upgrade pyflakes
+ - travis_retry pip install -r client/requirements.txt
+
+script:
+ - PATH="${HOME}/.local/bin:${PATH}" python lint.py
+ - PYTHONPATH="client:${PYTHONPATH}" python test_runner.py `find client/test/test_*.py | xargs`
