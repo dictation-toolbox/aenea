@@ -1,13 +1,9 @@
 import evdev
 import logging
-import os
 import subprocess
 
 import time
 
-import config
-
-import sys
 from server.core import AbstractAeneaPlatformRpcs
 
 from qwerty import Qwerty

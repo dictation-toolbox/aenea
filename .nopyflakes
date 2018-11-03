@@ -1,0 +1,7 @@
+./client/aenea/__init__.py
+./client/aenea/lax.py
+./client/aenea/strict.py
+./client/aenea/vocabulary.py
+./client/aenea/wrappers.py
+./server/linux_wayland/qwerty.py
+./server/osx/server_osx.py

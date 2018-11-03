@@ -18,7 +18,7 @@
 import unittest
 import mock
 
-from aenea.proxy_contexts import *
+from aenea.proxy_contexts import ProxyCustomAppContext, VALUE_DONT_CARE, VALUE_SET, VALUE_NOT_SET
 
 
 def match(ctx):
