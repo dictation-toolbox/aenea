@@ -1,5 +1,5 @@
-.. image:: https://travis-ci.org/dictation-toolbox/aenea.svg?branch=master
-    :target: https://travis-ci.org/dictation-toolbox/aenea
+.. image:: https://travis-ci.com/dictation-toolbox/aenea.svg?branch=master
+    :target: https://travis-ci.com/dictation-toolbox/aenea
 
 =================
 Aenea
