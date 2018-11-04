@@ -11,7 +11,7 @@ files.
 
 The unit test coverage is not comprehensive, and does not exercise the server
 at all, so this should not be depended on exclusively -- manual testing is,
-unfortuantely, also required. But hopefully this will make it a bit easier for
+unfortunately, also required. But hopefully this will make it a bit easier for
 us to prevent bit rot of the tests and catch any small issues pyflakes may
 find.
 

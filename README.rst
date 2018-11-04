@@ -18,7 +18,7 @@ A system to allow speech recognition via Dragonfly on one computer to send event
 | ...and to Joel Gould for NatLink, making it possible...
 | ...and to the current maintainers of Natlink: Rudiger Wilke, Mark Lillibridge, and Quintijn Hoogenboom...
 | ...and to Christo Butcher and Dragonfly for making it easy...
-| ...and to Nuance for being so awesomly hack friendly...
+| ...and to Nuance for being so awesomely hack friendly...
 | (even if it means we have to write the grammars ourselves :-) )
 
 -------------------------------------------------------------------------------------------
@@ -224,7 +224,7 @@ Aenea provides several classes which take an action via the proxy server. Their 
 - ProxyAppContext -- provides an AppContext that lets you match on the title, window class/window class name, etc of the currently active window on the host. This tries to be a drop-in replacement for AppContext, but can't quite work the same way since we need to take X11 properties into account.
 - ProxyCustomAppContext -- provides a custom context that allows querying by any value the server provides. See the docstring for details.
 - ProxyCrossPlatformContext -- chooses between one of several contexts based on what OS the server reports is running. Pass in a dict-like from OS to Context. Note that the OS is queried dynamically -- whenever we use the context, so you can use this if you need to switch between servers.
-- ProxyPlatformContext -- chooses between one of two contexts based on whether or not we are currently sending commands to the proxy server -- so you can use the same grammer on the VM/local machine and via proxy.
+- ProxyPlatformContext -- chooses between one of two contexts based on whether or not we are currently sending commands to the proxy server -- so you can use the same grammar on the VM/local machine and via proxy.
 - ProxyKey, ProxyMouse, ProxyText -- very similar to Dragonfly's, but support additional functionality (e.g., the Key can accept Linux keysyms as well as Dragonfly ones). See their docstrings for details.
 - ProxyMousePhantomClick -- Move mouse to a location, click, return. From the user's perspective, click without moving the mouse.
 

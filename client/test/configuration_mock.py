@@ -16,7 +16,7 @@
 # Alex Roper <alex@aroper.net>
 
 class MockConfigWatcher(object):
-    '''Provides similar API to ConfigWatcher but can be easilycontrolled
+    '''Provides similar API to ConfigWatcher but can be easily controlled
        by tests by changing the conf and dirty attributes.'''
     def __init__(self, path, default={}):
         self.dirty = True
@@ -40,7 +40,7 @@ class MockConfigWatcher(object):
 
 
 class MockConfigDirWatcher(object):
-    '''Provides similar API to ConfigDirWatcher but can be easilycontrolled
+    '''Provides similar API to ConfigDirWatcher but can be easily controlled
        by tests by changing the files and dirty attributes.'''
 
     def __init__(self, path, default={}):
