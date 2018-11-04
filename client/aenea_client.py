@@ -45,7 +45,7 @@ LITERAL_KEYS = ('abcdefghijklmnopqrstuvwxyz'
 
 # Keys that should be completely ignored when pressed. This has the side
 # effect that Dragon commands like 'press control J' will not work via
-# this cilent.
+# this client.
 IGNORED_KEYS = ('Shift_L', 'Control_L')
 
 ALT_KEY_SEQUENCE_MAP = {u'\u2013' : 'hyphen'}

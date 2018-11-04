@@ -13,7 +13,7 @@ class AbstractKeyboardMapping:
 
 	def multi(self):
 		"""
-		A multi key is a key wich needs a key sequence (i.e. you need
+		A multi key is a key which needs a key sequence (i.e. you need
 		to press and release several keys)
 		"""
 		raise NotImplementedError()

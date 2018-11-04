@@ -213,7 +213,7 @@ def make_proxy_disable_context(grammar_conf):
     """
     Given a grammar config generate a local grammar disabled context.
 
-    Example: to disable multiedit in proxty contexts where window titles
+    Example: to disable multiedit in proxy contexts where window titles
     contain "VIM" multiedit.json should contain the following keys:
     {
       "proxy_disable_context": {

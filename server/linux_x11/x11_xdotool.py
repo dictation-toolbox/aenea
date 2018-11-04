@@ -362,7 +362,7 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
                 # copy the pasted text to the clipboard
                 self.write_command(text, arguments='-i', executable='xsel')
 
-                # paste by simulating midde click
+                # paste by simulating middle click
                 # TODO: can we do this even in programs that don't have a
                 #     middle click?
                 #     if not, we may need a blacklist of buggy programs.
