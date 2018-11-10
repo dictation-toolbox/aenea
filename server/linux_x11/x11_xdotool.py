@@ -90,6 +90,7 @@ _KEY_TRANSLATION = {
     'dquote': 'quotedbl',
     'enter': 'Return',
     'equal': 'equal',
+    'equals': 'equal',
     'exclamation': 'exclam',
     'hash': 'numbersign',
     'hyphen': 'minus',
