@@ -70,7 +70,7 @@ Getting Started
 Windows VM Software (versions given are ones I used, others likely work too):
 
 - Windows 7 Ultimate 32 bit
-- Dragon NaturallySpeaking Premium 12. (Version 13 has been experimented with recently and works well, with much better accuracy than 12, therefore we recommend using version 13. If you do have problems with the version 13 and find out how to solve them, please do update this documentation or add information to GitHub issue.)
+- Dragon NaturallySpeaking Premium 12. (Version 13 also works, with noticeably better accuracy than 12!)
 - NatLink 4.1echo. 4.1whiskey also works. (look for Natlink download links here https://qh.antenna.nl/unimacro/installation/installation.html)
 - Python 2.7.5
 - pywin32-2.1.8
@@ -162,7 +162,7 @@ At this point, the folder ``C:\\NatLink\\NatLink\\MacroSystem`` should contain a
 
 1) Copy ``aenea/aenea.json.example`` into ``C:\\NatLink\\NatLink\\MacroSystem``. Rename it to ``aenea.json`` and edit to suit.
 
-1a) For aenea itself you have a choice -- you can either store its state and configuration files (these are used for keeping track of which dynamic vocabulary are currently active, which server to send commands to, etc) in ``C:\\Natlink\\NatLink\\MacroSystem``, or you can store them elsewhere. If you store them in ``MacroSystem`` just edit ``aenea.json`` to suit and youre done. If you want to store it elsewhere (I put it on a shared folder mounted as the ``E`` drive so I can manage it from the host), then delete all the lines except ``project_root``', and set its value to whatever directory you want to manage the config from. Then, in that directory, copy the full ``aenea.json.example`` and edit to taste. Basically on startup we first load ``C:\\NatLink\\NatLink\\MacroSystem\\aenea.json`` (hardcoded), then if the ``project_root`` specified is another directory we load ``aenea.json`` from that directory, overwriting any settings, and repeat until ``aenea.json`` specifies its own path (or a cycle which is an error). All other config files are relative to the ``project_root``.
+1a) For aenea itself you have a choice -- you can either store its state and configuration files (these are used for keeping track of which dynamic vocabulary are currently active, which server to send commands to, etc) in ``C:\\Natlink\\NatLink\\MacroSystem``, or you can store them elsewhere. If you store them in ``MacroSystem`` just edit ``aenea.json`` to suit and you're done. If you want to store it elsewhere (I put it on a shared folder mounted as the ``E`` drive so I can manage it from the host), then delete all the lines except ``project_root``', and set its value to whatever directory you want to manage the config from. Then, in that directory, copy the full ``aenea.json.example`` and edit to taste. Basically on startup we first load ``C:\\NatLink\\NatLink\\MacroSystem\\aenea.json`` (hardcoded), then if the ``project_root`` specified is another directory we load ``aenea.json`` from that directory, overwriting any settings, and repeat until ``aenea.json`` specifies its own path (or a cycle which is an error). All other config files are relative to the ``project_root``.
 
 1b) If not using VirtualBox host only adapter as described above, you will need to set the host and port to the correct settings.
 
