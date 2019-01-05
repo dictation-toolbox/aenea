@@ -14,6 +14,7 @@ general_syntax = {
     # A smart equals command
     'quail': Text(' = '),
     'Finn': Text('end'),
+    'if': Text('if'),
 }
 
 html_syntax = {

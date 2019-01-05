@@ -31,7 +31,7 @@ class TerminalRule(MappingRule):
             'cleaner': Key('c-u'),
             # Clearing and cancelling actions.
             'squash': Key('ca-c'),
-            'crush': Key('c-z'),
+            'crush': Key('cs-d'),
             # Killing all programs on a port
             'desiccate': Text('kill -9 $(lsof -ti :)'),
             # Killing all programs on a port
@@ -155,11 +155,16 @@ phoenixcommand = {
     "Jane html": ".gen.html",
 }
 
+mixedcommand = {
+    "depth get": "deps.get",
+    "ecto setup": "ecto.setup",
+}
+
 class ElixirRule(MappingRule):
     mapping = {
             ## Commands
             'eggs': Text("elixir "),
-            'mix': Text("mix "),
+            'mix <mixedcommand>': Text("mix %(mixedcommand)s"),
             'ecto': Text("ecto"),
             'Ickes': Text("iex "),
             'phoenix <phoenixcommand>': Text("phx%(phoenixcommand)s"),
@@ -170,7 +175,8 @@ class ElixirRule(MappingRule):
     extras = [
         Dictation("text"),
         IntegerRef("n", 1, 100),
-        Choice('phoenixcommand', phoenixcommand)
+        Choice('phoenixcommand', phoenixcommand),
+        Choice('mixedcommand', mixedcommand),
     ]
     defaults = {
         "n": 1,
