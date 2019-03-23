@@ -143,11 +143,11 @@ class AbstractAeneaPlatformRpcs(object):
             return
 
         if security_token is None:
-            error_text = 'Client did not send a security token, but server has security token set. To fix, find the client\'s aenea.json and add security_token: "foo", to it, then restart Dragon. You will need to replace foo with the server\'s security token, which you can find in config.py.'
+            error_text = 'Client did not send a security token, but server has security token set. To fix, find the client\'s aenea.json and add security_token: "foo", to it, then restart Dragon. You will need to replace foo with the server\'s security token, which you can find in config.py. Or generate a new random one with generate_security_token.py and set it in both client and server.'
             self.logger.error(error_text)
             raise PermissionDeniedError(error_text)
         elif not compare_security_token(self.security_token, security_token):
-            error_text = 'Client sent a security token, but it did not match the server\'s. The server\'s is specified in config.py. The client\'s is specified in aenea.json. Make the two match some random string, then restart Dragon.'''
+            error_text = 'Client sent a security token, but it did not match the server\'s. The server\'s is specified in config.py. The client\'s is specified in aenea.json. Use generate_security_token.py to create a random token.'
             self.logger.error(error_text)
             raise PermissionDeniedError(error_text)
         else:
