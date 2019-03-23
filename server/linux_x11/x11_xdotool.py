@@ -152,7 +152,8 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
     """
     def __init__(self, config, xdotool='xdotool'):
         super(XdotoolPlatformRpcs, self).__init__(
-            logger=logging.getLogger('aenea.XdotoolPlatformRpcs'))
+            logger=logging.getLogger('aenea.XdotoolPlatformRpcs'),
+            security_token=getattr(config, 'SECURITY_TOKEN', None))
 
         self.xdotool = xdotool
         self.xdotool_delay = getattr(config, 'XDOTOOL_DELAY', 0)
@@ -183,7 +184,8 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
             self.run_command(' '.join(actions))
             del actions[:]
 
-    def server_info(self, _xdotool=None):
+    def server_info(self, security_token=None, _xdotool=None):
+        self._check_security_token(security_token)
         self.flush_xdotool(_xdotool)
         return _SERVER_INFO
 
@@ -219,11 +221,12 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
         dx, dy = map(int, map(float, event.split()))
         return [('mousemove', '%i %i' % (geo['x'] + dx, geo['y'] + dy))]
 
-    def get_context(self, _xdotool=None):
+    def get_context(self, security_token=None, _xdotool=None):
         '''return a dictionary of window properties for the currently active
            window. it is fine to include platform specific information, but
            at least include title and executable.'''
 
+        self._check_security_token(security_token)
         self.flush_xdotool(_xdotool)
         window_id, window_title = self.get_active_window()
         if window_id is None:
@@ -271,22 +274,24 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
             self.logger.warn('pid not set. properties: %s' % properties)
         return properties
 
-    def pause(self, amount, _xdotool=None):
+    def pause(self, amount, security_token=None, _xdotool=None):
         '''pause amount in ms.'''
+        self._check_security_token(security_token)
         if _xdotool is not None:
             _xdotool.append('sleep %f' % (amount / 1000.))
         else:
             time.sleep(amount / 1000.)
 
-    def notify(self, message):
+    def notify(self, message, security_token=None):
         '''Send a message to the notification daemon via notify-send.'''
+        self._check_security_token(security_token)
         try:
             subprocess.Popen(['notify-send', message])
         except Exception as e:
             self.logger.warn('failed to start notify-send process: %s' % e)
 
     def move_mouse(self, x, y, reference='absolute', proportional=False,
-                   phantom=None, _xdotool=None):
+                   phantom=None, security_token=None, _xdotool=None):
         '''move the mouse to the specified coordinates. reference may be one
         of 'absolute', 'relative', or 'relative_active'. if phantom is not
         None, it is a button as click_mouse. If possible, click that
@@ -295,6 +300,7 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
         moves. Negative coordinates are allowed for all references; in the
         case of absolute they will be clamped to 0.'''
 
+        self._check_security_token(security_token)
         geo = self.get_geometry()
         if proportional:
             x = geo['width'] * x
@@ -321,11 +327,12 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
             self.run_command(' '.join(commands))
 
     def click_mouse(self, button, direction='click', count=1, count_delay=None,
-                    _xdotool=None):
+                    security_token=None, _xdotool=None):
         '''click the mouse button specified. button maybe one of 'right',
            'left', 'middle', 'wheeldown', 'wheelup'. This X11 server will
            also accept a number.'''
 
+        self._check_security_token(security_token)
         if count_delay is None or count < 2:
             delay = ''
         else:
@@ -347,12 +354,13 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
             self.run_command(command)
 
 
-    def write_text(self, text, paste=False, _xdotool=None):
+    def write_text(self, text, paste=False, security_token=None, _xdotool=None):
         '''send text formatted exactly as written to active window. If paste
            is True, will use X11 PRIMARY clipboard to paste the text instead
            of typing it. See config.ENABLE_XSEL documentation for more
            information on this.'''
 
+        self._check_security_token(security_token)
         # Workaround for https://github.com/jordansissel/xdotool/pull/29
         if text:
             if paste and config.ENABLE_XSEL:
@@ -367,7 +375,7 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
                 # TODO: can we do this even in programs that don't have a
                 #     middle click?
                 #     if not, we may need a blacklist of buggy programs.
-                self.click_mouse(2, _xdotool=_xdotool)
+                self.click_mouse(2, security_token=security_token, _xdotool=_xdotool)
                 self.flush_xdotool(_xdotool)
 
                 # nuke the text we selected
@@ -384,12 +392,13 @@ class XdotoolPlatformRpcs(AbstractAeneaPlatformRpcs):
                 )
 
     def key_press(self, key=None, modifiers=(), direction='press', count=1,
-                  count_delay=None, _xdotool=None):
+                  count_delay=None, security_token=None, _xdotool=None):
         '''press a key possibly modified by modifiers. direction may be
            'press', 'down', or 'up'. modifiers may contain 'alt', 'shift',
            'control', 'super'. this X11 server also supports 'hyper',
            'meta', and 'flag' (same as super). count is number of times to
            press it. count_delay delay in ms between presses.'''
+        self._check_security_token(security_token)
         assert key is not None
 
         if count_delay is None or count < 2:

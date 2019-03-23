@@ -64,12 +64,28 @@ class _ImpatientTransport(jsonrpclib.jsonrpc.Transport):
         return self._connection[1]
 
 
+def _adjust_arguments(a, kw, security_token):
+    # Cannot use both positional and keyword arguments
+    # (according to JSON-RPC spec.)
+    assert not (a and kw)
+
+    if security_token is not None:
+        if a:
+            a = a + (security_token,)
+        else:
+            kw = kw.copy()
+            kw['security_token'] = security_token
+
+    return a, kw
+
+
 class Proxy(object):
     def __init__(self):
         self._address = None
         self.last_connect_good = False
         self._last_failed_connect = 0
         self._transport = _ImpatientTransport(aenea.config.COMMAND_TIMEOUT)
+        self._security_token = getattr(aenea.config, 'SECURITY_TOKEN', None)
 
     def _execute_batch(self, batch, use_multiple_actions=False):
         self._refresh_server()
@@ -87,7 +103,10 @@ class Proxy(object):
                         batch[0][0])(*batch[0][1], **batch[0][2])
                         )
                 elif use_multiple_actions:
-                    self._server.multiple_actions(batch)
+                    if self._security_token is not None:
+                        self._server.multiple_actions(actions=batch, security_token=self._security_token)
+                    else:
+                        self._server.multiple_actions(actions=batch)
                 else:
                     for (command, args, kwargs) in batch:
                         getattr(self._server, command)(*args, **kwargs)
@@ -101,9 +120,7 @@ class Proxy(object):
 
     def __getattr__(self, meth):
         def call(*a, **kw):
-            # Cannot use both positional and keyword arguments
-            # (according to JSON-RPC spec.)
-            assert not (a and kw)
+            a, kw = _adjust_arguments(a, kw, self._security_token)
 
             return self._execute_batch([(meth, a, kw)])
         return call
@@ -123,13 +140,12 @@ class Proxy(object):
 
 class BatchProxy(object):
     def __init__(self):
+        self._security_token = getattr(aenea.config, 'SECURITY_TOKEN', None)
         self._commands = []
 
     def __getattr__(self, key):
         def call(*a, **kw):
-            # Cannot use both positional and keyword arguments
-            # (according to JSON-RPC spec.)
-            assert not (a and kw)
+            a, kw = _adjust_arguments(a, kw, self._security_token)
 
             if not key.startswith('_'):
                 self._commands.append((key, a, kw))

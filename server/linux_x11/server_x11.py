@@ -71,7 +71,7 @@ if __name__ == '__main__':
         platform_rpcs = XdotoolPlatformRpcs(config)
     elif arguments.impl == 'libxdo':
         from server.linux_x11.x11_libxdo import XdoPlatformRpcs
-        platform_rpcs = XdoPlatformRpcs()
+        platform_rpcs = XdoPlatformRpcs(security_token=getattr(config, 'SECURITY_TOKEN', None))
 
     if arguments.daemon:
         daemonize()
