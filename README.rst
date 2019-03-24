@@ -132,6 +132,8 @@ Server (Linux X11)
 Server (Windows)
 ~~~~~~~~~~~~~~~~
 
+Note that the windows server does not support a security token, without which any webpage can POST RPCs to the server just by getting you to click a link.
+
 windows server by @grayjay
 
 Note that the Windows server only supports a subset of the commands (``key_press``, ``write_text``, and ``pause``; ``get_context`` currently only returns the title of the foreground window as "title" and the title of the foreground window's ancestor as "name".).
