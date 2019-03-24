@@ -14,6 +14,9 @@ def main():
     if not append_constant(token, os.path.join('server', 'linux_x11', 'config.py')):
         append_constant(token, os.path.join('server', 'linux_x11', 'config.py.example'))
 
+    if not append_constant(token, os.path.join('server', 'osx', 'config.py')):
+        append_constant(token, os.path.join('server', 'osx', 'config.py.example'))
+
     if not add_json(token, 'aenea.json'):
         add_json(token, 'aenea.json.example')
 
