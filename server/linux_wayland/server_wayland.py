@@ -92,6 +92,11 @@ if __name__ == '__main__':
                         default="qwerty",
                         required=False,
                         help='If provided the server uses another keyboard mapping than qwerty. Possible mappings are: {}'.format(MAPPINGS))
+    parser.add_argument('--security_token',
+                        action = 'store',
+                        default=None,
+                        required=False,
+                        help='Prevent execution of commands by clicking a link in a browser that POSTs a JSON-RPC to the server.')
 
     arguments = parser.parse_args()
 
@@ -103,10 +108,12 @@ if __name__ == '__main__':
     platform_rpcs = EvdevPlatformRpcs(config,
                                       arguments.mapping,
                                       arguments.keyEvent,
-                                      arguments.mouseEvent)
+                                      arguments.mouseEvent,
+                                      security_token=arguments.securityToken)
 
     if arguments.daemon:
         daemonize()
 
     server = AeneaServer.from_config(platform_rpcs, config)
+    server.security_token=arguments.securityToken
     server.serve_forever()
