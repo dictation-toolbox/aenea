@@ -149,7 +149,7 @@ class ProxyNotification(ProxyBase, dragonfly.DynStrActionBase):
         return spec
 
     def _execute_events(self, events):
-        aenea.communications.server.notify(events)
+        aenea.communications.server.notify(message=events)
     
 
 ###############################################################################

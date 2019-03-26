@@ -90,7 +90,7 @@ class ProxyBuffer(object):
     # Requires buffer_lock
     def flush_text_buffer(self):
         if self.text_buffer:
-            self.to_send.write_text(''.join(self.text_buffer))
+            self.to_send.write_text(text=''.join(self.text_buffer))
             self.text_buffer = []
 
     # Requires buffer_lock
