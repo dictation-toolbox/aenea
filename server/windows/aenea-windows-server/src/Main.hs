@@ -16,16 +16,20 @@ import Network.JsonRpc.Server( Parameter (..)
                              , Method
                              , toMethod
                              , rpcError)
+import Data.Bits (xor, (.|.))
+import Data.Char (ord)
+import Data.Function (on)
 import Data.Text (Text, unpack, append)
 import Data.String (fromString)
 import Data.List (intersperse)
 import Data.Maybe (catMaybes, mapMaybe, fromMaybe)
-import Data.Aeson (Value (Number, String), object, (.=))
+import Data.Aeson (FromJSON (parseJSON), Value (Number, String), object, withText, (.=))
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.Lazy.Char8 as LBChar8
 import Control.Monad ((<=<), when, forM_)
+import Control.Monad.Except (mapExceptT)
 import Control.Monad.Trans (liftIO)
-import Control.Monad.Reader (lift)
+import Control.Monad.Reader (ReaderT(..), ask, lift, runReaderT)
 import Control.Concurrent (threadDelay, readMVar)
 import Happstack.Lite (Request, toResponse)
 import qualified Happstack.Server.SimpleHTTP as H
@@ -45,33 +49,41 @@ import Control.Monad.Except (throwError)
 import Control.Monad.Error (throwError)
 #endif
 
+newtype SecurityToken = SecurityToken String
+
+instance FromJSON SecurityToken where
+  parseJSON = withText "SecurityToken" (return . SecurityToken . unpack)
+
+-- Monad used by all RPC methods on the server.
+type Server = ReaderT SecurityToken IO
+
 main :: IO ()
 main = getArgs >>= \args ->
   case parseArgs args of
     Left Nothing -> putStrLn usage >> exitSuccess
-    Left (Just errs) -> putStrLn (errs ++ usage) >> exitWith (ExitFailure 1)
-    Right (maybeAddress, portStr, verbosity) ->
+    Left (Just errs) -> putStrLn (errs ++ "\r\n" ++ usage) >> exitWith (ExitFailure 1)
+    Right (maybeAddress, portStr, token, verbosity) ->
         case parseInt portStr of
           Nothing -> putStrLn "cannot parse port" >> exitWith (ExitFailure 1)
-          Just port -> serve verbosity maybeAddress port
+          Just port -> serve verbosity maybeAddress port token
 
-serve :: Verbosity -> Maybe Address -> Int -> IO ()
-serve verbosity maybeAddress port =
+serve :: Verbosity -> Maybe Address -> Int -> SecurityToken -> IO ()
+serve verbosity maybeAddress port token =
     let conf = H.nullConf {H.port = port}
     in case maybeAddress of
          Nothing -> putStrLn ("listening on port " ++ show port) >>
-                    H.simpleHTTP conf (handleRequests verbosity)
+                    H.simpleHTTP conf (handleRequests token verbosity)
          Just addr -> do
            s <- H.bindIPv4 addr port
            putStrLn $ "listening on " ++ addr ++ ":" ++ show port
-           H.simpleHTTPWithSocket s conf $ handleRequests verbosity
+           H.simpleHTTPWithSocket s conf $ handleRequests token verbosity
 
-handleRequests :: Verbosity -> H.ServerPartT IO H.Response
-handleRequests verbosity = do
+handleRequests :: SecurityToken -> Verbosity -> H.ServerPartT IO H.Response
+handleRequests token verbosity = do
   request <- H.askRq
   body <- lift $ getBody request
   printMsg "" >> printMsg body
-  result <- lift $ call methods body
+  result <- lift $ runReaderT (call methods body) token
   let resultStr = fromMaybe "" result
   printMsg resultStr
   return $ noContentLength $ toResponse resultStr
@@ -89,18 +101,21 @@ data Verbosity = Verbose | Quiet deriving Eq
 type Address = String
 type Port = String
 
-parseArgs :: [String] -> Either (Maybe String) (Maybe Address, Port, Verbosity)
+parseArgs :: [String] -> Either (Maybe String) (Maybe Address, Port, SecurityToken, Verbosity)
 parseArgs args = case getOpt Permute options args of
                    (opts, _, []) | Help `elem` opts -> Left Nothing
-                   (opts, [], []) -> Right $ parseOpts opts
+                   (opts, [], []) -> parseOpts opts
                    (_, _, []) -> Left $ Just msg
                    (_, _, errs) -> Left $ Just $ concat errs
                  where msg = "unexpected arguments\n"
                        parseOpts opts =
                            let addr = getArg opts getAddress Nothing
                                port = getArg opts getPort "8240"
+                               mToken = getArg opts getSecuityToken Nothing
                                verbosity = getArg opts getVerbosity Quiet
-                           in (addr, port, verbosity)
+                           in case mToken of
+                                Nothing -> Left (Just "missing required security token flag")
+                                Just token -> Right (addr, port, token, verbosity)
 
 getArg :: [Flag] -> (Flag -> Maybe a) -> a -> a
 getArg opts f default' = case safeLast $ mapMaybe f opts of
@@ -112,12 +127,16 @@ safeLast [] = Nothing
 safeLast xs = Just $ last xs
 
 getAddress :: Flag -> Maybe (Maybe Address)
-getAddress (Address a) = Just $ Just a
+getAddress (AddressFlag a) = Just $ Just a
 getAddress _ = Nothing
 
 getPort :: Flag -> Maybe Port
-getPort (Port p) = Just p
+getPort (PortFlag p) = Just p
 getPort _ = Nothing
+
+getSecuityToken :: Flag -> Maybe (Maybe SecurityToken)
+getSecuityToken (SecurityTokenFlag t) = Just $ Just (SecurityToken t)
+getSecuityToken _ = Nothing
 
 getVerbosity :: Flag -> Maybe Verbosity
 getVerbosity Verbosity = Just Verbose
@@ -128,78 +147,110 @@ parseInt x = case reads x of
                [(i, [])] -> Just i
                _ -> Nothing
 
-data Flag = Address String | Port String | Verbosity | Help
+data Flag = AddressFlag String | PortFlag String | SecurityTokenFlag String | Verbosity | Help
             deriving (Eq, Ord, Show)
 
 options :: [OptDescr Flag]
-options = [ Option "a" ["address"] (ReqArg Address "address") "specify host IP address (not host name)"
-          , Option "p" ["port"] (ReqArg Port "port") "specify host port (default is 8240)"
+options = [ Option "a" ["address"] (ReqArg AddressFlag "ADDRESS") "specify host IP address (not host name)"
+          , Option "p" ["port"] (ReqArg PortFlag "PORT") "specify host port (default is 8240)"
+          , Option "t"
+                   ["security-token"]
+                   (ReqArg SecurityTokenFlag "STRING")
+                   "specify the security token (required)"
           , Option "v" ["verbose"] (NoArg Verbosity) "print JSON-RPC requests and responses"
           , Option "h" ["help"] (NoArg Help) "show this message"]
 
-methods :: [Method IO]
+securityTokenKey :: Text
+securityTokenKey = "security_token"
+
+-- All methods must call 'withSecurityTokenValidation'.
+methods :: [Method Server]
 methods = [ getContextMethod
           , keyPressMethod
           , writeTextMethod
           , pauseMethod
           , serverInfoMethod ]
 
-keyPressMethod :: Method IO
+keyPressMethod :: Method Server
 keyPressMethod = toMethod "key_press" keyPressFunction
-                 (Required "key" :+:
+                 (Required securityTokenKey :+:
+                  Required "key" :+:
                   Optional "modifiers" [] :+:
                   Optional "direction" Press :+:
                   Optional "count" 1 :+:
                   Optional "delay" defaultKeyDelay :+: ())
 
-keyPressFunction :: Text -> [Text] -> Direction -> Int -> Int -> RpcResult IO ()
-keyPressFunction keyName modifiers direction count delayMillis = do
-  key <- tryLookupKey nameToKey id keyName
-  modKeys <- mapM (tryLookupKey nameToKey id) modifiers
-  let withPress k task = withKeyPress k (delay >> task >> delay)
-      pressKey = sequence_ $ intersperse delay $
-                   replicate count $ keyAction direction key
-      delay = threadDelay millis
-      millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
-  lift $ compose (withPress <$> modKeys) pressKey
-    where compose = foldl (.) id
+keyPressFunction :: SecurityToken -> Text -> [Text] -> Direction -> Int -> Int -> RpcResult Server ()
+keyPressFunction token keyName modifiers direction count delayMillis =
+    withSecurityTokenValidation token $ do
+      key <- tryLookupKey nameToKey id keyName
+      modKeys <- mapM (tryLookupKey nameToKey id) modifiers
+      let withPress k task = withKeyPress k (delay >> task >> delay)
+          pressKey = sequence_ $ intersperse delay $
+                       replicate count $ keyAction direction key
+          delay = threadDelay millis
+          millis = if delayMillis >= 0 then delayMillis else defaultKeyDelay
+      lift $ compose (withPress <$> modKeys) pressKey
+        where compose = foldl (.) id
 
 defaultKeyDelay :: Int
 defaultKeyDelay = -1
 
-getContextMethod :: Method IO
-getContextMethod = toMethod "get_context" context ()
-    where context :: RpcResult IO Value
-          context = liftIO $ (object . concat . catMaybes) <$> sequence [ancestor, active]
+getContextMethod :: Method Server
+getContextMethod = toMethod "get_context" context (Required securityTokenKey :+: ())
+    where context :: SecurityToken -> RpcResult Server Value
+          context token =
+              withSecurityTokenValidation token $
+              liftIO $ (object . concat . catMaybes) <$> sequence [ancestor, active]
           ancestor = ((\t -> ["name" .= t]) <$>) <$> getForegroundWindowAncestorText
           active = (titlePair <$>) <$> getForegroundWindowText
           titlePair text = ["id" .= ("" :: String), "title" .= text]
 
-serverInfoMethod :: Method IO
-serverInfoMethod = toMethod "server_info" serverInfo ()
-    where serverInfo :: RpcResult IO Value
-          serverInfo = return $ object
-                         [ "window_manager" .= String "windows"
-                         , "operating_system" .= String "windows"
-                         , "platform" .= String "windows"
-                         , "display" .= String "windows"
-                         , "server" .= String "aenea"
-                         , "server_version" .= Number 1
-                         ]
+serverInfoMethod :: Method Server
+serverInfoMethod = toMethod "server_info" serverInfo (Required securityTokenKey :+: ())
+    where serverInfo :: SecurityToken -> RpcResult Server Value
+          serverInfo token =
+              withSecurityTokenValidation token $
+              return $ object [ "window_manager" .= String "windows"
+                              , "operating_system" .= String "windows"
+                              , "platform" .= String "windows"
+                              , "display" .= String "windows"
+                              , "server" .= String "aenea"
+                              , "server_version" .= Number 1
+                              ]
 
-writeTextMethod :: Method IO
+writeTextMethod :: Method Server
 writeTextMethod = toMethod "write_text" writeTextFunction
-                  (Required "text" :+: ())
+                  (Required securityTokenKey :+: Required "text" :+: ())
 
-writeTextFunction :: Text -> RpcResult IO ()
-writeTextFunction text = forM_ (unpack text) $
-                         lift . keyPress <=< tryLookupKey charToKey charToText
-    where charToText c = fromString [c]
+writeTextFunction :: SecurityToken -> Text -> RpcResult Server ()
+writeTextFunction token text =
+    withSecurityTokenValidation token $
+    forM_ (unpack text) $
+    lift . keyPress <=< tryLookupKey charToKey charToText
+  where
+    charToText c = fromString [c]
 
-pauseMethod :: Method IO
-pauseMethod = toMethod "pause" pause (Required "amount" :+: ())
-    where pause :: Int -> RpcResult IO ()
-          pause ms = liftIO $ threadDelay (1000 * ms)
+pauseMethod :: Method Server
+pauseMethod = toMethod "pause" pause (Required securityTokenKey :+: Required "amount" :+: ())
+    where pause :: SecurityToken -> Int -> RpcResult Server ()
+          pause token ms =
+              withSecurityTokenValidation token $
+              liftIO $ threadDelay (1000 * ms)
+
+withSecurityTokenValidation :: SecurityToken -> RpcResult IO a -> RpcResult Server a
+withSecurityTokenValidation actualToken result = do
+  expectedToken <- ask
+  if constantTimeEquals expectedToken actualToken
+    then mapExceptT (ReaderT . const) result
+    else throwError $ rpcError 1 "permission denied"
+
+constantTimeEquals :: SecurityToken -> SecurityToken -> Bool
+constantTimeEquals (SecurityToken expected) (SecurityToken actual) =
+  if length expected /= length actual
+  then False
+  else let result = foldr (.|.) 0 $ zipWith (xor `on` ord) expected actual
+       in result == 0
 
 tryLookupKey :: (a -> Maybe Key) -> (a -> Text) -> a -> RpcResult IO Key
 tryLookupKey f toText k = case f k of

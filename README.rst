@@ -132,8 +132,6 @@ Server (Linux X11)
 Server (Windows)
 ~~~~~~~~~~~~~~~~
 
-Note that the windows server does not support a security token, without which any webpage can POST RPCs to the server just by getting you to click a link.
-
 windows server by @grayjay
 
 Note that the Windows server only supports a subset of the commands (``key_press``, ``write_text``, and ``pause``; ``get_context`` currently only returns the title of the foreground window as "title" and the title of the foreground window's ancestor as "name".).
@@ -143,7 +141,7 @@ Installation:
 - Install the Haskell Platform for Windows from http://www.haskell.org/platform.
 - Run the command ``cabal update``.
 - Run ``cabal install`` in the folder ...``aenea\\WindowsServer\\aenea-windows-server`` to create aenea.exe in cabal's bin folder.
-- aenea.exe takes optional arguments specifying the IP address and port. These should match those on ``C:\\NatLink\\NatLink\\MacroSystem\\aenea.json``.
+- aenea.exe takes a required ``--security-token`` flag. It also takes optional flags specifying the IP address and port. These should match those on ``C:\\NatLink\\NatLink\\MacroSystem\\aenea.json``.
 - Set use_multiple_actions to false in aenea.json.
 
 Server (OS X)
