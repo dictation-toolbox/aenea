@@ -25,48 +25,15 @@ import time
 from os.path import dirname, join, realpath
 
 import applescript
-import jsonrpclib
-import jsonrpclib.SimpleJSONRPCServer
 from Quartz.CoreGraphics import *
 
 import config
 # enable server.core imports by adding the root of the aenea project to path
 sys.path.append(realpath(join(dirname(__file__), '../../')))
-from server.core import AeneaPluginLoader
+from server.core import AeneaPluginLoader, AeneaJSONRPCServer
 
 
 #logging.basicConfig(level=logging.DEBUG)
-
-server_security_token = None
-
-
-class PermissionDeniedError(Exception):
-    pass
-
-
-def _compare_security_token(expected, actual):
-    if len(expected) != len(actual):
-        return False
-    result = 0
-    for x, y in zip(expected, actual):
-        result |= ord(x) ^ ord(y)
-    return result == 0
-
-def _check_security_token(expected_security_token, rpc_security_token):
-    if expected_security_token is None:
-        logging.warn('Server is configured to disable checking security tokens. You can use generate_security_token.py to generate a security token, which you should then add to config.py (client) and aenea.json (server). This message is intentionally spammy and annoying -- you need to fix this.')
-        return
-
-    if rpc_security_token is None:
-        error_text = 'Client did not send a security token, but server has security token set. To fix, find the client\'s aenea.json and add security_token: "foo", to it, then restart Dragon. You will need to replace foo with the server\'s security token, which you can find in config.py. Or generate a new random one with generate_security_token.py and set it in both client and server.'
-        logging.error(error_text)
-        raise PermissionDeniedError(error_text)
-    elif not _compare_security_token(expected_security_token, rpc_security_token):
-        error_text = 'Client sent a security token, but it did not match the server\'s. The server\'s is specified in config.py. The client\'s is specified in aenea.json. Use generate_security_token.py to create a random token.'
-        logging.error(error_text)
-        raise PermissionDeniedError(error_text)
-    else:
-        pass
 
 
 _MOUSE_BUTTONS = {
@@ -381,12 +348,10 @@ def transform_relative_mouse_event(event):
     return [('mousemove', '%i %i' % (geo['x'] + dx, geo['y'] + dy))]
 
 
-def get_context(security_token=None):
+def get_context():
     '''return a dictionary of window properties for the currently active
        window. it is fine to include platform specific information, but
        at least include title and executable.'''
-    _check_security_token(server_security_token, security_token)
-
     window_id, window_title = get_active_window()
     properties = get_window_properties(window_id)
     properties['id'] = window_id
@@ -421,14 +386,12 @@ def key_press(
         direction='press',
         count=1,
         count_delay=None,
-        security_token=None
         ):
     '''press a key possibly modified by modifiers. direction may be
        'press', 'down', or 'up'. modifiers may contain 'alt', 'shift',
        'control', 'super'. this X11 server also supports 'hyper',
        'meta', and 'flag' (same as super). count is number of times to
        press it. count_delay delay in ms between presses.'''
-    _check_security_token(server_security_token, security_token)
 
     logging.debug(("\nkey = {key} modifiers = {modifiers} " +
                   "direction = {direction} " +
@@ -486,11 +449,9 @@ def key_press(
     script.run()
 
 
-def write_text(text, paste=False, security_token=None):
+def write_text(text, paste=False):
     '''send text formatted exactly as written to active window.  will use
        simulate keypress typing for maximum compatibility.'''
-    _check_security_token(server_security_token, security_token)
-
     logging.debug("text = %s" % (text))
     if text:
         script = applescript.AppleScript('''
@@ -549,11 +510,9 @@ def click_mouse(
         direction='click',
         count=1,
         count_delay=None,
-        security_token=None
         ):
     '''click the mouse button specified. button maybe one of 'right',
        'left', 'middle', 'wheeldown', 'wheelup'.'''
-    _check_security_token(server_security_token, security_token)
 
     logging.debug("button = "+button)
     if count_delay is None or count < 2:
@@ -581,15 +540,12 @@ def move_mouse(
         reference='absolute',
         proportional=False,
         phantom=None,
-        security_token=None
         ):
     '''move the mouse to the specified coordinates. reference may be one
     of 'absolute', 'relative', or 'relative_active'. if phantom is not
     None, it is a button as click_mouse. If possible, click that
     location without moving the mouse. If not, the server will move the
     mouse there and click.'''
-    _check_security_token(server_security_token, security_token)
-
     geo = get_geometry()
     if proportional:
         x = geo['width'] * x
@@ -601,14 +557,12 @@ def move_mouse(
         trigger_mouseclick(1, 'click', x, y, 1)
 
 
-def pause(amount, security_token=None):
+def pause(amount):
     '''pause amount in ms.'''
-    _check_security_token(server_security_token, security_token)
     time.sleep(amount / 1000.)
 
 
-def server_info(security_token=None):
-    _check_security_token(server_security_token, security_token)
+def server_info():
     return _SERVER_INFO
 
 
@@ -625,26 +579,28 @@ def list_rpc_commands():
     return _RPC_COMMANDS
 
 
-def multiple_actions(actions, security_token=None):
+def multiple_actions(actions):
     '''execute multiple rpc commands, aborting on any error. will not
        return anything ever. actions is an array of objects, possessing
        'method', 'params', and 'optional' keys. See also JSON-RPC
        multicall.  Guaranteed to execute in specified order.'''
-    _check_security_token(server_security_token, security_token)
-
     for (method, parameters, optional) in actions:
         commands = list_rpc_commands()
         if method in commands:
+            # Remove 'security_token' from the optionals dicts because we
+            # aren't calling the patched RPC functions.
+            optional.pop("security_token")
             commands[method](*parameters, **optional)
         else:
             break
 
 
-def setup_server(host, port, security_token):
+def setup_server(host, port):
     print "started on host = %s port = %s " % (host, port)
+    security_token = getattr(config, 'SECURITY_TOKEN', None)
     if security_token is None:
         print "A security token is not in use. This allows any link you click in a web browser to execute arbitrary commands."
-    server = jsonrpclib.SimpleJSONRPCServer.SimpleJSONRPCServer((host, port))
+    server = AeneaJSONRPCServer(security_token, (host, port))
 
     for command in list_rpc_commands():
         logging.debug("registered %s", command)
@@ -660,10 +616,8 @@ def setup_server(host, port, security_token):
 
 
 if __name__ == '__main__':
-    global server_security_token
-    server_security_token = getattr(config, 'SECURITY_TOKEN', None)
     if len(sys.argv) == 2 and sys.argv[-1] == 'getcontext':
-        ctx = get_context(security_token=server_security_token)
+        ctx = get_context()
         try:
             import pprint
             pprint.pprint(ctx)
@@ -690,5 +644,5 @@ if __name__ == '__main__':
                     os._exit(0)
             else:
                 os._exit(0)
-    server = setup_server(config.HOST, config.PORT, server_security_token)
+    server = setup_server(config.HOST, config.PORT)
     server.serve_forever()
