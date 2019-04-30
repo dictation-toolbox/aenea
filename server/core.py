@@ -92,8 +92,6 @@ class AeneaServer(object):
           to register new RPCs in this method with a call to
           "server.register_function(...)"
         :param logger:
-        :param security_token: Static token that must be the same between
-         client and server.
         """
         self.logger = logger or logging.getLogger(self.__class__.__name__)
         self.server = server
@@ -156,8 +154,6 @@ class AeneaServer(object):
                 'parameters': None,
                 'optional': {'key': 'a', 'direction': 'press', 'count': 2}
             }
-        :param security_token: Static token that must be the same between
-         client and server.
         :return: This function always returns None
         :rtype: None
         """
@@ -208,8 +204,6 @@ class AbstractAeneaPlatformRpcs(object):
     def server_info(self):
         """
         Return arbitrary server information to the aenea client.
-        :param security_token: Static token that must be the same between
-         client and server.
         :return:
         :rtype: dict
         """
@@ -222,8 +216,6 @@ class AbstractAeneaPlatformRpcs(object):
         back to the aenea client so that it may use it in Dragonfly grammars.
         Specifically, this data will be used when Dragonfly's grammars perform
         context matching to decide which grammars should be activated.
-        :param security_token: Static token that must be the same between
-         client and server.
         :return: various properties related to the current active window
         """
         raise NotImplementedError()
@@ -241,8 +233,6 @@ class AbstractAeneaPlatformRpcs(object):
         :param int count: Number of times to perform this key press.
         :param int count_delay: Delay between repeated keystrokes in
          milliseconds.
-        :param security_token: Static token that must be the same between
-         client and server.
         :return: This function always returns None
         """
         raise NotImplementedError()
@@ -251,8 +241,6 @@ class AbstractAeneaPlatformRpcs(object):
         """
         Send text formatted exactly as written to active window.
         :param str text: Text to send to the current active window.
-        :param security_token: Static token that must be the same between
-         client and server.
         :return: This function always returns None
         """
         raise NotImplementedError()
@@ -265,8 +253,6 @@ class AbstractAeneaPlatformRpcs(object):
         :param str direction: Direction of 'up', 'down', 'click'
         :param int count: Number of times to repeat this click.
         :param int count_delay: Delay in milliseconds between mouse clicks.
-        :param security_token: Static token that must be the same between
-         client and server.
         :return: This function always returns None
         """
         raise NotImplementedError()
@@ -290,8 +276,6 @@ class AbstractAeneaPlatformRpcs(object):
         :param proportional:
         :param phantom: If provided, move to the desired location, click the
          <phantom> button and restore the mouse to the original location.
-        :param security_token: Static token that must be the same between
-         client and server.
         :type phantom: str or None
         :return: This function always returns None.
         """
@@ -301,8 +285,6 @@ class AbstractAeneaPlatformRpcs(object):
         """
         Pause command execution.
         :param int amount: number of milliseconds to sleep for.
-        :param security_token: Static token that must be the same between
-         client and server.
         :return: This function always returns None.
         """
         # we can get away with a concrete impl here because python provides
@@ -313,8 +295,6 @@ class AbstractAeneaPlatformRpcs(object):
         """
         Send a message to the desktop to be displayed in a notification window.
         :param str message: message to send to the desktop.
-        :param security_token: Static token that must be the same between
-         client and server.
         :return: This function always returns None.
         """
         raise NotImplementedError()

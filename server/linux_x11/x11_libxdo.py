@@ -153,8 +153,6 @@ class XdoPlatformRpcs(AbstractAeneaPlatformRpcs):
         """
         :param int xdo_delay: Default pause between keystrokes.
         :param str display: reserved for future use.
-        :param security_token: Static token that must be the same between
-         client and server.
         :param kwargs:
         """
         super(XdoPlatformRpcs, self).__init__(**kwargs)
