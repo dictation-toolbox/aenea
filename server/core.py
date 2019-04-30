@@ -10,13 +10,76 @@ class PermissionDeniedError(Exception):
     pass
 
 
+def compare_security_token(expected, actual):
+    if len(expected) != len(actual):
+        return False
+    result = 0
+    for x, y in zip(expected, actual):
+        result |= ord(x) ^ ord(y)
+    return result == 0
+
+
+class AeneaJSONRPCServer(SimpleJSONRPCServer):
+
+    def __init__(self, security_token, *args, **kwargs):
+        self.security_token = security_token
+        self.logger = logging.getLogger("server")
+        SimpleJSONRPCServer.__init__(self, *args, **kwargs)
+
+    def _check_security_token(self, security_token):
+        if self.security_token is None:
+            self.logger.warn('Server is configured to disable checking security tokens. You can use generate_security_token.py to generate a security token, which you should then add to config.py (client) and aenea.json (server). This message is intentionally spammy and annoying -- you need to fix this.')
+            return
+
+        if security_token is None:
+            error_text = 'Client did not send a security token, but server has security token set. To fix, find the client\'s aenea.json and add security_token: "foo", to it, then restart Dragon. You will need to replace foo with the server\'s security token, which you can find in config.py. Or generate a new random one with generate_security_token.py and set it in both client and server.'
+            self.logger.error(error_text)
+            raise PermissionDeniedError(error_text)
+        elif not compare_security_token(self.security_token, security_token):
+            error_text = 'Client sent a security token, but it did not match the server\'s. The server\'s is specified in config.py. The client\'s is specified in aenea.json. Use generate_security_token.py to create a random token.'
+            self.logger.error(error_text)
+            raise PermissionDeniedError(error_text)
+        else:
+            pass
+
+    def register_function(self, rpc_func, rpc_name=None):
+        # Patch each registered function to check if the security token
+        # matches.
+        def patched_rpc_func(*args, **kwargs):
+            assert not (args and kwargs)
+
+            # Pop the security token from args or kwargs. Raise an error if
+            # there is no token.
+            if args:
+                args = list(args)
+                rpc_security_token = args.pop(len(args) - 1)
+            elif "security_token" in kwargs:
+                rpc_security_token = kwargs.pop("security_token")
+            else:
+                raise ValueError("required 'security_token' argument was not "
+                                 "specified")
+
+            # Check the security token argument.
+            self._check_security_token(rpc_security_token)
+
+            # Run the RPC function if the security token was acceptable.
+            return rpc_func(*args, **kwargs)
+
+        # Preserve the function's name.
+        patched_rpc_func.__name__ = rpc_func.__name__
+
+        return SimpleJSONRPCServer.register_function(
+            self, patched_rpc_func, rpc_name
+        )
+
+
 class AeneaServer(object):
     """
     AeneaServer is a jsonrpc server that exposes emulated keyboard/mouse input
     over the network.  Takes care of the JSON RPC protocol that Aenea is built
     on top of and handles dispatching RPCs to the appropriate action.
     """
-    def __init__(self, rpc_impl, server, plugins=tuple(), logger=None, security_token=None):
+    def __init__(self, rpc_impl, server, plugins=tuple(), logger=None):
         """
         :param rpc_impl: Object that implements all AbstractAeneaPlatformRpc
          methods.  This is where the platform specific magic happens to gather
@@ -34,7 +97,6 @@ class AeneaServer(object):
         """
         self.logger = logger or logging.getLogger(self.__class__.__name__)
         self.server = server
-        self.security_token = None
 
         self.logger.debug('using {0} for input emulation'.format(
             rpc_impl.__class__.__name__))
@@ -63,10 +125,9 @@ class AeneaServer(object):
                 log_file=getattr(config, 'LOG_FILE', None))
         logger = logging.getLogger(AeneaLoggingManager.aenea_logger_name)
 
-        rpc_server = SimpleJSONRPCServer(
-                (config.HOST, config.PORT), logRequests=False)
-
         security_token = getattr(config, 'SECURITY_TOKEN', None)
+        rpc_server = AeneaJSONRPCServer(
+            security_token, (config.HOST, config.PORT), logRequests=False)
 
         # TODO: dynamically load/instantiate platform_rpcs from config instead
         # of requiring it as an explicit argument
@@ -74,14 +135,14 @@ class AeneaServer(object):
         plugins = AeneaPluginLoader(logger).get_plugins(
                 getattr(config, 'PLUGIN_PATH', None))
 
-        return cls(platform_rpcs, rpc_server, plugins=plugins, logger=logger, security_token=security_token)
+        return cls(platform_rpcs, rpc_server, plugins=plugins, logger=logger)
 
     def serve_forever(self):
         self.logger.debug(
             'starting server on {0}:{1}'.format(*self.server.server_address))
         self.server.serve_forever()
 
-    def multiple_actions(self, actions, security_token=None):
+    def multiple_actions(self, actions):
         """
         Execute multiple rpc commands, aborting on any error. Guaranteed to
         execute in specified order. See also JSON-RPC multicall. Annoyingly, we
@@ -100,8 +161,6 @@ class AeneaServer(object):
         :return: This function always returns None
         :rtype: None
         """
-        self.rpc_impl._check_security_token(security_token)
-
         for (method, parameters, optional) in actions:
             if method in self.server.funcs:
                 # JSON-RPC forbids specifying both optional and parameters.
@@ -114,15 +173,6 @@ class AeneaServer(object):
                 break
 
 
-def compare_security_token(expected, actual):
-    if len(expected) != len(actual):
-        return False
-    result = 0
-    for x, y in zip(expected, actual):
-        result |= ord(x) ^ ord(y)
-    return result == 0
-
-
 class AbstractAeneaPlatformRpcs(object):
     """
     Interface that defines Aenea's supported RPCs.  This is where the platform
@@ -133,26 +183,8 @@ class AbstractAeneaPlatformRpcs(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, logger=None, security_token=None):
+    def __init__(self, logger=None):
         self.logger = logger or logging.getLogger(self.__class__.__name__)
-        self.security_token = security_token
-
-    def _check_security_token(self, security_token):
-        if self.security_token is None:
-            self.logger.warn('Server is configured to disable checking security tokens. You can use generate_security_token.py to generate a security token, which you should then add to config.py (client) and aenea.json (server). This message is intentionally spammy and annoying -- you need to fix this.')
-            return
-
-        if security_token is None:
-            error_text = 'Client did not send a security token, but server has security token set. To fix, find the client\'s aenea.json and add security_token: "foo", to it, then restart Dragon. You will need to replace foo with the server\'s security token, which you can find in config.py. Or generate a new random one with generate_security_token.py and set it in both client and server.'
-            self.logger.error(error_text)
-            raise PermissionDeniedError(error_text)
-        elif not compare_security_token(self.security_token, security_token):
-            error_text = 'Client sent a security token, but it did not match the server\'s. The server\'s is specified in config.py. The client\'s is specified in aenea.json. Use generate_security_token.py to create a random token.'
-            self.logger.error(error_text)
-            raise PermissionDeniedError(error_text)
-        else:
-            pass
-
 
     @property
     def rpc_commands(self):
@@ -173,7 +205,7 @@ class AbstractAeneaPlatformRpcs(object):
         }
 
     @abc.abstractmethod
-    def server_info(self, security_token=None):
+    def server_info(self):
         """
         Return arbitrary server information to the aenea client.
         :param security_token: Static token that must be the same between
@@ -181,11 +213,10 @@ class AbstractAeneaPlatformRpcs(object):
         :return:
         :rtype: dict
         """
-        self._check_security_token(security_token)
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_context(self, security_token=None):
+    def get_context(self):
         """
         Query the system for context information.  This data is typically passed
         back to the aenea client so that it may use it in Dragonfly grammars.
@@ -195,11 +226,10 @@ class AbstractAeneaPlatformRpcs(object):
          client and server.
         :return: various properties related to the current active window
         """
-        self._check_security_token(security_token)
         raise NotImplementedError()
 
     def key_press(self, key=None, modifiers=(), direction='press', count=1,
-                  count_delay=None, security_token=None):
+                  count_delay=None):
         """
         Press a key possibly modified by modifiers. direction may be 'press',
         'down', or 'up'. modifiers may contain 'alt', 'shift', 'control',
@@ -215,10 +245,9 @@ class AbstractAeneaPlatformRpcs(object):
          client and server.
         :return: This function always returns None
         """
-        self._check_security_token(security_token)
         raise NotImplementedError()
 
-    def write_text(self, text, security_token=None):
+    def write_text(self, text):
         """
         Send text formatted exactly as written to active window.
         :param str text: Text to send to the current active window.
@@ -226,10 +255,9 @@ class AbstractAeneaPlatformRpcs(object):
          client and server.
         :return: This function always returns None
         """
-        self._check_security_token(security_token)
         raise NotImplementedError()
 
-    def click_mouse(self, button, direction='click', count=1, count_delay=None, security_token=None):
+    def click_mouse(self, button, direction='click', count=1, count_delay=None):
         """
         Click the mouse button specified at the current location.
         :param button: Mouse button to click.
@@ -241,11 +269,10 @@ class AbstractAeneaPlatformRpcs(object):
          client and server.
         :return: This function always returns None
         """
-        self._check_security_token(security_token)
         raise NotImplementedError()
 
     def move_mouse(self, x, y, reference='absolute', proportional=False,
-                   phantom=None, security_token=None):
+                   phantom=None):
         """
         Move the mouse to the specified coordinates.
         :param x: x coordinate for move
@@ -268,10 +295,9 @@ class AbstractAeneaPlatformRpcs(object):
         :type phantom: str or None
         :return: This function always returns None.
         """
-        self._check_security_token(security_token)
         raise NotImplementedError()
 
-    def pause(self, amount, security_token=None):
+    def pause(self, amount):
         """
         Pause command execution.
         :param int amount: number of milliseconds to sleep for.
@@ -279,12 +305,11 @@ class AbstractAeneaPlatformRpcs(object):
          client and server.
         :return: This function always returns None.
         """
-        self._check_security_token(security_token)
         # we can get away with a concrete impl here because python provides
         # cross platform sleep.
         time.sleep(amount / 1000.0)
 
-    def notify(self, message, security_token=None):
+    def notify(self, message):
         """
         Send a message to the desktop to be displayed in a notification window.
         :param str message: message to send to the desktop.
@@ -292,7 +317,6 @@ class AbstractAeneaPlatformRpcs(object):
          client and server.
         :return: This function always returns None.
         """
-        self._check_security_token(security_token)
         raise NotImplementedError()
 
 

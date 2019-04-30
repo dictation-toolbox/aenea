@@ -149,7 +149,7 @@ class XdoPlatformRpcs(AbstractAeneaPlatformRpcs):
     """
     Aenea RPC implementation that uses low level C bindings to the xdo library.
     """
-    def __init__(self, xdo_delay=0, display=None, security_token=None, **kwargs):
+    def __init__(self, xdo_delay=0, display=None, **kwargs):
         """
         :param int xdo_delay: Default pause between keystrokes.
         :param str display: reserved for future use.
@@ -170,8 +170,7 @@ class XdoPlatformRpcs(AbstractAeneaPlatformRpcs):
             name: self.display.intern_atom(name) for name in _X_PROPERTIES
         }
 
-    def server_info(self, security_token=None):
-        self._check_security_token(security_token)
+    def server_info(self):
         return {
             'window_manager': 'idk',
             'operating_system': 'linux',
@@ -181,8 +180,7 @@ class XdoPlatformRpcs(AbstractAeneaPlatformRpcs):
             'server_version': 1
         }
 
-    def get_context(self, security_token=None):
-        self._check_security_token(security_token)
+    def get_context(self):
         try:
             window_id = self.libxdo.get_focused_window_sane()
             window = self.display.create_resource_object('window', window_id)
@@ -235,8 +233,7 @@ class XdoPlatformRpcs(AbstractAeneaPlatformRpcs):
         return properties
 
     def key_press(self, key=None, modifiers=(), direction='press', count=1,
-                  count_delay=None, security_token=None):
-        self._check_security_token(security_token)
+                  count_delay=None):
         assert key is not None
 
         delay_millis = 0 if count_delay is None or count == 1 else count_delay
@@ -265,12 +262,10 @@ class XdoPlatformRpcs(AbstractAeneaPlatformRpcs):
 
             time.sleep(delay_millis / 1000)  # emulate xdotool sleep
 
-    def write_text(self, text, security_token=None):
-        self._check_security_token(security_token)
+    def write_text(self, text):
         self.libxdo.enter_text_window(0, text, self.xdotool_delay*1000)
 
-    def click_mouse(self, button, direction='click', count=1, count_delay=None, security_token=None):
-        self._check_security_token(security_token)
+    def click_mouse(self, button, direction='click', count=1, count_delay=None):
         delay_millis = 0 if count_delay is None or count < 2 else count_delay
 
         if button in _MOUSE_BUTTONS:
@@ -294,8 +289,7 @@ class XdoPlatformRpcs(AbstractAeneaPlatformRpcs):
 
             time.sleep(delay_millis / 1000)
 
-    def _get_geometry(self, window_id=None, security_token=None):
-        self._check_security_token(security_token)
+    def _get_geometry(self, window_id=None):
         if window_id is None:
             window_id = self.libxdo.get_focused_window_sane()
         window_location = self.libxdo.get_window_location(window_id)
@@ -309,8 +303,7 @@ class XdoPlatformRpcs(AbstractAeneaPlatformRpcs):
         }
 
     def move_mouse(self, x, y, reference='absolute', proportional=False,
-                   phantom=None, security_token=None):
-        self._check_security_token(security_token)
+                   phantom=None):
         original_location = self.libxdo.get_mouse_location()
         geo = self._get_geometry()
 
@@ -336,8 +329,7 @@ class XdoPlatformRpcs(AbstractAeneaPlatformRpcs):
             self.libxdo.click_window(0, _MOUSE_BUTTONS[phantom])
             self.libxdo.move_mouse(original_location.x, original_location.y)
 
-    def notify(self, message, security_token=None):
-        self._check_security_token(security_token)
+    def notify(self, message):
         try:
             subprocess.Popen(['notify-send', message])
         except Exception as e:
