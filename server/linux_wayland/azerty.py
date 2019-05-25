@@ -1,3 +1,4 @@
+# encoding: utf-8
 from abstractKeyboardMapping import AbstractKeyboardMapping
 import evdev
 

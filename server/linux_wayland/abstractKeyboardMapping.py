@@ -1,5 +1,5 @@
 
-class AbstractKeyboardMapping:
+class AbstractKeyboardMapping(object):
 	def __init__(self):
 		return
 

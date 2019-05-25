@@ -1,0 +1,13 @@
+# Host-side config (Linux host receiving commands)
+HOST = "192.168.56.1"
+PORT = 8240
+
+PLUGIN_PATH = ["plugins"]
+
+# Server log file path
+#LOG_FILE = '/path/to/server.log'
+
+# Logger verbosity settings.  See the following for a list of levels:
+# https://docs.python.org/2/library/logging.html#levels
+#CONSOLE_LOG_LEVEL = 'WARNING'
+#FILE_LOG_LEVEL = 'INFO'

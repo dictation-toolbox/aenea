@@ -20,6 +20,7 @@ special = { "enter" : evdev.ecodes.KEY_ENTER,
             "super" : evdev.ecodes.KEY_LEFTMETA,
             "shift" : evdev.ecodes.KEY_LEFTSHIFT,
             "control" : evdev.ecodes.KEY_LEFTCTRL,
+            "ctrl" : evdev.ecodes.KEY_LEFTCTRL,
             "space" : " ",
             "plus" : "+",
             "minus" : "-",
@@ -126,7 +127,7 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 
 		key = special.get(key, key) #convert to usable str or to a key code
 
-		if type(key) is str: #need to convert to key codes
+		if isinstance(key, (str, unicode)): #need to convert to key codes
 			keys = fixed.get(key)
 			if keys is None: #not a fixed
 				keys = self.mapping.solo().get(key)
