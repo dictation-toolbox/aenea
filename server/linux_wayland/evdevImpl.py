@@ -91,8 +91,8 @@ buttons = { "right" : evdev.ecodes.BTN_RIGHT,
 }
 
 class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
-	def __init__(self, config, mapping, keyEvent, mouseEvent, security_token=None):
-		super(EvdevPlatformRpcs, self).__init__(logger=logging.getLogger("aenea.XdotoolPlatformRpcs"), security_token=security_token)
+	def __init__(self, config, mapping, keyEvent, mouseEvent):
+		super(EvdevPlatformRpcs, self).__init__(logger=logging.getLogger("aenea.XdotoolPlatformRpcs"))
 		self.mapping = mappings.get(mapping, "qwerty")
 
 		key = evdev.InputDevice(keyEvent)
@@ -100,10 +100,10 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 
 		self.ui = evdev.UInput.from_device(key, mouse)
 
-	def server_info(self, security_token):
+	def server_info(self):
 		return _SERVER_INFO
 
-	def get_context(self, security_token):
+	def get_context(self):
 		self.logger.info("get_context Not implemented yet")
 		return {}
 
@@ -113,8 +113,7 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 	              modifiers=(),
 	              direction="press",
 	              count=1,
-	              count_delay=None,
-	              security_token=None):
+	              count_delay=None):
 		"""press a key possibly modified by modifiers. direction may be
 		'press', 'down', or 'up'. modifiers may contain 'alt', 'shift',
 		'control', 'super'. this X11 server also supports 'hyper',
@@ -157,7 +156,7 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 			self.ui.syn()
 			time.sleep(delay_millis / 1000.0)
 
-	def write_text(self, text, security_token=None):
+	def write_text(self, text):
 		for letter in text:
 			#check if letter need more than 1 key
 			seq = self.mapping.multi().get(letter)
@@ -202,7 +201,7 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 			time.sleep(0.000001)
 
 
-	def click_mouse(self, button, direction="click", count=1, count_delay=None, security_token=None):
+	def click_mouse(self, button, direction="click", count=1, count_delay=None):
 		delay_millis = 0 if count_delay is None or count == 1 else count_delay
 		print("click mouse " + button + " " + direction)
 		for _ in range(0, count):
@@ -235,14 +234,13 @@ class EvdevPlatformRpcs(AbstractAeneaPlatformRpcs):
 	               x, y,
 	               reference="absolute",
 	               proportional=False,
-	               phantom=None,
-	               security_token=None):
+	               phantom=None):
 		self.logger.info("move_mouse Not implemented yet")
 
-	def pause(self, amount, security_token=None):
+	def pause(self, amount):
 		time.sleep(amount / 1000.)
 
-	def notify(self, message, security_token=None):
+	def notify(self, message):
 		try:
 			subprocess.Popen(["notify-send", message])
 		except Exception as e:

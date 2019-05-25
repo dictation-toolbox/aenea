@@ -92,7 +92,7 @@ if __name__ == '__main__':
                         default="qwerty",
                         required=False,
                         help='If provided the server uses another keyboard mapping than qwerty. Possible mappings are: {}'.format(MAPPINGS))
-    parser.add_argument('--security_token',
+    parser.add_argument('--securityToken',
                         action = 'store',
                         default=None,
                         required=False,
@@ -104,16 +104,20 @@ if __name__ == '__main__':
 	    arguments.keyEvent = findKeyEvent()
     if arguments.mouseEvent is None:
 	    arguments.mouseEvent = findMouseEvent()
+    if arguments.securityToken is None:
+	    arguments.securityToken = getattr(config, "SECURITY_TOKEN", None)
 
     platform_rpcs = EvdevPlatformRpcs(config,
                                       arguments.mapping,
                                       arguments.keyEvent,
-                                      arguments.mouseEvent,
-                                      security_token=arguments.securityToken)
+                                      arguments.mouseEvent)
 
     if arguments.daemon:
         daemonize()
 
+    # Ensure the security token is set in the configuration.
+    setattr(config, "SECURITY_TOKEN", arguments.securityToken)
+
+    # Start the server.
     server = AeneaServer.from_config(platform_rpcs, config)
-    server.security_token=arguments.securityToken
     server.serve_forever()
