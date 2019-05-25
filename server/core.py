@@ -11,7 +11,7 @@ class PermissionDeniedError(Exception):
 
 
 def compare_security_token(expected, actual):
-    if len(expected) != len(actual):
+    if not hasattr(actual, "__len__") or len(expected) != len(actual):
         return False
     result = 0
     for x, y in zip(expected, actual):
@@ -48,16 +48,14 @@ class AeneaJSONRPCServer(SimpleJSONRPCServer):
         def patched_rpc_func(*args, **kwargs):
             assert not (args and kwargs)
 
-            # Pop the security token from args or kwargs. Raise an error if
-            # there is no token.
+            # Pop the security token from args or kwargs.
             if args:
                 args = list(args)
                 rpc_security_token = args.pop(len(args) - 1)
             elif "security_token" in kwargs:
                 rpc_security_token = kwargs.pop("security_token")
             else:
-                raise ValueError("required 'security_token' argument was not "
-                                 "specified")
+                rpc_security_token = None
 
             # Check the security token argument.
             self._check_security_token(rpc_security_token)
