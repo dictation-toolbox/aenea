@@ -120,6 +120,9 @@ _KEY_TRANSLATION = {
     'tilde': 'asciitilde',
     'underscore': 'underscore',
     'win': 'Super_L',
+    'pagedown': 'Next',
+    'pageup': 'Prior',
+
 }
 
 
