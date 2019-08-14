@@ -373,6 +373,10 @@ class AeneaLoggingManager(object):
             aenea_logger_name: {
                 'level': 'DEBUG',
                 'handlers': ['console']
+            },
+            "server": {
+                'level': 'DEBUG',
+                'handlers': ['console']
             }
         }
     }
