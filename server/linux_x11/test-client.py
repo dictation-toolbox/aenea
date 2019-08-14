@@ -19,22 +19,45 @@ import config
 
 import jsonrpclib
 
+def _add_security_token(token, *a, **kw):
+    # Cannot use both positional and keyword arguments
+    # (according to JSON-RPC spec.)
+    assert not (a and kw)
+
+    # Add the security token.
+    if token is not None:
+        if a:
+            a = a + (token,)
+        else:
+            kw = kw.copy()
+            kw['security_token'] = token
+    return a, kw
 
 class Proxy(object):
-    def __init__(self, host, port):
+    def __init__(self, host, port, security_token):
         self.server = jsonrpclib.Server('http://%s:%i' % (host, port))
+        self.security_token = security_token
 
     def execute_batch(self, batch):
-        self.server.multiple_actions(batch)
+        self.server.multiple_actions(batch, self.security_token)
+
+    def __getattr__(self, key):
+        def call(*a, **kw):
+            # Call the server function with the security token.
+            a, kw = _add_security_token(self.security_token, *a, **kw)
+            return getattr(self.server, key)(*a, **kw)
+        return call
 
 
 class BatchProxy(object):
-    def __init__(self):
+    def __init__(self, security_token):
         self._commands = []
+        self.security_token = security_token
 
     def __getattr__(self, key):
         def call(*a, **kw):
             if not key.startswith('_'):
+                a, kw = _add_security_token(self.security_token, *a, **kw)
                 self._commands.append((key, a, kw))
         return call
 
@@ -97,7 +120,7 @@ def test_pause(distobj):
 
 
 def test_multiple_actions(distobj):
-    batch = BatchProxy()
+    batch = BatchProxy(distobj.security_token)
     all_tests(batch)
     distobj.execute_batch(batch._commands)
 
@@ -113,11 +136,12 @@ def all_tests(distobj):
 
 
 def main():
-    communication = Proxy(config.HOST, config.PORT)
-    all_tests(communication.server)
+    security_token = getattr(config, "SECURITY_TOKEN", None)
+    communication = Proxy(config.HOST, config.PORT, security_token)
+    all_tests(communication)
     test_multiple_actions(communication)
     print 'Get context returns:'
-    print communication.server.get_context()
+    print communication.get_context()
 
 if __name__ == '__main__':
     main()
