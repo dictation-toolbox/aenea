@@ -1,5 +1,5 @@
-"click right":Mouse("right"),.. image:: https://travis-ci.com/dictation-toolbox/aenea.svg?branch=master
-    :target: https://travis-ci.com/dictation-toolbox/aenea"click right":Mouse("right"),
+.. image:: https://travis-ci.com/dictation-toolbox/aenea.svg?branch=master
+    :target: https://travis-ci.com/dictation-toolbox/aenea
 
 =================
 Aenea
