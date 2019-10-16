@@ -1,5 +1,5 @@
-.. image:: https://travis-ci.com/dictation-toolbox/aenea.svg?branch=master
-    :target: https://travis-ci.com/dictation-toolbox/aenea
+"click right":Mouse("right"),.. image:: https://travis-ci.com/dictation-toolbox/aenea.svg?branch=master
+    :target: https://travis-ci.com/dictation-toolbox/aenea"click right":Mouse("right"),
 
 =================
 Aenea
@@ -184,6 +184,12 @@ While optional, Aenea comes with two very useful modules.
 Aenea Dictation Client (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Also available is a dictation capture client @poppe1219 wrote. This is simply a window that captures all keystrokes typed into it an relays them to the Linux host. If you disable Dragon's dictation box, you can dictate in Dragon's normal mode with the capture client in the foreground in Windows. Dragon will then type into the client, which will send the keystrokes to the server. You can still use grammars with the client in the foreground. To use, just copy ``client/aenea_client.py`` to ``MacroSystem`` and run it. By default, all grammars will only work when the client is in the foreground. You can change this behavior in ``aenea.json`` by setting ``restrict_proxy_to_aenea_client`` to ``false``.
+
+
+Virtualbox usb passthrough to reduce latency(optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using pulseaudio can lead to significant latencies and audio drifts between the host and the VM. Of this can be avoided by either switching to alsa-audio or by directly passing through your audio device do the VM. This can easily be achieved by installing the virtualbox extensions on the host machine and adding your user to the `vboxusers group <https://superuser.com/questions/956622/no-usb-devices-available-in-virtualbox>`_ : ``sudo adduser $USER vboxusers``
+
 
 Snapshot and backup (MANDATORY)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
