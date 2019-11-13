@@ -185,10 +185,33 @@ Aenea Dictation Client (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Also available is a dictation capture client @poppe1219 wrote. This is simply a window that captures all keystrokes typed into it an relays them to the Linux host. If you disable Dragon's dictation box, you can dictate in Dragon's normal mode with the capture client in the foreground in Windows. Dragon will then type into the client, which will send the keystrokes to the server. You can still use grammars with the client in the foreground. To use, just copy ``client/aenea_client.py`` to ``MacroSystem`` and run it. By default, all grammars will only work when the client is in the foreground. You can change this behavior in ``aenea.json`` by setting ``restrict_proxy_to_aenea_client`` to ``false``.
 
+Aenea Recognition Bar (optional, for linux_x11)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+While using Aenea, the results of the recognition can be viewed by inspecting the server's output in a terminal. However, this requires constant task-switching. The Recognition Bar displays the latest recognized phrase in a small GUI that stays on top of all the windows.
+
+.. image:: https://raw.githubusercontent.com/facundoq/aenea_recognition_results/master/demo_small.gif
+
+The Recognition Bar requires ``Tk`` and the corresponding bindings installed in the same python distribution used for Aenea. These can be easily acquired in Ubuntu/Debian by executing ``sudo apt install python-tk`` or ``sudo pacman -S tk`` in Arch-based distros.
+
+To install the plugin:
+1) Copy ``client/_recognition_results_observer.py`` to ``MacroSystem`` in the guest VM. This grammar sends the recognition results to the server.
+2) Check that the following files exist in the server:
+  1) ``server/linux_x11/plugins/recognition_bar.yapsy-plugin``
+  2) ``server/linux_x11/plugins/recognitionbar/config.py``
+  3) ``server/linux_x11/plugins/recognitionbar/__init__.py``
+  4) ``server/linux_x11/plugins/recognitionbar/recognitionbar_tk.py``
+3) Give execute permissions to the file ``recognitionbar_tk.py`` (``chmod +x recognitionbar_tk.py``)
+4) Open the file ``config.py`` and change the variable ``enabled`` to the value ``True`` (``enabled = True``)
+5) Configure the appearance of the bar in ``config.py`` (optional).
+
+If the recognition bar window is closed and you need to reopen it, just run ``recognitionbar_tk.py``.
+
+Please note that the plugin uses a local file in the server to communicate the results from Aenea to the recognition bar application. This file stores in plain text the results of your speech. If security or privacy of what you input is a concern, you should delete this file regularly and/or take the appropiate measures. By default, the file is ``~/.aenea_phrases.log``, but this can changed in ``config.py``.
 
 Virtualbox usb passthrough to reduce latency(optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Using pulseaudio can lead to significant latencies and audio drifts between the host and the VM. Of this can be avoided by either switching to alsa-audio or by directly passing through your audio device do the VM. This can easily be achieved by installing the virtualbox extensions on the host machine and adding your user to the `vboxusers group <https://superuser.com/questions/956622/no-usb-devices-available-in-virtualbox>`_ : ``sudo adduser $USER vboxusers``
+Using pulseaudio can lead to significant latencies and audio drifts between the host and the VM. This can be avoided by either switching to alsa-audio or by directly passing through your audio device do the VM. This can easily be achieved by installing the virtualbox extensions on the host machine and adding your user to the `vboxusers group <https://superuser.com/questions/956622/no-usb-devices-available-in-virtualbox>`_ : ``sudo adduser $USER vboxusers``
 
 
 Snapshot and backup (MANDATORY)
