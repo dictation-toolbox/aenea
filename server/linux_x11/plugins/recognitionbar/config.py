@@ -5,6 +5,8 @@ import os
 
 
 #plug-in configuration
+enabled = False
+
 
 # path to file where the recognition results are stored
 results_file = os.path.expanduser("~/.aenea_phrases.log")
