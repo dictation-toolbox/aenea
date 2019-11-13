@@ -192,9 +192,10 @@ While using Aenea, the results of the recognition can be viewed by inspecting th
 
 .. image:: https://raw.githubusercontent.com/facundoq/aenea_recognition_results/master/demo_small.gif
 
-The Recognition Bar requires ``Tk`` and the corresponding bindings installed in the same python distribution used for Aenea. These can be easily acquired in Ubuntu/Debian by executing ``sudo apt install python-tk`` or ``sudo pacman -S tk`` in Arch-based distros.
+The Recognition Bar requires ``Tk`` and the corresponding bindings installed in the same python distribution used for Aenea. These can be easily acquired in Ubuntu/Debian by executing ``sudo apt install python-tk`` or ``sudo pacman -S tk`` in Arch-based distributions.
 
 To install the plugin:
+
 1) Copy ``client/_recognition_results_observer.py`` to ``MacroSystem`` in the guest VM. This grammar sends the recognition results to the server.
 2) Check that the following files exist in the server:
   1) ``server/linux_x11/plugins/recognition_bar.yapsy-plugin``
@@ -205,9 +206,9 @@ To install the plugin:
 4) Open the file ``config.py`` and change the variable ``enabled`` to the value ``True`` (``enabled = True``)
 5) Configure the appearance of the bar in ``config.py`` (optional).
 
-If the recognition bar window is closed and you need to reopen it, just run ``recognitionbar_tk.py``.
+If the recognition bar window is closed and you need to reopen it, just execute ``recognitionbar_tk.py``.
 
-Please note that the plugin uses a local file in the server to communicate the results from Aenea to the recognition bar application. This file stores in plain text the results of your speech. If security or privacy of what you input is a concern, you should delete this file regularly and/or take the appropiate measures. By default, the file is ``~/.aenea_phrases.log``, but this can changed in ``config.py``.
+Please note that the plugin uses a local file (``~/.aenea_phrases.log`` by default) in the server to communicate the results from Aenea to the Recognition Bar GUI application. This file stores in plain text the results of your speech. If security or privacy of what you input is a concern, you should delete this file regularly or take other appropriate measures. The location of the file can be modified in ``config.py``.
 
 Virtualbox usb passthrough to reduce latency(optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
