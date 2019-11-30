@@ -122,27 +122,15 @@ class ProxyCustomAppContext(dragonfly.Context):
     def _property_match(self, key, actual, desired):
         '''Overload to change how we should compare actual and
            desired properties.'''
-        if not isinstance(desired, list):
-            desired = [desired]
-
         if not self.case_sensitive:
             actual = actual.lower()
-            desired = [string.lower() for string in desired]
-
-        # Check if any desired strings match.
+            desired = desired.lower()
         if self.match == 'substring':
-            for string in desired:
-                if string in actual:
-                    return True
+            return desired in actual
         elif self.match == 'exact':
-            for string in desired:
-                if string == actual:
-                    return True
+            return desired == actual
         else:
-            for string in desired:
-                if re.match(string, actual):
-                    return True
-        return False  # no match
+            return bool(re.match(desired, actual))
 
     def _reduce_matches(self, matches):
         '''Overload to change the logic that should be used to combine
