@@ -3,8 +3,9 @@
 
 import os
 
-
-#plug-in configuration
+##########################################
+####### PLUG-IN configuration ############
+##########################################
 enabled = False
 
 
@@ -15,7 +16,9 @@ begin_literal = "..."
 # literal to display when a recognition has failed
 failure_literal = "???"
 
-#UI configuration
+##########################################
+#######    UI configuration   ############
+##########################################
 
 # include a button to quit the application
 include_quit_button = False

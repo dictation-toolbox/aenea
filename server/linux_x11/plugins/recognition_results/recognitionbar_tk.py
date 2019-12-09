@@ -3,13 +3,15 @@
 
 """ 
 Tkinker application to display the last result of the recognition.
-the application consists of as simple label to display the results
+It reads the results from a text file.
+The application consists of as simple label to display the results.
+The file config.py contains the configuration of the appearance and location of the text file.
 
 
 """
-import Tkinter as tk
-from Tkinter import *
-import os, sys
+
+from Tkinter import Tk, Frame, StringVar, Label, Button
+import sys
 import time
 import Queue,threading
 import config
@@ -22,9 +24,11 @@ class Application(object):
         self.set_phrase(phrase)
 
     def createWidgets(self):
-        self.root = Tk()
+        self.root = Tk(className="recognitionbar")
+        
         self.root.wm_attributes('-type', config.window_type)
-        self.root.wm_attributes('-topmost', config.always_on_top)
+        if config.always_on_top:
+            self.root.wm_attributes('-topmost', True)
         
         self.frame=Frame(master=self.root)
         self.frame.pack()
@@ -60,12 +64,8 @@ class Application(object):
         self.root.protocol("WM_DELETE_WINDOW", self.shutdown)
         self.setup_watcher_thread()
         
-    def shutdown(self):
-        
-        self.frame.stop
-        self.root.destroy()
+    def shutdown(self,unused_arg=None):
         sys.exit()
-        #self.watcher_thread.stop()
     
     def callback(self,phrase):
         self.queue.put(phrase)

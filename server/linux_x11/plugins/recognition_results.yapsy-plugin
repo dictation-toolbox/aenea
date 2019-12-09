@@ -1,8 +1,8 @@
 [Core]
-Name = recognition_bar
-Module = recognitionbar
+Name = recognition_results
+Module = recognition_results
 
 [Documentation]
 Author = Facundo Quiroga
-Version = 0.1
+Version = 0.2
 Description = Displays the recognized phrases of the client in the server

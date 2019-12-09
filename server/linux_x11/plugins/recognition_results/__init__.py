@@ -22,6 +22,7 @@ class RecognitionBarPlugin(IPlugin):
             server.register_function(self.on_recognition)
             server.register_function(self.on_failure)
             server.register_function(self.on_begin)
+            print "Recognition results plugin initialized. NOTE: you need also require the _recognition_results_observer.py file in your MACRO folder for this plugin to work."
     
     def on_begin(self,):
         self.write_message(config.begin_literal)

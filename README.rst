@@ -185,28 +185,28 @@ Aenea Dictation Client (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Also available is a dictation capture client @poppe1219 wrote. This is simply a window that captures all keystrokes typed into it an relays them to the Linux host. If you disable Dragon's dictation box, you can dictate in Dragon's normal mode with the capture client in the foreground in Windows. Dragon will then type into the client, which will send the keystrokes to the server. You can still use grammars with the client in the foreground. To use, just copy ``client/aenea_client.py`` to ``MacroSystem`` and run it. By default, all grammars will only work when the client is in the foreground. You can change this behavior in ``aenea.json`` by setting ``restrict_proxy_to_aenea_client`` to ``false``.
 
-Aenea Recognition Bar (optional, for linux_x11)
+Aenea Recognition Results Plugin (optional, for linux_x11)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-While using Aenea, the results of the recognition can be viewed by inspecting the server's output in a terminal. However, this requires constant task-switching. The Recognition Bar displays the latest recognized phrase in a small GUI that stays on top of all the windows.
+While using Aenea, the results of the recognition can be viewed by inspecting the server's output in a terminal. However, this requires constant task-switching. The Recognition Results plugin displays the latest recognized phrase in a small GUI that stays on top of all the windows.
 
 .. image:: https://raw.githubusercontent.com/facundoq/aenea_recognition_results/master/demo_small.gif
 
-The Recognition Bar requires ``Tk`` and the corresponding bindings installed in the same python distribution used for Aenea. These can be easily acquired in Ubuntu/Debian by executing ``sudo apt install python-tk`` or ``sudo pacman -S tk`` in Arch-based distributions.
+The Recognition Results requires ``Tk`` and the corresponding bindings installed in the same python distribution used for Aenea. These can be easily acquired in Ubuntu/Debian by executing ``sudo apt install python-tk`` or ``sudo pacman -S tk`` in Arch-based distributions.
 
 To install the plugin:
 
 1) Copy ``client/_recognition_results_observer.py`` to ``MacroSystem`` in the guest VM. This grammar sends the recognition results to the server.
 2) Check that the following files exist in the server:
-  1) ``server/linux_x11/plugins/recognition_bar.yapsy-plugin``
-  2) ``server/linux_x11/plugins/recognitionbar/config.py``
-  3) ``server/linux_x11/plugins/recognitionbar/__init__.py``
-  4) ``server/linux_x11/plugins/recognitionbar/recognitionbar_tk.py``
+  1) ``server/linux_x11/plugins/recognition_results.yapsy-plugin``
+  2) ``server/linux_x11/plugins/recognition_results/config.py``
+  3) ``server/linux_x11/plugins/recognition_results/__init__.py``
+  4) ``server/linux_x11/plugins/recognition_results/recognitionbar_tk.py``
 3) Give execute permissions to the file ``recognitionbar_tk.py`` (``chmod +x recognitionbar_tk.py``)
-4) Open the file ``config.py`` and change the variable ``enabled`` to the value ``True`` (``enabled = True``)
-5) Configure the appearance of the bar in ``config.py`` (optional).
+4) Open the file ``config.py`` and modify the variable ``enabled`` to the value ``True`` (``enabled = True``)
+5) Configure the appearance of the bar in ``config.py`` (optional). By default, the assigned window type is ``dock`` and the window is set to show always on top. You can use your window manager to provide additional customization, such as showing the window in all desktops.
 
-If the recognition bar window is closed and you need to reopen it, just execute ``recognitionbar_tk.py``.
+If you need to reopen the recognition bar window, just execute ``recognitionbar_tk.py``. 
 
 Please note that the plugin uses a local file (``~/.aenea_phrases.log`` by default) in the server to communicate the results from Aenea to the Recognition Bar GUI application. This file stores in plain text the results of your speech. If security or privacy of what you input is a concern, you should delete this file regularly or take other appropriate measures. The location of the file can be modified in ``config.py``.
 
