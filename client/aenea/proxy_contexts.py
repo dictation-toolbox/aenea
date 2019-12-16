@@ -107,7 +107,7 @@ class ProxyCustomAppContext(dragonfly.Context):
         properties = _get_context()
         matches = {}
         for (key, value) in self.arguments.iteritems():
-            if value == VALUE_DONT_CARE:
+            if value == VALUE_DONT_CARE or value is None:
                 continue
             matches[key] = False
             if value == VALUE_NOT_SET:
